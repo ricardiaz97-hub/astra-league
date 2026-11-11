@@ -724,6 +724,13 @@ function buildSunset(){
 /* ---------- HOTEL AURORA: un hotel de lujo abandonado convertido en campo de batalla ----------
    Oeste: vestíbulo derrumbado (ALFA). Centro: patio con fuente. Norte: ala de 3 niveles con balcones rotos y piscina en la azotea.
    Sur: salón de baile, callejón, cuartos de personal y el pasillo de mantenimiento. Este: terraza de la piscina (BETA) y patio de servicio. */
+const CITY={};
+function loadCity(n,x,z,ry,sc){const want=CURM;const put=src=>{if(CURM!==want||!mapGroup)return;const o=T.SkeletonUtils?T.SkeletonUtils.clone(src):src.clone(true);
+    o.position.set(x,0,z);o.rotation.y=ry;o.scale.setScalar(sc);o.traverse(m=>{if(m.isMesh){m.userData.noShadow=1;m.castShadow=m.receiveShadow=false;}});mapGroup.add(o);};
+  let c=CITY[n];if(!c){c=CITY[n]={p:fetch('city/'+n+'.json').then(r=>r.json()).then(j=>new Promise(res=>{const bin=atob(j.data),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+      new T.GLTFLoader().parse(u.buffer,'',g=>{g.scene.traverse(m=>{if(!m.isMesh)return;const om=m.material,map=om.map;if(map)map.encoding=T.LinearEncoding;
+        const cut=om.transparent||om.alphaTest>0||(om.name||'').toLowerCase().includes('lea');m.material=toon(0xffffff,{map,alphaTest:cut?.5:0,side:cut?T.DoubleSide:T.FrontSide});if(!map)m.material.color.copy(om.color);});res(g.scene);},()=>res(null));})).catch(()=>null)};}
+  c.p.then(src=>{if(src)put(src);});}
 function buildHotel(){
   BAKE=true;DECO.length=0;
   const Q='sunset2/',C='concrete/conc',ORA=0xff7a1a,CY=0x3fe0ff,RED=0xff3040;let cI=0;const cv=()=>C+(1+(cI++*5)%18);
@@ -782,7 +789,11 @@ function buildHotel(){
   // cielo pintado (el mismo panorama del atardecer)
   const skyM=basic(0x2a1838,{side:T.BackSide,fog:false,depthWrite:false});scene.add(new T.Mesh(new T.SphereGeometry(560,48,24),skyM));
   TL.load('textures/'+Q+'sky.jpg',t=>{t.wrapS=T.RepeatWrapping;t.repeat.set(1,1.668);t.offset.set(.6,-.668);skyM.map=t;skyM.color.setHex(0xffffff);skyM.needsUpdate=true;});
-  for(let i=0;i<22;i++){const a=i/22*6.283+rand(-.1,.1),r=rand(150,240),w=rand(14,30),h=rand(20,60); // ciudad lejana en silueta
+  // ciudad real alrededor del hotel (modelos que mandó Ricardo, aligerados); se cargan sin frenar el inicio
+  const g0=new T.Mesh(new T.CircleGeometry(420,40),basic(0x24152c));g0.rotation.x=-PI/2;g0.position.y=-.06;scene.add(g0);
+  for(const[n,x,z,ry,sc]of[['oval',22,-122,.35,2.6],['holes',122,-26,-PI/2,4.2],['block',116,48,2.4,5],['block',-66,-128,.8,4.4],['towers',-30,165,0,6],['towers',-165,10,PI/2,5],['holes',-70,118,PI,3.6]])
+    loadCity(n,x,z,ry,sc);
+  for(let i=0;i<12;i++){const a=i/12*6.283+rand(-.1,.1),r=rand(230,280),w=rand(14,30),h=rand(20,60); // siluetas muy lejanas
     const m=new T.Mesh(new T.BoxGeometry(w,h,w),basic(i%2?0x2e1a3c:0x3a2048));m.position.set(Math.cos(a)*r,h/2-4,Math.sin(a)*r);scene.add(m);}
   // suelo del patio y del exterior
   floorPlane(-HX,HX,-HZ,HZ,0,Q+'plaza',5,0xe0d0cc);

@@ -36,3 +36,4 @@ Las texturas de `textures/` se generaron con Gemini a partir de la dirección de
 
 ## Créditos de recursos
 - Modelos de blásters y efectos de sonido: Kenney (kenney.nl), licencia CC0, tomados de los Starter Kits de KenneyNL en GitHub.
+- Edificios brutalistas de la ciudad (fondo del Hotel Aurora): modelos de Sketchfab que mandó Ricardo; autoría y licencia por confirmar.
