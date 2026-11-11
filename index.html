@@ -267,7 +267,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
       <div class="grp"><div class="lbl">MAPA</div><div class="seg" id="mapSel"><button data-m="2" class="sel">HOTEL</button><button data-m="1">ATARDECER</button><button data-m="0">AZOTEA</button></div></div>
       <div class="grp"><div class="lbl">DIFICULTAD</div><div class="seg" id="diff"><button data-d="0">FÁCIL</button><button data-d="1" class="sel">NORMAL</button><button data-d="2">DIFÍCIL</button></div></div>
       <div class="grp"><div class="lbl">SOMBRAS</div><div class="seg" id="shSel"><button data-s="2">ALTAS</button><button data-s="1" class="sel">BAJAS</button><button data-s="0">NO</button></div></div>
-      <div class="grp"><div class="lbl">NIEBLA SUAVE</div><div class="seg" id="mistSel"><button data-n="1" class="sel">SÍ</button><button data-n="0">NO</button></div></div>
+      <div class="grp"><div class="lbl">FILTRO SUAVE</div><div class="seg" id="mistSel"><button data-n="1" class="sel">SÍ</button><button data-n="0">NO</button></div></div>
       <div class="grp"><div class="lbl">EFECTOS DE LUZ</div><div class="seg" id="fxSel"><button data-f="1" class="sel">SÍ</button><button data-f="0">NO</button></div></div>
       <div class="grp"><div class="lbl">TEXTOS DE CÓMIC</div><div class="seg" id="wordSel"><button data-w="1">SÍ</button><button data-w="0" class="sel">NO</button></div></div>
     </div>
@@ -425,7 +425,8 @@ const mBright=shader(`uniform sampler2D t;varying vec2 vUv;void main(){vec3 c=te
   float l=dot(c,vec3(.299,.587,.114));float w=smoothstep(.6,.97,(mx-mn)*mx)*.55+smoothstep(.93,1.,l)*.25;gl_FragColor=vec4(c*w,1.);}`,{t:{value:null}});
 const mBlur=shader(`uniform sampler2D t;uniform vec2 d;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb*.227;
   c+=(texture2D(t,vUv+d*1.385).rgb+texture2D(t,vUv-d*1.385).rgb)*.316;c+=(texture2D(t,vUv+d*3.231).rgb+texture2D(t,vUv-d*3.231).rgb)*.0703;gl_FragColor=vec4(c,1.);}`,{t:{value:null},d:{value:new T.Vector2}});
-const mFinal=shader(`uniform sampler2D t,b;uniform float ca,k,sat,con,mist;uniform vec3 lift,gain,mistC;varying vec2 vUv;
+const mSoft=shader(`uniform sampler2D t;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb;float l=dot(c,vec3(.299,.587,.114));gl_FragColor=vec4(c*smoothstep(.1,.8,l),1.);}`,{t:{value:null}});
+const mFinal=shader(`uniform sampler2D t,b,m;uniform float ca,k,sat,con,mist;uniform vec3 lift,gain,mistC;varying vec2 vUv;
   vec3 spec(float x){return clamp(vec3(1.5-abs(4.*x-1.),1.5-abs(4.*x-2.),1.5-abs(4.*x-3.)),0.,1.);}
   void main(){vec2 p=vUv-.5;float r2=dot(p,p);vec2 o=p*r2*ca;
     vec3 c=vec3(texture2D(t,vUv-o).r,texture2D(t,vUv).g,texture2D(t,vUv+o).b);
@@ -433,8 +434,8 @@ const mFinal=shader(`uniform sampler2D t,b;uniform float ca,k,sat,con,mist;unifo
     float r=length(p);
     vec3 gh=texture2D(b,.5-p*.6).rgb*spec(fract(r*1.7+.15))*.45+texture2D(b,.5-p*1.4).rgb*spec(fract(r*2.6+.55))*.3;
     c+=bl*k+gh*k*smoothstep(.02,.2,r2);float lu=dot(c,vec3(.299,.587,.114));c=mix(vec3(lu),c,sat);c=c*gain+lift*(1.-clamp(c,0.,1.));vec3 cc=clamp(c,0.,1.);c=mix(c,cc*cc*(3.-2.*cc),con);
-    if(mist>0.){vec3 bb=texture2D(b,vUv).rgb;c=1.-(1.-c)*(1.-clamp(bb*mist*1.6,0.,1.));float l2=dot(c,vec3(.299,.587,.114));c+=mistC*mist*(.07+.05*(1.-l2))*(1.-r2);}
-    c*=1.-r2*.38;gl_FragColor=vec4(c,1.);}`,{t:{value:null},b:{value:null},mist:{value:0},mistC:{value:new T.Vector3(.5,.4,.55)},ca:{value:.013},k:{value:.6},sat:{value:1},con:{value:0},lift:{value:new T.Vector3()},gain:{value:new T.Vector3(1,1,1)}});
+    if(mist>0.){vec3 h=(texture2D(m,vUv).rgb*1.5+texture2D(b,vUv).rgb)*mistC*4.2;c=1.-(1.-c)*(1.-clamp(h*mist,0.,1.));float l2=dot(c,vec3(.299,.587,.114));c=mix(c,vec3(l2),-.04*mist);c=mix(c,c*.92+.04,mist*.35*smoothstep(.55,1.,l2));}
+    c*=1.-r2*.38;gl_FragColor=vec4(c,1.);}`,{t:{value:null},b:{value:null},m:{value:null},mist:{value:0},mistC:{value:new T.Vector3(.5,.4,.55)},ca:{value:.013},k:{value:.6},sat:{value:1},con:{value:0},lift:{value:new T.Vector3()},gain:{value:new T.Vector3(1,1,1)}});
 function fxResize(){
   for(const n of ['rt','a','b'])if(FX[n]){FX[n].dispose();FX[n]=null;}
   if(!FX.on)return;
@@ -442,6 +443,7 @@ function fxResize(){
   const RT=renderer.capabilities.isWebGL2&&T.WebGLMultisampleRenderTarget?T.WebGLMultisampleRenderTarget:T.WebGLRenderTarget;
   FX.rt=new RT(w,h,o);o.depthBuffer=false;
   FX.a=new T.WebGLRenderTarget(Math.max(1,w>>2),Math.max(1,h>>2),o);FX.b=new T.WebGLRenderTarget(Math.max(1,w>>2),Math.max(1,h>>2),o);
+  FX.c=new T.WebGLRenderTarget(Math.max(1,w>>3),Math.max(1,h>>3),o);FX.d=new T.WebGLRenderTarget(Math.max(1,w>>3),Math.max(1,h>>3),o);
 }
 function pass(mat,target){fsQuad.material=mat;renderer.setRenderTarget(target);renderer.render(fsScene,fsCam);}
 function render(){
@@ -451,7 +453,9 @@ function render(){
   const dx=1/FX.a.width,dy=1/FX.a.height;
   for(const s of [1,2.2]){mBlur.uniforms.t.value=FX.a.texture;mBlur.uniforms.d.value.set(dx*s,0);pass(mBlur,FX.b);
     mBlur.uniforms.t.value=FX.b.texture;mBlur.uniforms.d.value.set(0,dy*s);pass(mBlur,FX.a);}
-  mFinal.uniforms.t.value=FX.rt.texture;mFinal.uniforms.b.value=FX.a.texture;pass(mFinal,null);
+  if(mFinal.uniforms.mist.value>0){mSoft.uniforms.t.value=FX.rt.texture;pass(mSoft,FX.c);const ex=1/FX.c.width,ey=1/FX.c.height; // difusión tipo filtro de lente (Pro-Mist)
+    for(const s of [1,2.4,4.5]){mBlur.uniforms.t.value=FX.c.texture;mBlur.uniforms.d.value.set(ex*s,0);pass(mBlur,FX.d);mBlur.uniforms.t.value=FX.d.texture;mBlur.uniforms.d.value.set(0,ey*s);pass(mBlur,FX.c);}}
+  mFinal.uniforms.t.value=FX.rt.texture;mFinal.uniforms.b.value=FX.a.texture;mFinal.uniforms.m.value=FX.c.texture;pass(mFinal,null);
 }
 function resize(){const w=window.innerWidth,h=window.innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();fxResize();}
 window.addEventListener('resize',resize);resize();
@@ -1003,12 +1007,6 @@ function buildHotel(){
   for(const[x,y,z,ry,gx,gz]of[[-35.6,6.4,-9.5,PI/2,-33,-9.5],[-35.6,6.4,9.5,PI/2,-33,9.5],[-12,6.4,-24.2,PI,-12,-21.5],[1,6.4,-24.2,PI,1,-21.5],[-24,8.6,22.2,0,-24,19.5],[24,8.6,22.2,0,24,19.5]]){
     placeProp('light',null,x,y,z,ry,1.25,{rx:0});neonBar(gx*.0+x+(gx-x)*.55,y-.15,z+(gz-z)*.55,.35,.08,.35,0xffd8a0,1.6);glowPool(gx,.04,gz,3.6,0xffc070,.26);glowPool(x+(gx-x)*.15,y-1.2,z+(gz-z)*.15,2.2,0xffc070,.14,true,ry);}
   BAKE=false;
-  // niebla baja: capas suaves que se mueven despacio (patio, piscina, pasillo y salón)
-  {const mt=tex(256,256,g=>{for(let i=0;i<60;i++){const x=Math.random()*256,y=Math.random()*256,r=20+Math.random()*60,gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(255,255,255,.22)');gr.addColorStop(1,'rgba(255,255,255,0)');
-      for(const dx of[-256,0,256])for(const dy of[-256,0,256]){g.save();g.translate(dx,dy);g.fillStyle=gr;g.fillRect(x-r,y-r,r*2,r*2);g.restore();}}});
-    for(const[x0,x1,z0,z1,y,c,op]of[[-36,24,-24,22,.35,0xd8b8d8,.5],[-36,24,-24,22,1.1,0xd0b0d8,.32],[34,48,-10,8,.5,0xa8c8e8,.55],[-61,44,-46,-42,.5,0x9a6a8a,.42],[-30,6,-41.5,-25,.6,0x9a7a98,.4],[-61,-36,-22,22,.6,0x8ab8c8,.35]]){
-      const t=mt.clone();t.needsUpdate=true;t.wrapS=t.wrapT=T.RepeatWrapping;t.repeat.set((x1-x0)/14,(z1-z0)/14);
-      const m=new T.Mesh(new T.PlaneGeometry(x1-x0,z1-z0),basic(c,{map:t,transparent:true,opacity:op,depthWrite:false,fog:true}));m.rotation.x=-PI/2;m.position.set((x0+x1)/2,y,(z0+z1)/2);m.userData.sp=rand(.004,.01);m.userData.noShadow=1;m.renderOrder=3;scene.add(m);MAPFX.mist.push(m);}}
   addPad(-33,-38,0,17); // trampolín en el callejón: sube al techo de los cuartos de personal (atajo)
 }
 const HOTEL_NAV={ // rutas normales para los bots (puertas, pasillos y escaleras)
@@ -1091,8 +1089,8 @@ function bakeMap(group,opts){
 }
 const MAPS=[
   {name:'AZOTEA',build:buildRooftop,HX:80,HZ:46,base:68,edges:true,hemi:[0xffffff,0xb9a8c8,.64],sun:[0xfff1dc,.5,-20,40,18],fog:[0xd6e9ff,150,420],ink:0x1d1a22,rim:[0,0],lift:[0,0,0],gain:[1,1,1],sat:1,k:.45,ca:.012,con:.25},
-  {name:'ATARDECER',build:buildSunset,HX:76,HZ:58,base:62,edges:false,hemi:[0x8c74d8,0x1e1028,.36],sun:[0xffa868,1.2,-90,26,38],fog:[0x4e2c52,95,400],ink:0x2a1834,rim:[0xff9a5a,.42],lift:[.018,.004,.04],gain:[1.06,.98,.96],sat:.92,k:.38,ca:.009,con:.5,mist:.45,mistC:[.6,.4,.55]},
-  {name:'HOTEL AURORA',build:buildHotel,HX:61,HZ:46,base:56,edges:false,hemi:[0x8a78d0,0x2a1834,.5],sun:[0xffb07a,1.1,-60,52,-34],fog:[0x4a2a50,110,420],ink:0x24142e,rim:[0xff9a5a,.38],lift:[.012,.003,.03],gain:[1.06,.98,.96],sat:.94,k:.4,ca:.009,con:.5,indK:.11,bake:true,mist:.55,mistC:[.55,.42,.6],
+  {name:'ATARDECER',build:buildSunset,HX:76,HZ:58,base:62,edges:false,hemi:[0x8c74d8,0x1e1028,.36],sun:[0xffa868,1.2,-90,26,38],fog:[0x4e2c52,95,400],ink:0x2a1834,rim:[0xff9a5a,.42],lift:[.018,.004,.04],gain:[1.06,.98,.96],sat:.92,k:.38,ca:.009,con:.5,mist:.5,mistC:[.64,.48,.44]},
+  {name:'HOTEL AURORA',build:buildHotel,HX:61,HZ:46,base:56,edges:false,hemi:[0x8a78d0,0x2a1834,.5],sun:[0xffb07a,1.1,-60,52,-34],fog:[0x4a2a50,110,420],ink:0x24142e,rim:[0xff9a5a,.38],lift:[.012,.003,.03],gain:[1.06,.98,.96],sat:.94,k:.4,ca:.009,con:.5,indK:.11,bake:true,mist:.6,mistC:[.62,.5,.44],
    spawns:[[[-55,0,-9],[-55,0,-15],[-56,0,-3]],[[56,2.4,-12],[56,2.4,-6],[58,2.4,2]]],nav:HOTEL_NAV}];
 let mapGroup=null,mapId=-1;
 const SET={words:false,mist:true};try{SET.words=localStorage.getItem('astra-words')==='1';SET.mist=localStorage.getItem('astra-mist')!=='0';}catch(e){}
@@ -2430,7 +2428,7 @@ buildTags();fullReset();
 for(const k of [10,11])loadVRM(k).then(v=>{if(v)refreshLook(k);});
 loadProp('sword').then(v=>{if(v){for(const f of fighters)f.setClass(f.cls,f.look,true);buildTags();}});
 loadAnim('strafe','anims/sword-strafe.json');loadMoves('anims/moves.json');
-window.__game={camera,boxes,setCam:(y,p)=>{camYaw=y;camPitch=p;},PJ,SPR,fxWord,swordModel,PROPS,game,player,fighters,step,startMatch,useSkill,jump,keys,startUlt,toggleLock,clash,melee,heavy,KIF,SANCT,getLock:()=>lock};
+window.__fx={mFinal,mSoft,FX,SET};window.__game={camera,boxes,setCam:(y,p)=>{camYaw=y;camPitch=p;},PJ,SPR,fxWord,swordModel,PROPS,game,player,fighters,step,startMatch,useSkill,jump,keys,startUlt,toggleLock,clash,melee,heavy,KIF,SANCT,getLock:()=>lock};
 requestAnimationFrame(loop);
 })();
 </script>
