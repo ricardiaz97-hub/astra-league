@@ -578,29 +578,55 @@ function buildVRM(team,cls,look){
   scene.add(g);const O=()=>new T.Object3D(); // poses intermedias que escribe animate()
   return {g,head:O(),armL:O(),armR:O(),legL:O(),legR:O(),gun,sword,sh,aura,stones,vrm:true,bones};
 }
-function applyVRM(m,f,dt){
-  const A=ANIMS.strafe,tg=f.isPlayer?lock:f.target; // con la hoja y un rival fijado, rodearlo con el paso de Mixamo
-  if(A&&f.weapon===1&&tg&&tg.alive&&f.onGround&&f.swingT<=0&&f.stunT<=0&&f.dashT<=0){
-    const lat=f.vel.x*Math.cos(f.yaw)-f.vel.z*Math.sin(f.yaw),fwd=-(f.vel.x*Math.sin(f.yaw)+f.vel.z*Math.cos(f.yaw));
-    if(Math.abs(lat)>2.5&&Math.abs(lat)>Math.abs(fwd)*.8){f.animT=(f.animT||0)+Math.abs(lat)/A.speed*dt;playAnim(m,A,f.animT,lat<0);m.g.rotation.x=0;return;}}
-  const B=m.bones,lL=m.legL.rotation.x,lR=m.legR.rotation.x,air=!f.onGround&&f.wr<=0,ar=m.armR.rotation;
-  setB(B.leftUpperLeg,-lL,0,0);setB(B.rightUpperLeg,-lR,0,0);
-  setB(B.leftLowerLeg,air?.9:f.sliding?.3:.12+Math.max(0,-lL)*1.3,0,0);setB(B.rightLowerLeg,air?.55:f.sliding?.3:.12+Math.max(0,-lR)*1.3,0,0);
-  setB(B.leftUpperArm,-m.armL.rotation.x,0,-1.2);setB(B.leftLowerArm,0,-.4,0);
-  setB(B.rightUpperArm,-ar.x,0,1.4-ar.z*.8);setB(B.rightLowerArm,0,f.weapon===1?.5:.1,0);
-  setB(B.head,-m.head.rotation.x,0,0);
-}
 // animaciones de Mixamo convertidas: rotación de cada hueso respecto al reposo, en ejes del modelo
 const ANIMS={};
-function loadAnim(key,url){fetch(url).then(r=>r.json()).then(a=>{const mir={};
+function prepAnim(a){const mir={};
   for(const k in a.bones){const src=a.bones[k],m=new Float32Array(src.length);for(let i=0;i<src.length;i+=4){m[i]=src[i];m[i+1]=-src[i+1];m[i+2]=-src[i+2];m[i+3]=src[i+3];}
     mir[k.replace(/^left/,'@').replace(/^right/,'left').replace(/^@/,'right')]=m;a.bones[k]=Float32Array.from(src);}
-  a.mirror=mir;ANIMS[key]=a;}).catch(()=>{});}
-const _qa=new T.Quaternion(),_qb=new T.Quaternion();
-function playAnim(m,a,t,mirror){ // t en segundos, en bucle
-  const n=a.frames-1,ft=((t*a.fps)%n+n)%n,i=Math.floor(ft),k=ft-i,set=mirror?a.mirror:a.bones;
-  for(const key in set){const b=m.bones[key];if(!b)continue;const d=set[key];
-    _qa.fromArray(d,i*4);_qb.fromArray(d,(i+1)*4);_qa.slerp(_qb,k);b.o.quaternion.copy(b.Ai).multiply(_qa).multiply(b.A).multiply(b.rest);}}
+  a.mirror=mir;a.fps=a.fps||30;a.rate=a.rate||1;return a;}
+function loadAnim(key,url){fetch(url).then(r=>r.json()).then(a=>{ANIMS[key]=prepAnim(a);}).catch(()=>{});}
+function loadMoves(url){fetch(url).then(r=>r.json()).then(all=>{for(const k in all)ANIMS[k]=prepAnim(all[k]);}).catch(()=>{});}
+const _qa=new T.Quaternion(),_qb=new T.Quaternion(),_qt=new T.Quaternion();
+function poseQ(b,q,k){_qt.copy(b.Ai).multiply(q).multiply(b.A).multiply(b.rest);b.o.quaternion.slerp(_qt,k);} // k<1 suaviza el cambio de pose
+function playFrame(m,a,ft,mirror,k){ // ft = cuadro (con decimales) dentro del tramo
+  const n=a.frames-1;ft=clamp(ft,0,n);const i=Math.min(Math.floor(ft),n-1),u=ft-i,set=mirror?a.mirror:a.bones;
+  for(const key in set){const b=m.bones[key];if(!b)continue;const d=set[key];_qa.fromArray(d,i*4);_qb.fromArray(d,(i+1)*4);_qa.slerp(_qb,u);poseQ(b,_qa,k);}}
+function playAnim(m,a,t,mirror,k){const n=a.frames-1;playFrame(m,a,((t*a.fps)%n+n)%n,mirror,k===undefined?1:k);}
+const ACTDUR={slash:.42,spin:.62,cast:.6};
+function act(f,key){f.act=key;f.actT=0;}
+function applyVRM(m,f,dt){
+  const A=ANIMS,k=1-Math.exp(-22*dt),hs=Math.hypot(f.vel.x,f.vel.z),cy=Math.cos(f.yaw),sy=Math.sin(f.yaw);
+  let key=null,mir=false,rate=1;
+  if(f.act){f.actT+=dt;if(f.actT>=ACTDUR[f.act]||!A[f.act]||!f.alive)f.act=null;else key=f.act;}
+  const lat=f.vel.x*cy-f.vel.z*sy,fwd=-(f.vel.x*sy+f.vel.z*cy),tg=f.isPlayer?lock:f.target;
+  if(!key){
+    if(f.ultT>0||f.stunT>0||f.sliding||f.dashT>0||f.rushT>0){}
+    else if(f.charging)key='powerup';
+    else if(f.parryT>0)key='block';
+    else if(f.wr>0){key='wallrun';mir=f.wrNx*cy-f.wrNz*sy<0;}
+    else if(!f.onGround)key='jump';
+    else if(f.weapon===1&&tg&&tg.alive&&Math.abs(lat)>2.5&&Math.abs(lat)>Math.abs(fwd)*.8){key='strafe';mir=lat<0;rate=Math.abs(lat)/((A.strafe&&A.strafe.speed)||3);} // rodear al rival fijado
+    else if(f.onGround&&hs>3){key='run';rate=clamp(hs/5.5,.7,2.2);}
+    if(key&&!A[key])key=null;}
+  if(key!==f.curKey){f.curKey=key;f.keyT=0;}else f.keyT+=dt;
+  if(key){const a=A[key];
+    if(f.act)playFrame(m,a,f.actT/ACTDUR[key]*(a.frames-1),false,k);
+    else if(a.mode==='hold')playFrame(m,a,f.keyT*a.fps*a.rate,mir,k);
+    else{f.animT=(f.animT||0)+dt*rate*a.rate;playAnim(m,a,f.animT,mir,k);}
+    m.g.rotation.x=0;if(key==='wallrun')m.g.rotation.z=0;
+    if(f.weapon!==1&&!f.act&&key!=='powerup'&&key!=='block'){ // con arma de fuego, el brazo derecho sigue apuntando
+      _eu.set(-m.armR.rotation.x,0,1.4,'XYZ');_q.setFromEuler(_eu);if(m.bones.rightUpperArm)poseQ(m.bones.rightUpperArm,_q,k);
+      _eu.set(0,.1,0,'XYZ');_q.setFromEuler(_eu);if(m.bones.rightLowerArm)poseQ(m.bones.rightLowerArm,_q,k);}
+    return;}
+  const B=m.bones,lL=m.legL.rotation.x,lR=m.legR.rotation.x,air=!f.onGround&&f.wr<=0,ar=m.armR.rotation;
+  const sb=(b,x,y,z)=>{if(!b)return;_eu.set(x,y,z,'XYZ');_q.setFromEuler(_eu);poseQ(b,_q,k);};
+  for(const n of ['hips','spine','chest','upperChest','neck','leftShoulder','rightShoulder','leftHand','rightHand','leftFoot','rightFoot'])sb(B[n],0,0,0);
+  sb(B.leftUpperLeg,-lL,0,0);sb(B.rightUpperLeg,-lR,0,0);
+  sb(B.leftLowerLeg,air?.9:f.sliding?.3:.12+Math.max(0,-lL)*1.3,0,0);sb(B.rightLowerLeg,air?.55:f.sliding?.3:.12+Math.max(0,-lR)*1.3,0,0);
+  sb(B.leftUpperArm,-m.armL.rotation.x,0,-1.2);sb(B.leftLowerArm,0,-.4,0);
+  sb(B.rightUpperArm,-ar.x,0,1.4-ar.z*.8);sb(B.rightLowerArm,0,f.weapon===1?.5:.1,0);
+  sb(B.head,-m.head.rotation.x,0,0);
+}
 function refreshLook(k){for(const f of fighters)if(f.look===k)f.setClass(f.cls,k,true);buildTags();}
 
 const fighters=[];let now=0;
@@ -735,7 +761,7 @@ function meleeHit(f){
   const fx=-Math.sin(f.yaw),fz=-Math.cos(f.yaw);
   if(f.onGround){f.vel.x+=fx*7;f.vel.z+=fz*7;}
   if(now-f.comboT>1.3)f.combo=0;
-  const fin=f.combo>=2;let any=false;
+  const fin=f.combo>=2;let any=false;act(f,fin?'spin':'slash');
   for(const e of fighters){if(e.team===f.team||!e.alive)continue;
     const dx=e.pos.x-f.pos.x,dz=e.pos.z-f.pos.z,dy=e.pos.y-f.pos.y,d=Math.hypot(dx,dz);
     if(d>WPN[1].range||Math.abs(dy)>2.6)continue;
@@ -821,7 +847,7 @@ function useSkill(f,dx,dz,ally){
     burst(f.pos.x,f.pos.y+1,f.pos.z,ARC,14,5);let bx=f.pos.x,bz=f.pos.z;
     for(let s=.4;s<=12;s+=.4){const x=f.pos.x+dx*s,z=f.pos.z+dz*s;if(!freeAt(f,x,f.pos.y+.05,z))break;bx=x;bz=z;}
     muzzle(f,_a);f.pos.x=bx;f.pos.z=bz;_b.set(bx,f.pos.y+1.5,bz);tracer(_a,_b,ARC,.25,.25);burst(bx,f.pos.y+1,bz,0xffffff,14,5);snd('blink',v);f.protT=Math.max(f.protT,now+.25);}
-  f.skillCd=CLS[f.cls].cd;f.castT=.45;return true;
+  f.skillCd=CLS[f.cls].cd;f.castT=.45;act(f,'cast');return true;
 }
 
 /* ---------- combate: aturdir, parar, desvanecerse, impactos ---------- */
@@ -860,7 +886,7 @@ function startUlt(f){
   const t=f.isPlayer?lock:f.target;
   if(t&&t.alive)f.beamDir.set(t.pos.x-f.pos.x,t.pos.y-.25-f.pos.y,t.pos.z-f.pos.z).normalize();
   else{const cp=Math.cos(f.pitch);f.beamDir.set(-Math.sin(f.yaw)*cp,Math.sin(f.pitch),-Math.cos(f.yaw)*cp);}
-  ring(f.pos.x,f.pos.y,f.pos.z,TEAM[f.team].color,9,.6);snd('ultc',f===player?1:volAt(f.pos));return true;
+  ring(f.pos.x,f.pos.y,f.pos.z,TEAM[f.team].color,9,.6);snd('ultc',f===player?1:volAt(f.pos));act(f,'cast');return true;
 }
 function beamOrigin(f,out){return out.set(f.pos.x,f.pos.y+1.35,f.pos.z).addScaledVector(f.beamDir,.9);}
 function botBeamAim(b,dt){const t=b.target;if(!t||!t.alive)return;beamOrigin(b,_a);_b.set(t.pos.x,t.pos.y+1.1,t.pos.z).sub(_a).normalize();
@@ -1300,7 +1326,7 @@ function loop(t){
 }
 buildTags();fullReset();
 for(const k of [10,11])loadVRM(k).then(v=>{if(v)refreshLook(k);});
-loadAnim('strafe','anims/sword-strafe.json');
+loadAnim('strafe','anims/sword-strafe.json');loadMoves('anims/moves.json');
 window.__game={game,player,fighters,step,startMatch,useSkill,jump,keys,startUlt,toggleLock,clash,melee,getLock:()=>lock};
 requestAnimationFrame(loop);
 })();
