@@ -111,6 +111,8 @@ button.sel{background:var(--ink);color:var(--paper)}
 .classes button b{font-weight:400;font-size:22px}
 .classes button small{font:600 12px/1.25 var(--body);letter-spacing:0}
 .classes button em{font:700 11px var(--body);font-style:normal;color:var(--alfa);letter-spacing:.04em}
+#photoUI{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 18px;background:rgba(16,8,24,.62);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.14);border-radius:12px;color:#f4e8f0;font:500 13px/1.35 system-ui,sans-serif;text-align:center;pointer-events:none;max-width:92vw}#photoUI b{font:400 18px Anton,Impact,sans-serif;letter-spacing:.1em;color:#ff9a4a}#photoUI i{font-style:normal;opacity:.7}#photoUI[hidden]{display:none}
+#photoFlash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:31;transition:opacity .35s ease-out}
 button.go{font-size:26px;padding:10px 40px;background:var(--alfa);border-color:var(--ink);clip-path:polygon(14px 0,100% 0,calc(100% - 14px) 100%,0 100%)}
 button.go:hover{background:#ff9140}
 table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
@@ -208,6 +210,8 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
 <body>
 <canvas id="c"></canvas>
 
+<div id="photoUI" hidden><b>MODO FOTO</b><span>Ratón: mirar · WASD: mover · Espacio / C: subir / bajar · Shift: rápido · Rueda: zoom · Q / E: inclinar · H: ocultar personaje · <u>Enter</u>: guardar foto · O o Esc: salir</span><i id="photoFov"></i></div>
+<div id="photoFlash"></div>
 <div id="hud" hidden>
   <div id="speed"></div>
   <div id="top"><span id="sA">0</span><span id="clock">5:00</span><span id="sB">0</span></div>
@@ -273,6 +277,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
     </div>
     <footer class="mFoot" style="--i:4">
       <button class="go" id="play">JUGAR</button>
+      <button class="ghost" id="roam" title="El mapa sin rivales ni reloj">EXPLORAR</button>
       <button class="ghost" id="ctrlBtn" aria-expanded="false" aria-controls="ctrls">CONTROLES</button>
       <span class="hint">Enter para jugar</span>
     </footer>
@@ -315,7 +320,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
   <div class="card">
     <h2>PAUSA</h2>
     <p>El partido está detenido. En computadora, el ratón se captura al continuar; presiona Esc para soltarlo.</p>
-    <div class="row"><button class="go" id="resume">CONTINUAR</button><button id="quit">SALIR AL MENÚ</button></div>
+    <div class="row"><button class="go" id="resume">CONTINUAR</button><button id="photoBtn">MODO FOTO</button><button id="quit">SALIR AL MENÚ</button></div>
   </div>
 </div>
 
@@ -1518,7 +1523,7 @@ function sndK(k,v){
 function volAt(p){return clamp(1-player.pos.distanceTo(p)/60,0,1)*.6;}
 
 /* ---------- juego ---------- */
-const game={map:2,menu:true,paused:false,state:'playing',score:[0,0],time:MATCH,diff:1,cls:0,look:10};
+const game={map:2,menu:true,paused:false,free:false,photo:false,state:'playing',score:[0,0],time:MATCH,diff:1,cls:0,look:10};
 const player=new Fighter(0,'Tú',0,true,0,10);
 new Fighter(0,'Nova',1,false,1,11);new Fighter(0,'Lince',2,false,2,11);
 new Fighter(1,'Vex',0,false,0,11);new Fighter(1,'Brasa',1,false,1,11);new Fighter(1,'Orión',2,false,2,11);
@@ -2095,9 +2100,12 @@ const joy={x:0,y:0,id:null,ox:0,oy:0},look={id:null,x:0,y:0},tbtn={fire:false,fi
 let adsHeld=false,ads=0,heavyQ=false,jumpQ=false,dashQ=false,skillQ=false,parryQ=false,ultQ=false,diveQ=false;
 function setWeapon(i){if(player.weapon===i)return;player.weapon=i;player.burstQ=0;snd('swap');player.reloadT=0;player.cd=Math.max(player.cd,.2);}
 function lockPtr(){if(touchMode)return;try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{});}catch(e){}}
-document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;if(locked)wasLocked=true;else{mouseDown=false;if(wasLocked&&!game.menu&&!game.paused&&game.state!=='ended')pause();wasLocked=false;}});
+document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;if(locked)wasLocked=true;else{mouseDown=false;if(wasLocked&&!game.menu&&!game.paused&&!game.photo&&game.state!=='ended')pause();wasLocked=false;}});
 window.addEventListener('keydown',e=>{
   if(game.menu)return;
+  if(game.photo){if(['Space','Tab','Enter'].includes(e.code)||e.code.startsWith('Control'))e.preventDefault();if(e.repeat)return;
+    if(e.code==='Enter'||e.code==='NumpadEnter')photoShot();else if(e.code==='KeyO'||e.code==='Escape'||e.code==='KeyP')photoOff();else if(e.code==='KeyH')PH.hide=!PH.hide;else keys[e.code]=true;return;}
+  if(e.code==='KeyO'&&!e.repeat){photoOn();return;}
   if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Tab'].includes(e.code))e.preventDefault();
   if(e.repeat)return;keys[e.code]=true;
   if(e.code==='Space'){jumpQ=true;if(player.clash)player.push+=1;}
@@ -2112,10 +2120,10 @@ window.addEventListener('keydown',e=>{
 window.addEventListener('keyup',e=>{keys[e.code]=false;});
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouseDown=false;});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&!game.menu&&!game.paused&&game.state!=='ended')pause();});
-canvas.addEventListener('mousedown',e=>{if(game.menu||game.paused)return;initAudio();if(!locked)lockPtr();if(e.button===0){mouseDown=true;if(player.clash)player.push+=1;}if(e.button===2){adsHeld=true;if(player.weapon===1)heavyQ=true;}if(e.button===1){e.preventDefault();toggleLock();}});
+canvas.addEventListener('mousedown',e=>{if(game.photo){if(!locked)lockPtr();return;}if(game.menu||game.paused)return;initAudio();if(!locked)lockPtr();if(e.button===0){mouseDown=true;if(player.clash)player.push+=1;}if(e.button===2){adsHeld=true;if(player.weapon===1)heavyQ=true;}if(e.button===1){e.preventDefault();toggleLock();}});
 window.addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2)adsHeld=false;});
-window.addEventListener('mousemove',e=>{if(game.menu||game.paused||touchMode)return;camYaw-=(e.movementX||0)*.0023;camPitch=clamp(camPitch-(e.movementY||0)*.0023,-1.25,1.25);});
-window.addEventListener('wheel',e=>{if(game.menu||game.paused)return;setWeapon((player.weapon+(e.deltaY>0?1:2))%3);},{passive:true});
+window.addEventListener('mousemove',e=>{if(game.photo){PH.yaw-=(e.movementX||0)*.0018;PH.pitch=clamp(PH.pitch-(e.movementY||0)*.0018,-1.5,1.5);return;}if(game.menu||game.paused||touchMode)return;camYaw-=(e.movementX||0)*.0023;camPitch=clamp(camPitch-(e.movementY||0)*.0023,-1.25,1.25);});
+window.addEventListener('wheel',e=>{if(game.photo){PH.fov=clamp(PH.fov*(e.deltaY>0?1.08:1/1.08),12,100);return;}if(game.menu||game.paused)return;setWeapon((player.weapon+(e.deltaY>0?1:2))%3);},{passive:true});
 window.addEventListener('contextmenu',e=>e.preventDefault());
 function reload(){const W=WPN[player.weapon];if(!W.mag||player.reloadT>0||player.ammo[player.weapon]>=W.mag)return;player.reloadT=W.reload;snd('reload');}
 function enableTouch(){if(touchMode)return;touchMode=true;$('touch').hidden=false;}
@@ -2281,7 +2289,7 @@ function fullReset(){
 }
 function step(dt){
   now+=dt;
-  if(!game.menu){game.time-=dt;if(game.time<=0){game.time=0;endMatch();return;}updPlayer(dt);}
+  if(!game.menu){if(!game.free)game.time-=dt;if(game.time<=0){game.time=0;endMatch();return;}updPlayer(dt);}
   for(const f of fighters){
     if(!f.alive){f.respawnT-=dt;if(f.m.g.visible&&f.deadT!==undefined){f.deadT+=dt;const m=f.m; // cae con la animación de muerte y luego se desvanece
         if(f.pos.y>f.groundY){f.vel.y-=G*dt;f.pos.y=Math.max(f.groundY,f.pos.y+f.vel.y*dt);}m.g.position.copy(f.pos);m.g.rotation.set(0,f.yaw,0);m.sh.position.set(f.pos.x,f.groundY+.03,f.pos.z);
@@ -2299,7 +2307,7 @@ function step(dt){
 
 /* ---------- cámara ---------- */
 const camT=new V3;let fov=72,camSide=.95;
-function updCamera(dt){if(window.__camOverride)return;
+function updCamera(dt){if(window.__camOverride)return;if(game.photo){updPhoto(dt);return;}
   if(game.menu){const a=now*.1;camera.position.set(Math.cos(a)*74,30,Math.sin(a)*44);camera.lookAt(0,4,0);return;}
   const p=player;
   if(p.alive)camT.set(p.pos.x,p.pos.y+1.7,p.pos.z);
@@ -2374,11 +2382,28 @@ function applyRoster(){
   fighters[1].setClass(mates[0],11);fighters[2].setClass(mates[1],11);
   buildTags();
 }
-function startMatch(){initAudio();buildMap(game.map);applyRoster();game.menu=false;game.paused=false;$('menu').hidden=true;$('end').hidden=true;$('pause').hidden=true;$('hud').hidden=false;
-  fullReset();banner('¡A PELEAR!','#ff7a1a',1.5);lockPtr();}
+function startMatch(free){game.free=free===true;initAudio();buildMap(game.map);applyRoster();game.menu=false;game.paused=false;$('menu').hidden=true;$('end').hidden=true;$('pause').hidden=true;$('hud').hidden=false;
+  fullReset();if(game.free){for(const f of fighters)if(!f.isPlayer){f.alive=false;f.respawnT=1e9;f.deadT=undefined;f.m.g.visible=false;f.m.sh.visible=false;f.pos.set(0,-50,0);}
+    banner('EXPLORAR','#3fe0ff',1.5);setTimeout(()=>{if(game.free&&!game.menu)banner('O: MODO FOTO','#ffd23f',2);},1700);}else banner('¡A PELEAR!','#ff7a1a',1.5);lockPtr();}
+// ---- modo foto: cámara libre, sin interfaz, el juego queda congelado ----
+const PH={pos:new V3(),yaw:0,pitch:0,roll:0,fov:55,hide:false,n:0};
+function photoOn(){if(game.menu||game.state==='ended'||game.photo)return;$('pause').hidden=true;game.paused=true;game.photo=true;mouseDown=false;
+  PH.pos.copy(camera.position);PH.yaw=camYaw;PH.pitch=camPitch;PH.roll=0;PH.fov=camera.fov;PH.hide=false;
+  $('hud').hidden=true;$('tags').style.display='none';$('photoUI').hidden=false;for(const k in keys)keys[k]=false;lockPtr();}
+function photoOff(){if(!game.photo)return;game.photo=false;player.m.g.visible=player.alive;$('hud').hidden=false;$('tags').style.display='';$('photoUI').hidden=true;camera.rotation.z=0;
+  for(const k in keys)keys[k]=false;resume();}
+function photoShot(){const ui=$('photoUI');ui.hidden=true;render();
+  try{const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='astra-foto-'+(++PH.n)+'.png';document.body.appendChild(a);a.click();a.remove();}catch(e){}
+  ui.hidden=false;const fl=$('photoFlash');fl.style.transition='none';fl.style.opacity=.55;requestAnimationFrame(()=>{fl.style.transition='';fl.style.opacity=0;});}
+function updPhoto(dt){const K=keys,sp=(K.ShiftLeft||K.ShiftRight?16:5)*dt,cy=Math.cos(PH.yaw),sy=Math.sin(PH.yaw),cp=Math.cos(PH.pitch),spi=Math.sin(PH.pitch);
+  const f=[-sy*cp,spi,-cy*cp],r=[cy,0,-sy];let mx=0,mz=0,my=0;if(K.KeyW)mz++;if(K.KeyS)mz--;if(K.KeyD)mx++;if(K.KeyA)mx--;if(K.Space)my++;if(K.KeyC||K.ControlLeft)my--;
+  PH.pos.x+=(f[0]*mz+r[0]*mx)*sp;PH.pos.y+=(f[1]*mz+my)*sp;PH.pos.z+=(f[2]*mz+r[2]*mx)*sp;PH.pos.y=Math.max(.15,PH.pos.y);
+  if(K.KeyQ)PH.roll+=dt*.8;if(K.KeyE)PH.roll-=dt*.8;
+  camera.position.copy(PH.pos);camera.rotation.set(PH.pitch,PH.yaw,PH.roll,'YXZ');if(Math.abs(camera.fov-PH.fov)>.01){camera.fov=PH.fov;camera.updateProjectionMatrix();}
+  player.m.g.visible=player.alive&&!PH.hide;$('photoFov').textContent='Lente '+Math.round(24/Math.tan(PH.fov*Math.PI/360))+' mm';}
 function pause(){if(game.menu||game.paused)return;game.paused=true;$('pause').hidden=false;mouseDown=false;tbtn.fire=false;if(document.pointerLockElement)document.exitPointerLock();}
 function resume(){initAudio();game.paused=false;$('pause').hidden=true;last=performance.now();lockPtr();}
-function toMenu(){game.menu=true;game.paused=false;$('pause').hidden=true;$('end').hidden=true;$('hud').hidden=true;$('menu').hidden=false;
+function toMenu(){if(game.photo){game.photo=false;$('photoUI').hidden=true;$('tags').style.display='';}game.free=false;game.menu=true;game.paused=false;$('pause').hidden=true;$('end').hidden=true;$('hud').hidden=true;$('menu').hidden=false;
   if(document.pointerLockElement)document.exitPointerLock();fullReset();}
 function endMatch(){
   game.state='ended';mouseDown=false;if(document.pointerLockElement)document.exitPointerLock();
@@ -2410,7 +2435,7 @@ function endMatch(){
     if((e.code==='Enter'||e.code==='NumpadEnter')&&dr.hidden&&!(e.target&&e.target.tagName==='BUTTON'&&e.target!==$('play'))){e.preventDefault();$('play').click();}});
   $('play').addEventListener('click',()=>{if(!dr.hidden){dr.hidden=true;dr.classList.add('off');}});
 })();
-$('play').addEventListener('click',startMatch);$('again').addEventListener('click',startMatch);
+$('play').addEventListener('click',()=>startMatch(false));$('roam').addEventListener('click',()=>startMatch(true));$('photoBtn').addEventListener('click',()=>photoOn());$('again').addEventListener('click',()=>startMatch(game.free));
 $('resume').addEventListener('click',resume);$('quit').addEventListener('click',toMenu);$('toMenu').addEventListener('click',toMenu);
 function pick(boxId,attr,fn,init){const box=$(boxId),set=b=>[...box.querySelectorAll('button')].forEach(x=>x.classList.toggle('sel',x===b));
   box.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.dataset[attr]===undefined)return;fn(+b.dataset[attr]);set(b);});
@@ -2429,7 +2454,7 @@ function loop(t){
   requestAnimationFrame(loop);
   let dt=(t-last)/1000;last=t;if(dt>.1)dt=.1;if(dt<=0)return;
   if(!game.paused&&game.state!=='ended'){if(hitstop>0)hitstop-=dt;else{const n=dt>.034?2:1;for(let i=0;i<n;i++)step(dt/n);}}
-  updCamera(dt);if(!game.menu)updHUD(dt);
+  updCamera(dt);if(!game.menu&&!game.photo)updHUD(dt);
   updLights(dt);if((++shadeTick&63)===0)shadeAll(scene);
   render();
 }
@@ -2437,7 +2462,7 @@ buildTags();fullReset();
 for(const k of [10,11])loadVRM(k).then(v=>{if(v)refreshLook(k);});
 loadProp('sword').then(v=>{if(v){for(const f of fighters)f.setClass(f.cls,f.look,true);buildTags();}});
 loadAnim('strafe','anims/sword-strafe.json');loadMoves('anims/moves.json');
-window.__fx={mFinal,mSoft,FX,SET};window.__game={camera,boxes,setCam:(y,p)=>{camYaw=y;camPitch=p;},PJ,SPR,fxWord,swordModel,PROPS,game,player,fighters,step,startMatch,useSkill,jump,keys,startUlt,toggleLock,clash,melee,heavy,KIF,SANCT,getLock:()=>lock};
+window.__fx={mFinal,mSoft,FX,SET};window.__game={camera,boxes,setCam:(y,p)=>{camYaw=y;camPitch=p;},PJ,SPR,fxWord,swordModel,PROPS,game,player,fighters,step,startMatch,photoOn,photoOff,photoShot,PH,useSkill,jump,keys,startUlt,toggleLock,clash,melee,heavy,KIF,SANCT,getLock:()=>lock};
 requestAnimationFrame(loop);
 })();
 </script>
