@@ -196,6 +196,8 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
 @media (prefers-reduced-motion:reduce){.mnu .mL>*,.mnu .mHero,.hSwap{animation:fadeIn .2s both}.drawer{transition:opacity .2s}.drawer.off{transform:none}
   @keyframes fadeIn{from{opacity:0}to{opacity:1}}}
 @media (prefers-reduced-transparency:reduce){.drawer{background:#1a1022;backdrop-filter:none}}
+@media (max-height:820px) and (min-width:821px){.mL{gap:12px;padding-top:18px;padding-bottom:16px}.mHead h1{font-size:min(6.4vw,10.5vh)}.mHead p{margin-top:6px;font-size:14px}
+  .clsList button{padding:10px 14px 9px 18px}.sets{gap:5px}.seg button{padding:6px 12px}.mnu button.go{font-size:26px;padding:10px 40px}.mnu .lbl{margin-bottom:5px}}
 @media (max-width:820px){.mnu{grid-template-columns:1fr;grid-auto-rows:max-content;background:rgba(22,13,30,.88)}.mL{min-height:auto;padding-bottom:8px}
   .clsList b{font-size:19px}.clsList i::after{content:none}.clsList button{padding:12px 12px 11px 16px}.sets .grp{grid-template-columns:1fr;gap:6px}.sets .seg{flex-wrap:wrap}
   .mHero{justify-self:stretch;align-self:start;width:100%;padding:0 20px 120px;order:2}.mHero h2{font-size:56px}.hMoves div{grid-template-columns:1fr;gap:4px}
@@ -264,6 +266,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
     <div class="sets" style="--i:3">
       <div class="grp"><div class="lbl">MAPA</div><div class="seg" id="mapSel"><button data-m="2" class="sel">HOTEL</button><button data-m="1">ATARDECER</button><button data-m="0">AZOTEA</button></div></div>
       <div class="grp"><div class="lbl">DIFICULTAD</div><div class="seg" id="diff"><button data-d="0">FÁCIL</button><button data-d="1" class="sel">NORMAL</button><button data-d="2">DIFÍCIL</button></div></div>
+      <div class="grp"><div class="lbl">SOMBRAS</div><div class="seg" id="shSel"><button data-s="2">ALTAS</button><button data-s="1" class="sel">BAJAS</button><button data-s="0">NO</button></div></div>
       <div class="grp"><div class="lbl">EFECTOS DE LUZ</div><div class="seg" id="fxSel"><button data-f="1" class="sel">SÍ</button><button data-f="0">NO</button></div></div>
       <div class="grp"><div class="lbl">TEXTOS DE CÓMIC</div><div class="seg" id="wordSel"><button data-w="1">SÍ</button><button data-w="0" class="sel">NO</button></div></div>
     </div>
@@ -366,7 +369,14 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
 const scene=new T.Scene();scene.fog=new T.Fog(0xd6e9ff,150,420);
 const camera=new T.PerspectiveCamera(72,1,.1,700);camera.rotation.order='YXZ';
 const hemi=new T.HemisphereLight(0xffffff,0xb9a8c8,.64);scene.add(hemi);
-const sun=new T.DirectionalLight(0xfff1dc,.5);sun.position.set(-20,40,18);scene.add(sun);
+const sun=new T.DirectionalLight(0xfff1dc,.5);sun.position.set(-20,40,18);scene.add(sun);scene.add(sun.target);
+// sombras del sol: 0 = sin sombras, 1 = bajas (rápidas), 2 = altas
+let SHQ=1;try{const v=localStorage.getItem('astra-sh');if(v!==null)SHQ=+v;}catch(e){}
+function applyShadows(){renderer.shadowMap.enabled=SHQ>0;renderer.shadowMap.type=T.PCFShadowMap;sun.castShadow=SHQ>0;
+  const sz=SHQ>1?2048:1024;sun.shadow.mapSize.set(sz,sz);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null;}
+  const c=sun.shadow.camera;c.left=c.bottom=-82;c.right=c.top=82;c.near=1;c.far=420;c.updateProjectionMatrix();sun.shadow.bias=-.0006;sun.shadow.normalBias=.035;
+  scene.traverse(o=>{if(o.material){const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms)m.needsUpdate=true;}});}
+applyShadows();
 
 /* ---------- efectos de luz: resplandor, aberración cromática y prismas ---------- */
 const FX={on:true,rt:null,a:null,b:null};
@@ -429,12 +439,13 @@ float indoorK(vec3 p){float f=0.;for(int i=0;i<${INDMAX};i++){if(i>=uIndN)break;
 function SHADE(sh){Object.assign(sh.uniforms,INDU);sh.uniforms.uRim=RIM;sh.uniforms.uRimK={value:this.userData.rk||0};
   sh.vertexShader='varying vec3 vWPos;\n'+sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\n  vWPos=(modelMatrix*vec4(transformed,1.0)).xyz;');
   sh.fragmentShader=SHADE_DECL+sh.fragmentShader.replace('#include <lights_fragment_begin>','float indK=indoorK(vWPos);\n'+(SHADE_OK?LFB:LFB0))
-    .replace('#include <dithering_fragment>','#include <dithering_fragment>\n  gl_FragColor.rgb+=uRim*uRimK*indK*pow(1.0-clamp(dot(normal,normalize(vViewPosition)),0.0,1.0),3.0);');}
-function shadeMat(m,rim){if(!m||!m.isMeshToonMaterial)return m;if(rim)m.userData.rk=1;
+    .replace('#include <dithering_fragment>','#include <dithering_fragment>\n  gl_FragColor.rgb+=uRim*uRimK*max(indK,.5)*pow(1.0-clamp(dot(normal,normalize(vViewPosition)),0.0,1.0),3.0);');}
+function shadeMat(m,rim){if(!m||!(m.isMeshToonMaterial||m.isMeshPhongMaterial))return m;if(rim)m.userData.rk=1;
   if(m.onBeforeCompile!==SHADE){m.onBeforeCompile=SHADE;m.needsUpdate=true;}return m;}
 function rimify(m){return shadeMat(m,true);}
 function rimAll(g){g.traverse(o=>{if(o.isMesh&&o.material&&o.material.isMeshToonMaterial)rimify(o.material);});}
-function shadeAll(root){root.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms)shadeMat(m,false);}});}
+function shadeAll(root){root.traverse(o=>{if(o.isMesh&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];let lit=false;for(const m of ms){shadeMat(m,false);if(m.isMeshToonMaterial||m.isMeshPhongMaterial||m.isMeshLambertMaterial)lit=true;}
+  if(lit&&!o.userData.noShadow){o.receiveShadow=true;o.castShadow=!(o.material.transparent);}}});}
 function setIndoor(list,k){const n=Math.min(INDMAX,list.length);INDU.uIndN.value=n;INDU.uIndK.value=k===undefined?.06:k;
   for(let i=0;i<n;i++){const v=list[i];INDU.uIndA.value[i].set(v[0]-.35,v[1]-.05,v[2]-.35,v[6]===undefined?1:v[6]);INDU.uIndB.value[i].set(v[3]+.35,v[4]+.05,v[5]+.35);}}
 
@@ -478,11 +489,13 @@ function decal(name,w,h,x,y,z,ry){const ma=basic(0xffffff,{transparent:true,opac
 
 /* ---------- arena: azoteas en el cielo ---------- */
 const boxes=[],pads=[];
+let BAKE=false;
 function addBox(cx,cz,sx,sy,sz,y0,col,band,tx,tile){
   y0=y0||0;
   const ge=new T.BoxGeometry(sx,sy,sz),ma=toon(col||CREAM);if(tx){boxUV(ge,sx,sy,sz,tile||3);useTex(ma,tx);}
   const m=new T.Mesh(ge,ma);
   m.position.set(cx,y0+sy/2,cz);scene.add(m);
+  if(BAKE&&tx&&band===undefined)m.userData.bake={kind:'box',b:{x0:cx-sx/2,x1:cx+sx/2,y0,y1:y0+sy,z0:cz-sz/2,z1:cz+sz/2},tx,tile:tile||3};
   if(EDGES)m.add(new T.LineSegments(new T.EdgesGeometry(m.geometry),new T.LineBasicMaterial({color:INKC})));
   if(band!==undefined){const b=new T.Mesh(new T.BoxGeometry(sx+.03,Math.min(.22,sy*.3),sz+.03),basic(band));b.position.y=sy/2-Math.min(.4,sy*.3);m.add(b);}
   boxes.push({x0:cx-sx/2,x1:cx+sx/2,y0:y0,y1:y0+sy,z0:cz-sz/2,z1:cz+sz/2});return m;
@@ -676,20 +689,24 @@ function buildSunset(){
    Oeste: vestíbulo derrumbado (ALFA). Centro: patio con fuente. Norte: ala de 3 niveles con balcones rotos y piscina en la azotea.
    Sur: salón de baile, callejón, cuartos de personal y el pasillo de mantenimiento. Este: terraza de la piscina (BETA) y patio de servicio. */
 function buildHotel(){
+  BAKE=true;DECO.length=0;
   const Q='sunset2/',C='concrete/conc',ORA=0xff7a1a,CY=0x3fe0ff,RED=0xff3040;let cI=0;const cv=()=>C+(1+(cI++*5)%18);
   const vol=[],lamps=[];MAPFX.lamps=lamps;MAPFX.indoor=vol;
   const B=(x0,x1,z0,z1,y0,y1,tx,tile,col)=>addBox((x0+x1)/2,(z0+z1)/2,x1-x0,y1-y0,z1-z0,y0,col||0xffffff,undefined,tx,tile||3);
   const segs=(a0,a1,gaps)=>{const out=[];let a=a0;for(const g of gaps.slice().sort((p,q)=>p[0]-q[0])){if(g[0]>a)out.push([a,g[0]]);a=Math.max(a,g[1]);}if(a<a1)out.push([a,a1]);return out;};
   // muro a lo largo de X (en z, grosor t), con huecos [a,b,ySuelo,yTecho]
   const wallX=(x0,x1,z,y0,y1,tx,gaps,t,tile,col)=>{t=t||.5;gaps=gaps||[];for(const[a,b]of segs(x0,x1,gaps))B(a,b,z-t/2,z+t/2,y0,y1,tx,tile,col);
-    for(const g of gaps){if(g[2]>y0)B(g[0],g[1],z-t/2,z+t/2,y0,g[2],tx,tile,col);if(g[3]<y1)B(g[0],g[1],z-t/2,z+t/2,g[3],y1,tx,tile,col);}};
+    for(const g of gaps){if(t>=.45&&g[3]-g[2]<6)frameGap('x',g[0],g[1],z,t,g[2],g[3],g[2]<=y0+.01);if(g[2]>y0)B(g[0],g[1],z-t/2,z+t/2,y0,g[2],tx,tile,col);if(g[3]<y1)B(g[0],g[1],z-t/2,z+t/2,g[3],y1,tx,tile,col);}};
   const wallZ=(z0,z1,x,y0,y1,tx,gaps,t,tile,col)=>{t=t||.5;gaps=gaps||[];for(const[a,b]of segs(z0,z1,gaps))B(x-t/2,x+t/2,a,b,y0,y1,tx,tile,col);
-    for(const g of gaps){if(g[2]>y0)B(x-t/2,x+t/2,g[0],g[1],y0,g[2],tx,tile,col);if(g[3]<y1)B(x-t/2,x+t/2,g[0],g[1],g[3],y1,tx,tile,col);}};
+    for(const g of gaps){if(t>=.45&&g[3]-g[2]<6)frameGap('z',g[0],g[1],x,t,g[2],g[3],g[2]<=y0+.01);if(g[2]>y0)B(x-t/2,x+t/2,g[0],g[1],y0,g[2],tx,tile,col);if(g[3]<y1)B(x-t/2,x+t/2,g[0],g[1],g[3],y1,tx,tile,col);}};
   // escalera: sube de y0 a y1 en la dirección indicada ('+x','-x','+z','-z'), entre los dos lados dados
   const stairs=(a0,a1,w0,w1,dir,y0,y1,n,tx)=>{const run=(a1-a0)/n,rise=(y1-y0)/n;
     for(let k=0;k<n;k++){const p0=a0+run*k,p1=p0+run,top=y0+rise*(k+1);
       const lo=dir[0]==='+'?p0:a1-(p1-a0),hi=dir[0]==='+'?p1:a1-(p0-a0);
-      if(dir[1]==='x')B(Math.min(lo,hi),Math.max(lo,hi),w0,w1,y0,top,tx,2,0xd8ccd0);else B(w0,w1,Math.min(lo,hi),Math.max(lo,hi),y0,top,tx,2,0xd8ccd0);}};
+      if(dir[1]==='x')B(Math.min(lo,hi),Math.max(lo,hi),w0,w1,y0,top,tx,2,0xd8ccd0);else B(w0,w1,Math.min(lo,hi),Math.max(lo,hi),y0,top,tx,2,0xd8ccd0);
+      const m=(lo+hi)/2,l0=Math.min(lo,hi),l1=Math.max(lo,hi);
+      for(const w of[w0+.05,w1-.05]){if(dir[1]==='x'){deco(m-.04,m+.04,top,top+.86,w-.04,w+.04,TRIM,1);deco(l0,l1,top+.86,top+.94,w-.06,w+.06,WOOD,1);}
+        else{deco(w-.04,w+.04,top,top+.86,m-.04,m+.04,TRIM,1);deco(w-.06,w+.06,top+.86,top+.94,l0,l1,WOOD,1);}}}};
   const lamp=(x,y,z,c,i,d,fl,size)=>{const l=new T.PointLight(c,i,d||16,2);l.position.set(x,y,z);scene.add(l);
     const m=basic(c);m.color.multiplyScalar(1.6);const b=new T.Mesh(new T.BoxGeometry(size||.5,.12,size||.5),m);b.position.set(x,y+.25,z);scene.add(b);
     lamps.push({l,i,c,fl:fl||0,t:0,on:true,m:fl?m:null});return l;};
@@ -700,8 +717,31 @@ function buildHotel(){
   const hdec=(n,w,x,y,z,ry,flat)=>{const ma=toon(0xffffff,{transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});ma.userData.decal=1;useTex(ma,Q+n+'.png');
     const m=new T.Mesh(new T.PlaneGeometry(w,w),ma);if(flat)m.rotation.set(-PI/2,0,ry);else m.rotation.y=ry;m.position.set(x,y,z);scene.add(m);};
   const floorPlane=(x0,x1,z0,z1,y,tx,tile,col)=>{const g=new T.PlaneGeometry(x1-x0,z1-z0);for(let i=0;i<4;i++)g.attributes.uv.setXY(i,g.attributes.uv.getX(i)*(x1-x0)/tile,g.attributes.uv.getY(i)*(z1-z0)/tile);
-    const m=new T.Mesh(g,toon(col||0xffffff,{polygonOffset:true,polygonOffsetFactor:-1}));useTex(m.material,tx);m.rotation.x=-PI/2;m.position.set((x0+x1)/2,y,(z0+z1)/2);scene.add(m);return m;};
+    const m=new T.Mesh(g,toon(col||0xffffff,{polygonOffset:true,polygonOffsetFactor:-1}));useTex(m.material,tx);m.rotation.x=-PI/2;m.position.set((x0+x1)/2,y,(z0+z1)/2);scene.add(m);m.userData.bake={kind:'floor',f:{x0,x1,z0,z1,y},tx,tile};return m;};
   const neonBar=(x,y,z,sx,sy,sz,c,k)=>{const m=new T.Mesh(new T.BoxGeometry(sx,sy,sz),basic(c));m.material.color.multiplyScalar(k||1.5);m.position.set(x,y,z);scene.add(m);return m;};
+  // ---- detalle arquitectónico (piezas visuales que se hornean junto al mapa) ----
+  const TRIM='sunset2/plaster',WOOD='sunset2/planks';
+  const solid=(x0,x1,y0,y1,z0,z1)=>boxes.push({x0,x1,y0,y1,z0,z1});
+  const frameGap=(axis,a,b,c,t,gy0,gy1,door)=>{const h=t/2; // marco de puerta o ventana; axis 'x': el muro corre en x a la altura c (z)
+    const put=(p0,p1,y0,y1,o)=>axis==='x'?deco(p0,p1,y0,y1,c-h-o,c+h+o,TRIM,1.5):deco(c-h-o,c+h+o,y0,y1,p0,p1,TRIM,1.5);
+    put(a-.2,a,gy0,gy1+.2,.07);put(b,b+.2,gy0,gy1+.2,.07);put(a-.2,b+.2,gy1,gy1+.24,.1);
+    if(door&&b-a>=2.8){const m=(a+b)/2;put(m-.28,m+.28,gy1-.16,gy1+.5,.14);}
+    if(!door)put(a-.28,b+.28,gy0-.16,gy0,.3);};
+  const column=(x,z,w,y0,y1,tx)=>{B(x-w/2,x+w/2,z-w/2,z+w/2,y0,y1,tx,3,0xe0d4d0);
+    deco(x-w/2-.22,x+w/2+.22,y0,y0+.42,z-w/2-.22,z+w/2+.22,TRIM,1.5);deco(x-w/2-.12,x+w/2+.12,y0+.42,y0+.56,z-w/2-.12,z+w/2+.12,TRIM,1.5);
+    deco(x-w/2-.1,x+w/2+.1,y1-.62,y1-.5,z-w/2-.1,z+w/2+.1,TRIM,1.5);deco(x-w/2-.26,x+w/2+.26,y1-.5,y1,z-w/2-.26,z+w/2+.26,TRIM,1.5);};
+  const rail=(x0,x1,z0,z1,y0,y1)=>{solid(x0,x1,y0,y1,z0,z1); // baranda: se choca como un muro bajo, se ve con balaústres
+    const alongX=x1-x0>=z1-z0,L=alongX?x1-x0:z1-z0,n=Math.max(2,Math.round(L/.38));
+    deco(x0-.04,x1+.04,y1-.1,y1+.02,z0-.04,z1+.04,WOOD,1);deco(x0,x1,y0,y0+.1,z0,z1,TRIM,1);
+    for(let i=0;i<=n;i++){const p=(alongX?x0:z0)+L*i/n,cx=alongX?p:(x0+x1)/2,cz=alongX?(z0+z1)/2:p,w=i%Math.max(1,Math.round(n/4))===0?.14:.06;
+      deco(cx-w,cx+w,y0+.1,y1-.1,cz-w,cz+w,i%Math.max(1,Math.round(n/4))===0?WOOD:TRIM,1);}};
+  const pilasters=(axis,c,side,list,y0,y1,w,cap)=>{for(const p of list){const o0=side>0?c:c-.28,o1=side>0?c+.28:c; // pilastras que rompen el muro plano
+      if(axis==='x'){B(p-w/2,p+w/2,o0,o1,y0,y1,TRIM,2,0xe8dcd4);if(cap)deco(p-w/2-.12,p+w/2+.12,y1-.35,y1,side>0?c:c-.4,side>0?c+.4:c,TRIM,1.5);}
+      else{B(o0,o1,p-w/2,p+w/2,y0,y1,TRIM,2,0xe8dcd4);if(cap)deco(side>0?c:c-.4,side>0?c+.4:c,y1-.35,y1,p-w/2-.12,p+w/2+.12,TRIM,1.5);}}};
+  const course=(axis,a,b,c,side,y0,y1,o)=>{const z0=side>0?c:c-o,z1=side>0?c+o:c;if(axis==='x')deco(a,b,y0,y1,z0,z1,TRIM,1.5);else deco(z0,z1,y0,y1,a,b,TRIM,1.5);};
+  const RUB=[];const rubble=(x,z,y,n,spread,size)=>{for(let i=0;i<n;i++){const r=rand(.12,.42)*(size||1),g=new T.IcosahedronGeometry(r,0),
+      M=new T.Matrix4().compose(new V3(x+rand(-spread,spread),(y||0)+r*.45,z+rand(-spread,spread)),new T.Quaternion().setFromEuler(new T.Euler(rand(0,6),rand(0,6),rand(0,6))),new V3(rand(.8,1.6),rand(.5,.9),rand(.8,1.4)));
+      g.applyMatrix4(M);RUB.push(g);}};
 
   // cielo pintado (el mismo panorama del atardecer)
   const skyM=basic(0x2a1838,{side:T.BackSide,fog:false,depthWrite:false});scene.add(new T.Mesh(new T.SphereGeometry(560,48,24),skyM));
@@ -720,14 +760,14 @@ function buildHotel(){
   // techo con un hueco derrumbado
   B(-61,-36,-22.5,-6,9,9.6,cv(),4,0xc8b8c0);B(-61,-36,6,22.5,9,9.6,cv(),4,0xc8b8c0);B(-61,-52,-6,6,9,9.6,cv(),4,0xc8b8c0);B(-44,-36,-6,6,9,9.6,cv(),4,0xc8b8c0);
   // mezanine y escalinata
-  B(-61,-46.6,10,22,5,5.5,Q+'planks',3,0xc0a8a0);B(-46.6,-46.1,10,14,5.5,6.4,Q+'copper',2);B(-46.6,-46.1,17,22,5.5,6.4,Q+'copper',2); // baranda baja con hueco
+  B(-61,-46.6,10,22,5,5.5,Q+'planks',3,0xc0a8a0);rail(-46.6,-46.2,14.2,22,5.5,6.4); // baranda de la mezanine
   stairs(-46.6,-39.4,10,14,'-x',0,5.5,11,Q+'plaza');
   // escombros bajo el hueco: ruta avanzada hasta el techo
   B(-52,-48.5,-4,-.5,0,1.3,Q+'concrete',2);B(-52,-49.5,-.5,3,0,2.7,cv(),2);B(-52,-50.5,3,5.5,0,4.1,cv(),2);B(-55,-51.5,5.5,9.5,0,5.5,Q+'steel',2); // llega al nivel de la mezanine
   B(-51.5,-48,2,5.5,5.5,7.5,Q+'corrugated',2); // viga caída bajo el hueco: escalón hacia el techo
   // recepción, columnas, araña caída con cristales de ki
   B(-50,-45.5,-15,-13,0,1.15,Q+'copper',2,0xd8b8a0);B(-53,-52,-15,-11,0,1.15,Q+'copper',2,0xd8b8a0);
-  for(const[x,z]of[[-55,-7],[-55,7],[-42,-17],[-42,17],[-42,-4]])B(x-.6,x+.6,z-.6,z+.6,0,9,'concrete/conc5',3,0xe0d4d0);
+  for(const[x,z]of[[-55,-7],[-55,7],[-42,-17],[-42,17],[-42,-4]])column(x,z,1.2,0,9,'concrete/conc5');
   for(let i=0;i<7;i++){const a=i*.9,r=.6+i*.25,h=.9+((i*7)%5)*.35,m=new T.Mesh(new T.OctahedronGeometry(.45,0),basic(CY));m.material.color.multiplyScalar(1.7);
     m.position.set(-45.5+Math.cos(a)*r,h*.5,1+Math.sin(a)*r);m.scale.set(.7,h,.7);m.rotation.y=a;scene.add(m);}
   lamp(-45.5,1.6,1,CY,3.2,15);glowPool(-45.5,.03,1,5,CY,.3);
@@ -748,7 +788,7 @@ function buildHotel(){
   lamp(-47,4.2,35,ORA,1.6,13,.35);vol.push([-61,0,22.5,-36,5,46,1]);
   // columnata abierta al patio (sombra suave)
   floorPlane(-36,42,22.5,31,.012,Q+'plaza',3,0xc8b8b8);
-  for(let x=-33;x<=39;x+=8)B(x-.45,x+.45,22.6,23.5,0,5,'concrete/conc13',3,0xe8dcd8);
+  for(let x=-33;x<=39;x+=8)column(x,23.05,.9,0,5,'concrete/conc13');
   vol.push([-36,0,23,42,5,31,.55]);
   // pasillo de servicio y cuartos
   floorPlane(-36,42,31,46,.012,Q+'asphalt',4,0x8a7a90);
@@ -762,7 +802,7 @@ function buildHotel(){
   B(-61,32,22.5,46,5,5.5,Q+'planks',3,0xb8a0a0);B(40,62,22.5,46,5,5.5,Q+'planks',3,0xb8a0a0);B(32,40,22.5,32.5,5,5.5,Q+'planks',3,0xb8a0a0);B(32,40,36,46,5,5.5,Q+'planks',3,0xb8a0a0);
   // balcones rotos sobre el patio
   B(-20,-8,19,22.5,5,5.5,Q+'planks',2,0xb8a0a0);B(6,18,19,22.5,5,5.5,Q+'planks',2,0xb8a0a0);
-  B(-20,-15,18.8,19.2,5.5,6.4,Q+'copper',2);B(-12,-8,18.8,19.2,5.5,6.4,Q+'copper',2);B(6,18,18.8,19.2,5.5,6.4,Q+'copper',2);
+  rail(-20,-15,18.8,19.2,5.5,6.4);rail(-12,-8,18.8,19.2,5.5,6.4);rail(6,18,18.8,19.2,5.5,6.4);
   B(-14.2,-12.8,17.1,18.6,0,1.6,Q+'copper',2,0xb08870); // jardinera alta: ruta avanzada al balcón
   // segundo piso: suites abandonadas
   floorPlane(-61,62,22.5,46,5.512,Q+'planks',3,0xa08c90);
@@ -811,9 +851,9 @@ function buildHotel(){
   B(-61,44.5,-46,-42,3.2,3.7,Q+'steel',3,0x9a8aa0);
   for(const x of[-44,-20,4,24])B(x-1,x+1,-45.8,-45,0,2.6,Q+'pipes',2);
   B(-24,-21,-46,-44.6,0,1.1,Q+'hazard',2);B(12,15,-43.4,-42.5,0,1.1,Q+'hazard',2);
-  lamp(-40,2.7,-44,RED,1.6,13,.45);fakeLamp(-14,3.05,-44,RED,2.4,.25);lamp(22,2.7,-44,RED,1.6,13,.6);
+  lamp(-40,2.7,-44,RED,2.6,22,.45);fakeLamp(-14,3.05,-44,RED,2.6,.4);lamp(22,2.7,-44,RED,2.6,22,.6);fakeLamp(-56,3.05,-44,RED,2.6,.35);fakeLamp(6,3.05,-44,CY,2.6,.3);fakeLamp(36,3.05,-44,RED,2.6,.35);
   for(const x of[-58,-30,-12,10,38])neonBar(x,3.0,-45.9,.8,.12,.12,RED,1.2);
-  vol.push([-61,0,-46,44,3.2,-42,1]);
+  vol.push([-61,0,-46,44,3.2,-42,.86]);
   wallX(-61,-36,-42.25,3.7,4.5,Q+'brick',[],.5,3);wallX(-30,6.5,-42.25,3.7,8.1,'concrete/conc18',[],.5,4);wallX(6.5,24.5,-42.25,3.7,4.5,Q+'brick',[],.5,3);
   // cuartos de personal (bajo el vestíbulo)
   floorPlane(-61,-36,-41.75,-22.5,.012,Q+'planks',3,0x9a8890);
@@ -851,7 +891,7 @@ function buildHotel(){
   stairs(34,37.6,-2,2,'-x',0,2.4,5,Q+'plaza'); // escalones de la piscina
   stairs(20,24,-3,3,'+x',0,2.4,5,Q+'plaza');   // del patio a la terraza
   stairs(54,58,-29,-24,'+z',0,2.4,5,Q+'plaza'); // del patio de servicio a la terraza
-  B(38,42,-10.8,-10,2.4,3.2,Q+'copper',2);B(42,46,8,8.8,2.4,3.4,Q+'copper',2);
+  rail(38,42,-10.6,-10.1,2.4,3.3);rail(42,46,8.1,8.6,2.4,3.3);
   for(const[x,z]of[[28,-18],[30,14],[54,-18]])B(x-1.1,x+1.1,z-1.1,z+1.1,2.4,3.5,Q+'brick',2,0xa88aa8);
   wallZ(-46,46,62.5,0,12,Q+'brick',[],1,4); // muro del jardín (límite este)
   // escalinata exterior de la terraza al segundo piso del ala norte
@@ -873,9 +913,24 @@ function buildHotel(){
     B(x-w/2,x+w/2,z-d/2,z+d/2,0,h,tx==='crate'?tx:Q+tx,1.5,0xc8b0a0);
   hdec('tag',3,44.05,1.6,-44,PI/2);
 
+  // fachadas con pilastras, cornisas y zócalos
+  pilasters('x',22.5,-1,[-25,-9,4,17,33,52],5.5,10,.8,true);course('x',-36,62,22.5,-1,4.95,5.5,.32);course('x',-61,62,22.5,-1,10,10.5,.38);
+  pilasters('x',-24.5,1,[-28,-17,-8,.75],0,7.6,.7,true);course('x',-30,6.5,-24.5,1,7.6,8.1,.35);course('x',-30,-14,-24.5,1,0,.45,.12);course('x',-10,6.5,-24.5,1,0,.45,.12);
+  course('x',6.5,24,-24.5,1,4,4.5,.3);course('x',6.5,13,-24.5,1,0,.45,.12);course('x',16,24,-24.5,1,0,.45,.12);
+  pilasters('z',-36,1,[-18,-4.75,4.75,18],0,9,.9,true);course('z',-22.5,22.5,-36,1,9,9.6,.4);
+  for(const[a,b]of[[-22.5,-12],[-7,-2.5],[2.5,7],[12,22.5]])course('z',a,b,-36,1,0,.5,.12);
+  course('z',-41.75,-22.5,-36,1,4,4.5,.3);
+  // escombros
+  rubble(-49,0,0,26,3,1.3);rubble(-18,-31,0,14,3);rubble(0,-35,0,10,2.5);rubble(-33,-34,0,10,2);rubble(-24,-44,0,8,1.5);rubble(18,-44,0,8,1.5);
+  rubble(46,-34,0,10,3);rubble(-5,-20,0,8,2.5);rubble(-30,34,10.5,8,3);rubble(-40,-14,0,6,2);rubble(-10,40,5.5,8,3);rubble(28,-30,0,6,2);
+  {let n=0;for(const g of RUB)n+=g.attributes.position.count;const P=new Float32Array(n*3),N=new Float32Array(n*3),U=new Float32Array(n*2),C=new Float32Array(n*3);let o=0;
+    for(const g of RUB){const c=g.attributes.position.count;g.computeVertexNormals();P.set(g.attributes.position.array,o*3);N.set(g.attributes.normal.array,o*3);U.set(g.attributes.uv.array,o*2);o+=c;}
+    C.fill(.72);const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(P,3));g.setAttribute('normal',new T.BufferAttribute(N,3));g.setAttribute('uv',new T.BufferAttribute(U,2));g.setAttribute('color',new T.BufferAttribute(C,3));
+    const m=new T.Mesh(g,toon(0xffffff,{vertexColors:true}));useTex(m.material,'concrete/conc3');scene.add(m);}
   // bases
   for(const t of[0,1]){const p=t?[56,2.43,-12]:[-55,.04,-9];TEAM[t].rune=new T.Mesh(new T.CircleGeometry(4,36),basic(0xffffff,{map:RUNE[t],transparent:true,depthWrite:false}));
     TEAM[t].rune.rotation.x=-PI/2;TEAM[t].rune.position.set(p[0],p[1],p[2]);scene.add(TEAM[t].rune);}
+  BAKE=false;
   addPad(-33,-38,0,17); // trampolín en el callejón: sube al techo de los cuartos de personal (atajo)
 }
 const HOTEL_NAV={ // rutas normales para los bots (puertas, pasillos y escaleras)
@@ -890,10 +945,76 @@ const HOTEL_NAV={ // rutas normales para los bots (puertas, pasillos y escaleras
   e:'L1-L2 L1-L3 L2-L3 L2-L4 L4-L5 L4-S1 S1-M1 M1-M2 M2-N1 L5-K1 L1-LS LS-SR L3-C1 L4-C2 C1-C2 C1-C3 C2-C4 C1-C7 C3-C8 C3-C5 C4-C5 C5-C6 C6-T1 C4-P2 C2-P1 C8-C9 C3-C9 C5-C9 C6-C9 '+
     'K1-K2 K2-H1 H1-H2 H2-P1 H2-H5 H5-H3 H3-P2 H3-H4 H4-P3 H4-HS HS-NS P1-P2 P2-P3 C2-P1 C4-P1 C6-P3 N1-N2 N2-N3 N3-N4 N4-N5 N5-N6 N3-B1 N4-B2 N5-R0 R0-R1 R1-R2 R2-R3 NS-N5 N6-T6 T6-T5 T5-T4 T4-T1 '+
     'T1-T2 T1-Q2 Q2-Q1 T2-T3 T3-T4 T3-T7 T2-T7 T7-Y1 Y1-Y2 Y2-Y3 Y3-D1 D1-D2 D2-D3 D3-D4 D4-D5 D5-SR D4-A1 A1-C7 D3-BR2 BR2-BR1 BR1-BR0 BR0-C8 C9-ST0 ST0-ST1 ST1-ST2 ST2-ST3 ST3-Y2 Y2-F0 F0-F1 F1-F2 F2-F3 F3-F4 T4-C6'};
+/* ---------- acabado del mapa: une la geometría estática, hornea oclusión ambiental y agrega relieve ----------
+   Cada caja del mapa se rehace subdividida, con UV alineadas al mundo (las texturas siguen de una pieza a otra),
+   oscurecimiento en rincones y contactos, y se agrupa por material para dibujar muy pocas mallas. */
+const NORMALS=new Set(['sunset2/arrow','sunset2/asphalt','sunset2/brick','sunset2/concrete','sunset2/copper','sunset2/corrugated','sunset2/crystal','sunset2/grate2','sunset2/hazard',
+  'sunset2/lavacrack','sunset2/neonframe','sunset2/pipes','sunset2/planks','sunset2/plaster','sunset2/plaza','sunset2/rooftile','sunset2/runepanel','sunset2/steel','sunset2/stucco','sunset2/vent2',
+  ...Array.from({length:18},(_,i)=>'concrete/conc'+(i+1))]);
+const GLOSSY={'sunset2/asphalt':[0x3a3048,26],'sunset2/steel':[0x4a4058,34],'sunset2/copper':[0x6a4a3a,40],'sunset2/runepanel':[0x3a5a70,46],'sunset2/grate2':[0x4a4050,30],'sunset2/plaza':[0x2a2430,14]};
+const normJobs={};
+function useNormal(mat,name){if(!NORMALS.has(name))return;let j=normJobs[name];
+  if(!j){j=normJobs[name]={t:null,mats:[]};TL.load('textures/'+name+'_n.jpg',t=>{t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=4;j.t=t;for(const m of j.mats){m.normalMap=t;m.needsUpdate=true;}});}
+  if(j.t)mat.normalMap=j.t;else j.mats.push(mat);mat.normalScale=new T.Vector2(.5,.5);}
+const DECO=[]; // piezas solo visuales (molduras, balaústres...) que también se hornean
+function deco(x0,x1,y0,y1,z0,z1,tx,tile){DECO.push({x0,x1,y0,y1,z0,z1,tx,tile:tile||2});}
+function bakeMap(group,opts){
+  opts=opts||{};const solids=boxes.concat(DECO);
+  // rejilla espacial para las pruebas de oclusión
+  const CS=4,grid=new Map(),key=(i,j)=>i*1000+j;
+  solids.forEach((b,idx)=>{for(let i=Math.floor(b.x0/CS);i<=Math.floor(b.x1/CS);i++)for(let j=Math.floor(b.z0/CS);j<=Math.floor(b.z1/CS);j++){const k=key(i,j);let a=grid.get(k);if(!a)grid.set(k,a=[]);a.push(idx);}});
+  const solidAt=(x,y,z)=>{if(y<0)return true;const a=grid.get(key(Math.floor(x/CS),Math.floor(z/CS)));if(!a)return false;
+    for(const idx of a){const b=solids[idx];if(x>b.x0&&x<b.x1&&y>b.y0&&y<b.y1&&z>b.z0&&z<b.z1)return true;}return false;};
+  // direcciones de muestreo (hemisferio) en espacio local de la normal
+  const SD=[];for(let i=0;i<10;i++){const a=i*2.39996,z=.25+.7*((i+.5)/10),r=Math.sqrt(1-z*z);SD.push([Math.cos(a)*r,Math.sin(a)*r,z]);}
+  const ao=(px,py,pz,nx,ny,nz)=>{let tx,ty,tz;if(Math.abs(ny)>.9){tx=1;ty=0;tz=0;}else{tx=-nz;ty=0;tz=nx;const l=Math.hypot(tx,tz)||1;tx/=l;tz/=l;}
+    const bx=ny*tz-nz*ty,by=nz*tx-nx*tz,bz=nx*ty-ny*tx;let occ=0,tot=0;
+    for(const rr of[.45,1.25]){for(const d of SD){const x=px+(tx*d[0]+bx*d[1]+nx*d[2])*rr,y=py+(ty*d[0]+by*d[1]+ny*d[2])*rr,z=pz+(tz*d[0]+bz*d[1]+nz*d[2])*rr;
+      const w=rr<1?1.2:.8;tot+=w;if(solidAt(x+nx*.06,y+ny*.06,z+nz*.06))occ+=w;}}
+    return 1-.78*Math.pow(occ/tot,.85);};
+  const buckets={}; // por textura
+  const bucket=(tx,tile)=>{const k=tx+'|'+tile;return buckets[k]||(buckets[k]={tx,tile,p:[],n:[],u:[],c:[]});};
+  // cara subdividida, con UV del mundo y oclusión por vértice
+  function face(B,o,ua,va,nx,ny,nz,lu,lv,tile){
+    // cara enterrada (pegada a otra pieza): no se dibuja
+    {let hidden=true;for(const fu of[.15,.5,.85])for(const fv of[.15,.5,.85]){const x=o[0]+ua[0]*lu*fu+va[0]*lv*fv+nx*.05,y=o[1]+ua[1]*lu*fu+va[1]*lv*fv+ny*.05,z=o[2]+ua[2]*lu*fu+va[2]*lv*fv+nz*.05;if(!solidAt(x,y,z)){hidden=false;break;}}if(hidden)return;}
+    const big=lu*lv>400,su=Math.max(1,Math.ceil(lu/(big?2.6:2.2))),sv=Math.max(1,Math.ceil(lv/(big?2.6:1.5)));
+    const P=[];for(let j=0;j<=sv;j++)for(let i=0;i<=su;i++){const x=o[0]+ua[0]*lu*i/su+va[0]*lv*j/sv,y=o[1]+ua[1]*lu*i/su+va[1]*lv*j/sv,z=o[2]+ua[2]*lu*i/su+va[2]*lv*j/sv;
+      let u,v;if(Math.abs(ny)>.5){u=x;v=z;}else if(Math.abs(nx)>.5){u=z;v=y;}else{u=x;v=y;}
+      const gr=.9+.1*Math.sin(x*.71+z*1.37)*Math.sin(z*.53-x*.29+y*.9)-(y%5.5<1.1&&Math.abs(ny)<.5?.06:0); // variación y mugre baja
+      P.push([x,y,z,u/tile,v/tile,ao(x,y,z,nx,ny,nz)*gr]);}
+    const W=su+1,push=q=>{B.p.push(q[0],q[1],q[2]);B.n.push(nx,ny,nz);B.u.push(q[3],q[4]);B.c.push(q[5],q[5],q[5]);};
+    for(let j=0;j<sv;j++)for(let i=0;i<su;i++){const a=P[j*W+i],b=P[j*W+i+1],c=P[(j+1)*W+i],d=P[(j+1)*W+i+1];push(a);push(b);push(d);push(a);push(d);push(c);}}
+  function boxFaces(b,tx,tile,skipBottom){const B=bucket(tx,tile),sx=b.x1-b.x0,sy=b.y1-b.y0,sz=b.z1-b.z0;
+    face(B,[b.x0,b.y1,b.z1],[1,0,0],[0,0,-1],0,1,0,sx,sz,tile);                 // arriba
+    if(!skipBottom)face(B,[b.x0,b.y0,b.z0],[1,0,0],[0,0,1],0,-1,0,sx,sz,tile);  // abajo
+    face(B,[b.x0,b.y0,b.z1],[1,0,0],[0,1,0],0,0,1,sx,sy,tile);                  // frente +z
+    face(B,[b.x1,b.y0,b.z0],[-1,0,0],[0,1,0],0,0,-1,sx,sy,tile);                // atrás -z
+    face(B,[b.x1,b.y0,b.z1],[0,0,-1],[0,1,0],1,0,0,sz,sy,tile);                 // +x
+    face(B,[b.x0,b.y0,b.z0],[0,0,1],[0,1,0],-1,0,0,sz,sy,tile);}                // -x
+  // 1) cajas del mapa y suelos planos
+  const gone=[];
+  group.traverse(o=>{if(!o.isMesh||!o.userData.bake)return;const u=o.userData.bake;
+    if(u.kind==='box')boxFaces(u.b,u.tx,u.tile,u.b.y0<=.01);
+    else if(u.kind==='floor'){const B=bucket(u.tx,u.tile),f=u.f;face(B,[f.x0,f.y,f.z1],[1,0,0],[0,0,-1],0,1,0,f.x1-f.x0,f.z1-f.z0,u.tile);}
+    gone.push(o);});
+  for(const d of DECO)boxFaces(d,d.tx,d.tile,false);
+  for(const o of gone)o.parent.remove(o);
+  // 2) una malla por material
+  let tris=0;
+  for(const k in buckets){const B=buckets[k];if(!B.p.length)continue;const g=new T.BufferGeometry();
+    g.setAttribute('position',new T.Float32BufferAttribute(B.p,3));g.setAttribute('normal',new T.Float32BufferAttribute(B.n,3));
+    g.setAttribute('uv',new T.Float32BufferAttribute(B.u,2));g.setAttribute('color',new T.Float32BufferAttribute(B.c,3));
+    g.computeBoundingSphere();tris+=B.p.length/9;
+    const gl=GLOSSY[B.tx],m=gl?new T.MeshPhongMaterial({color:0xffffff,vertexColors:true,specular:gl[0],shininess:gl[1]}):toon(0xffffff,{vertexColors:true});
+    useTex(m,B.tx);useNormal(m,B.tx);
+    const mesh=new T.Mesh(g,m);mesh.userData.baked=1;group.add(mesh);}
+  DECO.length=0;return tris;
+}
 const MAPS=[
   {name:'AZOTEA',build:buildRooftop,HX:80,HZ:46,base:68,edges:true,hemi:[0xffffff,0xb9a8c8,.64],sun:[0xfff1dc,.5,-20,40,18],fog:[0xd6e9ff,150,420],ink:0x1d1a22,rim:[0,0],lift:[0,0,0],gain:[1,1,1],sat:1,k:.45,ca:.012,con:.25},
   {name:'ATARDECER',build:buildSunset,HX:76,HZ:58,base:62,edges:false,hemi:[0x8c74d8,0x1e1028,.36],sun:[0xffa868,1.2,-90,26,38],fog:[0x4e2c52,95,400],ink:0x2a1834,rim:[0xff9a5a,.42],lift:[.018,.004,.04],gain:[1.06,.98,.96],sat:.92,k:.38,ca:.009,con:.5},
-  {name:'HOTEL AURORA',build:buildHotel,HX:61,HZ:46,base:56,edges:false,hemi:[0x8a78d0,0x201028,.38],sun:[0xffb07a,1.02,-70,30,-40],fog:[0x4a2a50,110,420],ink:0x24142e,rim:[0xff9a5a,.38],lift:[.012,.003,.03],gain:[1.06,.98,.96],sat:.94,k:.4,ca:.009,con:.5,indK:.06,
+  {name:'HOTEL AURORA',build:buildHotel,HX:61,HZ:46,base:56,edges:false,hemi:[0x8a78d0,0x2a1834,.5],sun:[0xffb07a,1.1,-60,52,-34],fog:[0x4a2a50,110,420],ink:0x24142e,rim:[0xff9a5a,.38],lift:[.012,.003,.03],gain:[1.06,.98,.96],sat:.94,k:.4,ca:.009,con:.5,indK:.11,bake:true,
    spawns:[[[-55,0,-9],[-55,0,-15],[-56,0,-3]],[[56,2.4,-12],[56,2.4,-6],[58,2.4,2]]],nav:HOTEL_NAV}];
 let mapGroup=null,mapId=-1;
 let CURM=null,NAV=null;
@@ -907,9 +1028,10 @@ function buildMap(id){
   boxes.length=0;pads.length=0;MAPFX.halo=MAPFX.motes=MAPFX.lamps=null;MAPFX.indoor=[];CURM=M;NAV=M.nav?prepNav(M.nav):null;HX=M.HX;HZ=M.HZ;TEAM[0].baseX=-M.base;TEAM[1].baseX=M.base;EDGES=M.edges;
   const n0=scene.children.length;M.build();
   const g=new T.Group();for(const o of scene.children.slice(n0))g.add(o);scene.add(g);mapGroup=g;
+  if(M.bake){const t0=performance.now(),tris=bakeMap(g);console.log('mapa horneado',Math.round(tris),'triángulos',Math.round(performance.now()-t0),'ms');}
   setIndoor(MAPFX.indoor||[],M.indK);shadeAll(g);
   hemi.color.setHex(M.hemi[0]);hemi.groundColor.setHex(M.hemi[1]);hemi.intensity=M.hemi[2];
-  sun.color.setHex(M.sun[0]);sun.intensity=M.sun[1];sun.position.set(M.sun[2],M.sun[3],M.sun[4]);
+  sun.color.setHex(M.sun[0]);sun.intensity=M.sun[1];sun.position.set(M.sun[2],M.sun[3],M.sun[4]).normalize().multiplyScalar(170);sun.target.position.set(0,0,0);
   scene.fog.color.setHex(M.fog[0]);scene.fog.near=M.fog[1];scene.fog.far=M.fog[2];
   INKCOL.setHex(M.ink);RIM.value.setHex(M.rim[0]).multiplyScalar(M.rim[1]);
   const U=mFinal.uniforms;U.lift.value.fromArray(M.lift);U.gain.value.fromArray(M.gain);U.sat.value=M.sat;U.con.value=M.con||0;U.k.value=M.k;U.ca.value=M.ca;
@@ -2137,6 +2259,7 @@ function pick(boxId,attr,fn,init){const box=$(boxId),set=b=>[...box.querySelecto
 pick('diff','d',v=>game.diff=v);pick('clsSel','c',v=>game.cls=v);pick('lookSel','l',v=>game.look=v);
 pick('mapSel','m',v=>{game.map=v;buildMap(v);fullReset();});
 pick('wordSel','w',v=>{SET.words=!!v;try{localStorage.setItem('astra-words',v?'1':'0');}catch(e){}},SET.words?1:0);
+pick('shSel','s',v=>{SHQ=v;try{localStorage.setItem('astra-sh',String(v));}catch(e){}applyShadows();},SHQ);
 pick('fxSel','f',v=>{FX.on=!!v;try{localStorage.setItem('astra-fx',v?'1':'0');}catch(e){}fxResize();},FX.on?1:0);
 for(const id of ['play','again','resume'])$(id).addEventListener('touchend',()=>enableTouch(),{passive:true});
 
