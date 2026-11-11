@@ -174,7 +174,7 @@ th:first-child,td:first-child{text-align:left;font-weight:700}
       <button data-c="3"><b>DESTELLO</b><em>75 VIDA · VELOZ</em><small>Parpadeo: teletransporte corto en la dirección que vas.</small></button>
     </div>
     <div class="row" id="lookSel"><span class="lbl">PERSONAJE</span>
-      <button data-l="0" class="sel">RIZOS Y BARBA</button><button data-l="1">MELENA LARGA</button>
+      <button data-l="10" class="sel">MILENA</button><button data-l="11">AVATAR C</button><button data-l="0">BLOQUES: RIZOS</button><button data-l="1">BLOQUES: MELENA</button>
     </div>
     <div class="row" id="diff"><span class="lbl">DIFICULTAD</span>
       <button data-d="0">FÁCIL</button><button data-d="1" class="sel">NORMAL</button><button data-d="2">DIFÍCIL</button>
@@ -215,6 +215,8 @@ th:first-child,td:first-child{text-align:left;font-weight:700}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/SkeletonUtils.js"></script>
 <script>
 (()=>{
 'use strict';
@@ -494,7 +496,8 @@ function faceTex(i){if(faceCache[i])return faceCache[i];const L=LOOKS[i],sk=hex(
     g.strokeStyle='#7a2f2a';g.lineWidth=3.5;g.beginPath();g.moveTo(cx-11,184);g.quadraticCurveTo(cx+2,192,cx+13,181);g.stroke();
   });}
 function buildChar(team,cls,look){
-  const c=TEAM[team].color,L=LOOKS[look],g=new T.Group();
+  if(look>=10){if(VRMS[look]&&VRMS[look].scene)return buildVRM(team,cls,look);look=look===10?1:2;} // mientras carga el modelo 3D, se usa el de bloques
+  const c=TEAM[team].color,L=LOOKS[look],g=new T.Group();g.rotation.order='YXZ';
   const tc=toon(c),glow=basic(c),hair=toon(L.hc);
   const add=(par,ge,ma,x,y,z,ol)=>{const m=new T.Mesh(ge,ma);m.position.set(x,y,z);par.add(m);if(ol)ink(m);return m;};
   add(g,geo.hips,matChar,0,.95,0,1);add(g,geo.belt,matTop,0,1.05,0);add(g,geo.top,matTop,0,1.26,0,1);
@@ -528,6 +531,77 @@ function buildChar(team,cls,look){
   const sh=new T.Group();const s1=new T.Mesh(geo.shadow,matShadow);s1.rotation.x=-PI/2;sh.add(s1);const s2=new T.Mesh(geo.ring,glow);s2.rotation.x=-PI/2;s2.position.y=.005;sh.add(s2);scene.add(sh);
   scene.add(g);return {g,head,armL,armR,legL,legR,gun,sword,sh,aura,stones};
 }
+/* ---------- personajes 3D de VRoid (VRM aligerado a .glb) ---------- */
+const VRMS={10:{url:'chars/milena.glb'},11:{url:'chars/avatar-c.glb'}};
+const OUTL=basic(INKC,{side:T.BackSide,skinning:true});
+OUTL.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n  transformed+=normalize(normal)*.011;');};
+function loadVRM(k){const v=VRMS[k];if(v.p)return v.p;
+  v.p=new Promise(res=>{if(!T.GLTFLoader||!T.SkeletonUtils){res(null);return;}
+    new T.GLTFLoader().load(v.url,g=>{try{prepVRM(v,g);res(v);}catch(e){console.warn(e);res(null);}},undefined,()=>res(null));});
+  return v.p;}
+function prepVRM(v,g){
+  const hb=g.parser.json.extensions.VRMC_vrm.humanoid.humanBones,nodes=g.parser.json.nodes;v.names={};
+  for(const k in hb)v.names[k]=T.PropertyBinding.sanitizeNodeName(nodes[hb[k].node].name||'');
+  const add=[];
+  g.scene.traverse(o=>{if(!o.isMesh)return;const om=o.material,map=om.map;if(map){map.encoding=T.LinearEncoding;map.needsUpdate=true;}
+    const m=new T.MeshToonMaterial({map,gradientMap:grad,skinning:!!o.isSkinnedMesh,transparent:om.transparent,alphaTest:om.alphaTest,side:om.side,depthWrite:om.depthWrite,color:om.color});
+    o.material=m;o.frustumCulled=false;
+    if(o.isSkinnedMesh&&!om.transparent&&!/FACE|EYE/.test(om.name||''))add.push(o);});
+  for(const o of add){const ol=new T.SkinnedMesh(o.geometry,OUTL);ol.name=o.name+'_tinta';ol.frustumCulled=false;ol.position.copy(o.position);ol.quaternion.copy(o.quaternion);ol.scale.copy(o.scale);
+    o.parent.add(ol);ol.bind(o.skeleton,o.bindMatrix);}
+  g.scene.updateMatrixWorld(true);const box=new T.Box3().setFromObject(g.scene);
+  v.scale=1.9/Math.max(.5,box.max.y-box.min.y);v.foot=box.min.y;v.scene=g.scene;
+}
+const _q=new T.Quaternion(),_eu=new T.Euler();
+// gira un hueso en ejes del modelo (de frente a +Z), sin importar cómo venga orientado en reposo
+function setB(b,x,y,z){if(!b)return;_eu.set(x,y,z,'XYZ');_q.setFromEuler(_eu);b.o.quaternion.copy(b.Ai).multiply(_q).multiply(b.A).multiply(b.rest);}
+function buildVRM(team,cls,look){
+  const v=VRMS[look],c=TEAM[team].color,g=new T.Group();g.rotation.order='YXZ';
+  const inner=T.SkeletonUtils.clone(v.scene),sc=v.scale*(cls===1?1.08:cls===3?.95:1);
+  inner.rotation.y=PI;inner.scale.setScalar(sc);inner.position.y=-v.foot*sc;g.add(inner);
+  const bones={};
+  for(const k in v.names){const o=inner.getObjectByName(v.names[k]);if(!o)continue;const A=new T.Quaternion();const chain=[];let p=o.parent;
+    while(p&&p!==inner){chain.unshift(p);p=p.parent;}for(const n of chain)A.multiply(n.quaternion);
+    bones[k]={o,rest:o.quaternion.clone(),A,Ai:A.clone().invert()};}
+  const add=(par,ge,ma,x,y,z)=>{const m=new T.Mesh(ge,ma);m.position.set(x,y,z);par.add(m);return m;};
+  const glow=basic(c),hand=bones.rightHand&&bones.rightHand.o,wg=new T.Group();
+  if(hand){inner.updateMatrixWorld(true);const ws=new V3();hand.getWorldScale(ws);
+    const Wh=bones.rightHand.A.clone().multiply(bones.rightHand.rest);wg.quaternion.copy(Wh).invert();wg.scale.setScalar(1/ws.x);hand.add(wg);}
+  else g.add(wg);
+  const gun=new T.Group();wg.add(gun);ink(add(gun,B(.46,.13,.17),toon(0x1d1a22),-.2,0,0));add(gun,B(.34,.05,.19),glow,-.2,0,0);
+  const sword=new T.Group();wg.add(sword);add(sword,B(.12,.24,.12),toon(0x1d1a22),0,.08,0);add(sword,B(.08,1.5,.03),glow,0,.9,0);add(sword,B(.03,1.5,.08),basic(0xffffff),0,.9,0);sword.visible=false;
+  let stones=null;
+  if(cls===2){stones=new T.Group();stones.position.y=1.25;g.add(stones);for(let i=0;i<3;i++){const a=i*2.094;add(stones,geo.stone,basic(0xffffff),Math.cos(a)*.75,0,Math.sin(a)*.75);add(stones,geo.stone,basic(c,{transparent:true,opacity:.5}),Math.cos(a)*.75,0,Math.sin(a)*.75).scale.setScalar(1.6);}}
+  const aura=new T.Mesh(geo.aura,basic(c,{transparent:true,opacity:0,depthWrite:false}));aura.scale.y=1.45;aura.position.y=1.05;g.add(aura);
+  const sh=new T.Group();const s1=new T.Mesh(geo.shadow,matShadow);s1.rotation.x=-PI/2;sh.add(s1);const s2=new T.Mesh(geo.ring,glow);s2.rotation.x=-PI/2;s2.position.y=.005;sh.add(s2);scene.add(sh);
+  scene.add(g);const O=()=>new T.Object3D(); // poses intermedias que escribe animate()
+  return {g,head:O(),armL:O(),armR:O(),legL:O(),legR:O(),gun,sword,sh,aura,stones,vrm:true,bones};
+}
+function applyVRM(m,f,dt){
+  const A=ANIMS.strafe,tg=f.isPlayer?lock:f.target; // con la hoja y un rival fijado, rodearlo con el paso de Mixamo
+  if(A&&f.weapon===1&&tg&&tg.alive&&f.onGround&&f.swingT<=0&&f.stunT<=0&&f.dashT<=0){
+    const lat=f.vel.x*Math.cos(f.yaw)-f.vel.z*Math.sin(f.yaw),fwd=-(f.vel.x*Math.sin(f.yaw)+f.vel.z*Math.cos(f.yaw));
+    if(Math.abs(lat)>2.5&&Math.abs(lat)>Math.abs(fwd)*.8){f.animT=(f.animT||0)+Math.abs(lat)/A.speed*dt;playAnim(m,A,f.animT,lat<0);m.g.rotation.x=0;return;}}
+  const B=m.bones,lL=m.legL.rotation.x,lR=m.legR.rotation.x,air=!f.onGround&&f.wr<=0,ar=m.armR.rotation;
+  setB(B.leftUpperLeg,-lL,0,0);setB(B.rightUpperLeg,-lR,0,0);
+  setB(B.leftLowerLeg,air?.9:f.sliding?.3:.12+Math.max(0,-lL)*1.3,0,0);setB(B.rightLowerLeg,air?.55:f.sliding?.3:.12+Math.max(0,-lR)*1.3,0,0);
+  setB(B.leftUpperArm,-m.armL.rotation.x,0,-1.2);setB(B.leftLowerArm,0,-.4,0);
+  setB(B.rightUpperArm,-ar.x,0,1.4-ar.z*.8);setB(B.rightLowerArm,0,f.weapon===1?.5:.1,0);
+  setB(B.head,-m.head.rotation.x,0,0);
+}
+// animaciones de Mixamo convertidas: rotación de cada hueso respecto al reposo, en ejes del modelo
+const ANIMS={};
+function loadAnim(key,url){fetch(url).then(r=>r.json()).then(a=>{const mir={};
+  for(const k in a.bones){const src=a.bones[k],m=new Float32Array(src.length);for(let i=0;i<src.length;i+=4){m[i]=src[i];m[i+1]=-src[i+1];m[i+2]=-src[i+2];m[i+3]=src[i+3];}
+    mir[k.replace(/^left/,'@').replace(/^right/,'left').replace(/^@/,'right')]=m;a.bones[k]=Float32Array.from(src);}
+  a.mirror=mir;ANIMS[key]=a;}).catch(()=>{});}
+const _qa=new T.Quaternion(),_qb=new T.Quaternion();
+function playAnim(m,a,t,mirror){ // t en segundos, en bucle
+  const n=a.frames-1,ft=((t*a.fps)%n+n)%n,i=Math.floor(ft),k=ft-i,set=mirror?a.mirror:a.bones;
+  for(const key in set){const b=m.bones[key];if(!b)continue;const d=set[key];
+    _qa.fromArray(d,i*4);_qb.fromArray(d,(i+1)*4);_qa.slerp(_qb,k);b.o.quaternion.copy(b.Ai).multiply(_qa).multiply(b.A).multiply(b.rest);}}
+function refreshLook(k){for(const f of fighters)if(f.look===k)f.setClass(f.cls,k,true);buildTags();}
+
 const fighters=[];let now=0;
 class Fighter{
   constructor(team,name,slot,isPlayer,cls,look){
@@ -539,7 +613,7 @@ class Fighter{
     this.side=Math.random()<.5?-1:1;this.stuckT=0;this.stuckDir={x:0,z:0};this.progT=0;this.lastPos=new V3;this.burst=5;
     fighters.push(this);this.spawn();
   }
-  setClass(cls,look){if(cls===this.cls&&look===this.look)return;scene.remove(this.m.g);scene.remove(this.m.sh);this.cls=cls;this.look=look;this.m=buildChar(this.team,cls,look);}
+  setClass(cls,look,force){if(!force&&cls===this.cls&&look===this.look)return;scene.remove(this.m.g);scene.remove(this.m.sh);this.cls=cls;this.look=look;this.m=buildChar(this.team,cls,look);}
   spawn(){
     const tm=TEAM[this.team];
     this.pos.set(tm.baseX+rand(-3,3),0,[0,-10,10][this.slot]+rand(-3,3));this.vel.set(0,0,0);
@@ -621,10 +695,10 @@ function snd(k,v){if(!AC||game.menu)return;v=v===undefined?1:v;if(v<.03)return;
 function volAt(p){return clamp(1-player.pos.distanceTo(p)/60,0,1)*.6;}
 
 /* ---------- juego ---------- */
-const game={menu:true,paused:false,state:'playing',score:[0,0],time:MATCH,diff:1,cls:0,look:0};
-const player=new Fighter(0,'Tú',0,true,0,0);
-new Fighter(0,'Nova',1,false,1,1);new Fighter(0,'Lince',2,false,2,2);
-new Fighter(1,'Vex',0,false,0,3);new Fighter(1,'Brasa',1,false,1,5);new Fighter(1,'Orión',2,false,2,4);
+const game={menu:true,paused:false,state:'playing',score:[0,0],time:MATCH,diff:1,cls:0,look:10};
+const player=new Fighter(0,'Tú',0,true,0,10);
+new Fighter(0,'Nova',1,false,1,11);new Fighter(0,'Lince',2,false,2,11);
+new Fighter(1,'Vex',0,false,0,11);new Fighter(1,'Brasa',1,false,1,11);new Fighter(1,'Orión',2,false,2,11);
 let camYaw=-PI/2,camPitch=-.08,camRoll=0,shake=0,hitstop=0,flashV=0,lock=null,lockLost=0;
 function flash(v){flashV=Math.max(flashV,v);}
 
@@ -930,6 +1004,7 @@ function animate(f,dt){
   if(m.aura.visible){const s=(1+Math.sin(now*24)*.06)*(big?1.55:1);m.aura.scale.set(s,1.45*s,s);a.color.setHex(f.parryT>0?0xffffff:TEAM[f.team].color);}
   if(f.charging&&(f.fxT-=dt)<=0){f.fxT=.28;const col=TEAM[f.team].color;ring(f.pos.x,f.pos.y,f.pos.z,col,5,.4);burst(f.pos.x+rand(-1,1),f.pos.y+.2,f.pos.z+rand(-1,1),col,3,3,-10);
     if(f===player){shake=Math.max(shake,.06);snd('charge');}}
+  if(m.vrm)applyVRM(m,f,dt);
 }
 
 /* ---------- entrada ---------- */
@@ -1185,7 +1260,7 @@ function updHUD(dt){
 function applyRoster(){
   player.setClass(game.cls,game.look);
   const mates=[0,1,2].filter(c=>c!==game.cls).slice(game.cls===3?1:0,game.cls===3?3:2).reverse(); // dos clases distintas a la tuya
-  fighters[1].setClass(mates[0],1-game.look);fighters[2].setClass(mates[1],2);
+  fighters[1].setClass(mates[0],11);fighters[2].setClass(mates[1],11);
   buildTags();
 }
 function startMatch(){initAudio();applyRoster();game.menu=false;game.paused=false;$('menu').hidden=true;$('end').hidden=true;$('pause').hidden=true;$('hud').hidden=false;
@@ -1223,6 +1298,8 @@ function loop(t){
   render();
 }
 buildTags();fullReset();
+for(const k of [10,11])loadVRM(k).then(v=>{if(v)refreshLook(k);});
+loadAnim('strafe','anims/sword-strafe.json');
 window.__game={game,player,fighters,step,startMatch,useSkill,jump,keys,startUlt,toggleLock,clash,melee,getLock:()=>lock};
 requestAnimationFrame(loop);
 })();
