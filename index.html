@@ -252,10 +252,10 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
     </header>
     <div class="grp" style="--i:1"><div class="lbl">CLASE</div>
       <div class="clsList" id="clsSel">
-        <button data-c="0" class="sel" data-role="EQUILIBRADO" data-hp="100" data-spd="3" data-sk="Embestida de ki" data-skd="Carga hacia adelante y golpea a quien toque." data-ul="Onda astral" data-uld="Un rayo enorme que puede chocar contra otro."><b>IMPACTO</b><i>100</i></button>
-        <button data-c="1" data-role="TANQUE" data-hp="180" data-spd="2" data-sk="Muro rúnico" data-skd="Levanta una barrera que frena rivales y disparos." data-ul="Bomba espíritu" data-uld="Una esfera gigante que arrasa toda la zona."><b>BASTIÓN</b><i>180</i></button>
-        <button data-c="2" data-role="APOYO" data-hp="85" data-spd="3" data-sk="Piedra de sanación" data-skd="Un círculo que cura a tu equipo." data-ul="Despertar dorado" data-uld="Invulnerable por un rato; cada golpe te lleva hasta tu rival fijado."><b>SANADOR</b><i>85</i></button>
-        <button data-c="3" data-role="VELOZ" data-hp="75" data-spd="5" data-sk="Parpadeo" data-skd="Teletransporte corto hacia donde te mueves." data-ul="Lluvia astral" data-uld="Ráfaga de disparos que persiguen a tu rival."><b>DESTELLO</b><i>75</i></button>
+        <button data-c="0" class="sel" data-role="EQUILIBRADO" data-hp="100" data-spd="3" data-sk="Embestida de ki" data-skd="Carga hacia adelante y golpea a quien toque." data-ul="Onda astral" data-uld="Un rayo que barre pasillos y puede chocar contra otro."><b>IMPACTO</b><i>100</i></button>
+        <button data-c="1" data-role="TANQUE" data-hp="180" data-spd="2" data-sk="Muro rúnico" data-skd="Levanta una barrera que frena rivales y disparos." data-ul="Granada espíritu" data-uld="La lanzas: empuja, daña y deja un campo de ki que frena a los rivales."><b>BASTIÓN</b><i>180</i></button>
+        <button data-c="2" data-role="APOYO" data-hp="85" data-spd="3" data-sk="Piedra de sanación" data-skd="Un círculo que cura a tu equipo." data-ul="Despertar dorado" data-uld="Un santuario que cura y fortalece a tu equipo; tus golpes te acercan al rival."><b>SANADOR</b><i>85</i></button>
+        <button data-c="3" data-role="VELOZ" data-hp="75" data-spd="5" data-sk="Parpadeo" data-skd="Teletransporte corto hacia donde te mueves." data-ul="Armas de ki" data-uld="Cuatro cañones de energía flotan a tu alrededor y persiguen a los rivales."><b>DESTELLO</b><i>75</i></button>
       </div>
     </div>
     <div class="grp" style="--i:2"><div class="lbl">PERSONAJE</div>
@@ -289,7 +289,8 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
     <div class="dHead"><h2>CONTROLES</h2><button class="ghost" id="ctrlX">CERRAR</button></div>
     <div class="keys">
       <div><kbd>W A S D</kbd><span>moverte, el ratón apunta</span></div>
-      <div><kbd>Clic</kbd><span>atacar; tres golpes de hoja lanzan al rival</span></div>
+      <div><kbd>Clic</kbd><span>atacar; con la hoja: combo de tres, tras un dash embiste, en el aire encadena</span></div>
+      <div><kbd>Clic der.</kbd><span>con la hoja: golpe pesado; en el suelo lanza, en el aire clava, rompe la guardia</span></div>
       <div><kbd>Espacio</kbd><span>salto y doble salto; si casi llegas a un borde, te agarras y subes</span></div>
       <div><kbd>Muro</kbd><span>corre por él; Espacio salta desde el muro</span></div>
       <div><kbd>Shift</kbd><span>dash; quieto y con rival fijado, apareces detrás</span></div>
@@ -298,8 +299,8 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
       <div><kbd>Tab</kbd><span>fijar rival (también con la rueda)</span></div>
       <div><kbd>F</kbd><span>parar un golpe de hoja</span></div>
       <div><kbd>V</kbd><span>mantén para cargar ki</span></div>
-      <div><kbd>X</kbd><span>definitiva de tu clase</span></div>
-      <div><kbd>Clic der.</kbd><span>apuntar con zoom: más precisión, menos movilidad</span></div>
+      <div><kbd>X</kbd><span>definitiva de tu clase: cambia la zona del combate por un rato</span></div>
+      <div><kbd>Clic der.</kbd><span>con armas de disparo: apuntar con zoom, más precisión y menos movilidad</span></div>
       <div><kbd>E</kbd><span>poder de clase</span></div>
       <div><kbd>1 2 3</kbd><span>cambiar arma; R recarga; Esc pausa</span></div>
     </div>
@@ -344,10 +345,10 @@ const WPN=[
   {name:'LANZA RÚNICA',mag:4,cd:1.1,dmg:75,reload:2.2,spread:0}];
 const CLS=[
   {name:'IMPACTO',hp:100,spd:1,skill:'EMBESTIDA DE KI',cd:7,ult:'ONDA ASTRAL'},
-  {name:'BASTIÓN',hp:180,spd:.88,skill:'MURO RÚNICO',cd:14,ult:'BOMBA ESPÍRITU'},
+  {name:'BASTIÓN',hp:180,spd:.88,skill:'MURO RÚNICO',cd:14,ult:'GRANADA ESPÍRITU'},
   {name:'SANADOR',hp:85,spd:1,skill:'PIEDRA DE SANACIÓN',cd:10,ult:'DESPERTAR DORADO'},
-  {name:'DESTELLO',hp:75,spd:1.15,skill:'PARPADEO',cd:5,ult:'LLUVIA ASTRAL'}];
-const ULTK=['beam','bomb','super','barrage'];
+  {name:'DESTELLO',hp:75,spd:1.15,skill:'PARPADEO',cd:5,ult:'ARMAS DE KI'}];
+const ULTK=['beam','gren','super','guns'];
 const DIFF=[{acc:.2,react:.75,dmg:6},{acc:.36,react:.42,dmg:7},{acc:.52,react:.22,dmg:8}];
 const LOOKS=[
   {hair:'curly',hc:0x3a2418,skin:0xe2a57c,beard:1,eye:'#3a2414'},
@@ -931,7 +932,7 @@ function hitBox(f,ax,d,b){const p=f.pos;
   if(ax==='y'){if(d<0){p.y=b.y1;f.onGround=true;}else p.y=b.y0-H-.001;f.vel.y=0;}
   else if(ax==='x'){f.wallBox=b;if(d>0){p.x=b.x0-R-.001;setWall(f,-1,0);}else{p.x=b.x1+R+.001;setWall(f,1,0);}}
   else{f.wallBox=b;if(d>0){p.z=b.z0-R-.001;setWall(f,0,-1);}else{p.z=b.z1+R+.001;setWall(f,0,1);}}}
-function freeAt(x,y,z){if(x>HX-R||x<-HX+R||z>HZ-R||z<-HZ+R)return false;
+function spaceFree(x,y,z){if(x>HX-R||x<-HX+R||z>HZ-R||z<-HZ+R)return false;
   for(const b of boxes)if(x+R>b.x0&&x-R<b.x1&&y+H>b.y0&&y<b.y1&&z+R>b.z0&&z-R<b.z1)return false;return true;}
 function tryLedge(f,vault,hs){ // casi alcanzó el borde: se agarra y sube; en el suelo, salta obstáculos bajos
   const b=f.wallBox,p=f.pos,n=f.wallN,w=f.wish,wl=Math.hypot(w.x,w.z);
@@ -940,9 +941,9 @@ function tryLedge(f,vault,hs){ // casi alcanzó el borde: se agarra y sube; en e
   const top=b.y1,rel=top-p.y;if(vault?(rel<=.75||rel>1.3):(rel<.5||rel>2.3))return;
   const ix=-n.x,iz=-n.z,depth=n.x?b.x1-b.x0:b.z1-b.z0;let tx,tz,ty=top,arc=0,thin=false;
   if(vault&&depth<1.8){thin=true;tx=p.x+ix*(depth+R*2+.35);tz=p.z+iz*(depth+R*2+.35);ty=p.y;arc=rel+.12;
-    if(!freeAt((p.x+tx)/2,top+.02,(p.z+tz)/2))return;}
+    if(!spaceFree((p.x+tx)/2,top+.02,(p.z+tz)/2))return;}
   else{tx=p.x+ix*(R*2+.2);tz=p.z+iz*(R*2+.2);}
-  if(!freeAt(tx,ty+.02,tz)||(!thin&&!freeAt(p.x,top+.02,p.z)))return;
+  if(!spaceFree(tx,ty+.02,tz)||(!thin&&!spaceFree(p.x,top+.02,p.z)))return;
   f.cA=f.cA||new V3();f.cB=f.cB||new V3();f.cN=f.cN||new V3();
   f.cA.copy(p);f.cB.set(tx,ty,tz);f.cN.set(ix,0,iz);f.cArc=arc;f.climbD=f.climbT=vault?(thin?.3:.22):.32;
   f.cV=vault?Math.max(hs,SPEED*.85):SPEED*.65;f.climbJump=false;f.wr=0;f.wallT=0;f.vel.set(0,0,0);f.onGround=false;
@@ -1187,7 +1188,7 @@ class Fighter{
     this.weapon=0;this.ammo=[30,0,4];this.reloadT=0;this.cd=0;this.dashT=0;this.dashCd=0;this.spWait=0;this.onGround=false;this.blocked=false;
     this.wallT=0;this.swingT=0;this.phase=0;this.lastHit=-99;this.protT=now+2;this.groundY=0;this.skillCd=1.5;this.rushT=0;this.castT=0;
     this.jumps=0;this.climbT=0;this.wallBox=null;this.wr=0;this.wrCd=0;this.wrDir=1;this.wrSpd=0;this.wrNx=0;this.wrNz=0;this.slide=false;this.sliding=false;this.slideCd=0;
-    this.stunT=0;this.parryT=0;this.parryCd=0;this.charging=false;if(this.bombP){this.bombP.g.visible=false;this.bombP.used=false;}this.ultT=0;this.ultKind=null;this.barrageT=0;this.superT=0;this.bombP=null;this.bombThrown=false;this.dustT=0;this.launchT=0;this.combo=0;this.comboT=-9;this.pendingMelee=false;this.hover=false;this.botCharge=0;this.clash=false;this.push=0;
+    this.stunT=0;this.parryT=0;this.parryCd=0;this.charging=false;this.heavyT=this.grenT=this.gunsT=this.slowT=this.sanctT=this.warpCd=this.lungeCd=this.airHits=0;this.dashEnd=-9;if(this.gunRig)this.gunRig.forEach(g=>g.g.visible=false);if(this.bombP){this.bombP.g.visible=false;this.bombP.used=false;}this.ultT=0;this.ultKind=null;this.barrageT=0;this.superT=0;this.bombP=null;this.bombThrown=false;this.dustT=0;this.launchT=0;this.combo=0;this.comboT=-9;this.pendingMelee=false;this.hover=false;this.botCharge=0;this.clash=false;this.push=0;
     this.m.g.visible=true;this.m.sh.visible=true;this.lastPos.copy(this.pos);this.stuckT=0;
   }
 }
@@ -1283,7 +1284,7 @@ function dmgNum(t,amt,big){_n.set(t.pos.x,t.pos.y+2.1,t.pos.z).project(camera);i
 function damage(t,amt,by,big){
   if(!t.alive||game.state!=='playing'||now<t.protT)return;
   if(t.parryT>0)amt*=.3;
-  const raw=amt;amt*=DMGK;
+  const raw=amt;amt*=DMGK;if(t.superT>0)amt*=.6;if(t.sanctT>0)amt*=.8;if(by.sanctT>0)amt*=1.2;
   {const bg=big||raw>=30;fxHit(t.pos.x,t.pos.y+1.2,t.pos.z,bg,TEAM[by.team].color);if(bg&&(by===player||t===player)&&raw>=40)fxWord(WORDS[Math.random()*WORDS.length|0],t.pos.x,t.pos.y+2.6,t.pos.z,by.team?'#18c8f0':'#ff7a1a');}
   t.hp-=amt;t.lastHit=now;t.lastBy=by;by.ult=Math.min(100,by.ult+raw*.3);t.ult=Math.min(100,t.ult+raw*.15);
   if(t===player){$('hurt').style.opacity=clamp(.35+amt/60,0,1);snd('hurt');shake=Math.min(.3,shake+raw/180);}
@@ -1296,29 +1297,45 @@ function damage(t,amt,by,big){
     if(++game.score[by.team]>=KILLS)endMatch();
   }
 }
-function melee(f){ // con un rival fijado, la hoja se lanza hacia él antes de golpear
-  if(f.superT>0){const t=f.isPlayer?lock:f.target;if(t&&t.alive&&superWarp(f,t))return;}
-  if(f.isPlayer&&lock&&lock.alive&&f.sp>=10){const dx=lock.pos.x-f.pos.x,dz=lock.pos.z-f.pos.z,d=Math.hypot(dx,dz);
-    if(d>3&&d<12){f.sp-=10;f.spWait=.5;f.dashT=Math.min(.34,(d-2)/26);f.dashDir.x=dx/d;f.dashDir.z=dz/d;f.pendingMelee=true;f.wr=0;f.vel.y=clamp((lock.pos.y-f.pos.y)*3,-6,9);snd('dash');return;}}
-  meleeHit(f);
+function melee(f){ // ataque ligero: combo de tres, embestida justo después de un dash, o golpe aéreo
+  if(f.superT>0){const t=f.isPlayer?lock:f.target;if(t&&t.alive&&!(f.warpCd>0)&&superWarp(f,t)){f.warpCd=.9;return;}}
+  if(f.isPlayer&&lock&&lock.alive&&f.sp>=22&&!(f.lungeCd>0)){const dx=lock.pos.x-f.pos.x,dz=lock.pos.z-f.pos.z,d=Math.hypot(dx,dz);
+    if(d>3.2&&d<8){f.sp-=22;f.spWait=.6;f.lungeCd=1.2;f.dashT=Math.min(.3,(d-2)/20);f.dashDir.x=dx/d;f.dashDir.z=dz/d;f.pendingMelee=true;f.wr=0;f.vel.y=clamp((lock.pos.y-f.pos.y)*3,-6,8);snd('dash');return;}}
+  meleeHit(f,'light');
 }
-function meleeHit(f){
+function heavy(f){ // golpe pesado: carga corta en la que quedas expuesto; en el suelo lanza al rival, en el aire lo clava contra el piso
+  if(f.heavyT>0||!f.alive||f.stunT>0)return false;f.heavyT=.36;f.heavyAir=!f.onGround;act(f,'spin');snd('charge',f===player?1:volAt(f.pos));return true;}
+function meleeHit(f,kind){
+  kind=kind||'light';const heavyHit=kind==='heavy',air=heavyHit?f.heavyAir:!f.onGround,dashAtk=!heavyHit&&(f.dashT>0||now-(f.dashEnd||-9)<.25);
   f.swingT=.28;slashFx(f);snd('sword',f===player?1:volAt(f.pos));
   const fx=-Math.sin(f.yaw),fz=-Math.cos(f.yaw);
-  if(f.onGround){f.vel.x+=fx*7;f.vel.z+=fz*7;}
+  if(f.onGround&&!heavyHit){const p=dashAtk?11:6;f.vel.x+=fx*p;f.vel.z+=fz*p;}
+  if(air&&!heavyHit){f.airHits=(f.airHits||0)+1;if(f.airHits<=3)f.vel.y=Math.max(f.vel.y,2.4);}
   if(now-f.comboT>1.3)f.combo=0;
-  const fin=f.combo>=2;let any=false;act(f,fin?'spin':'slash');
+  const fin=!heavyHit&&!dashAtk&&!air&&f.combo>=2;let any=false;act(f,fin||heavyHit?'spin':'slash');
+  const range=WPN[1].range*(dashAtk?1.15:heavyHit?1.1:1);
   for(const e of fighters){if(e.team===f.team||!e.alive)continue;
     const dx=e.pos.x-f.pos.x,dz=e.pos.z-f.pos.z,dy=e.pos.y-f.pos.y,d=Math.hypot(dx,dz);
-    if(d>WPN[1].range||Math.abs(dy)>2.6)continue;
-    if(d>.6&&(dx*fx+dz*fz)/d<.3)continue;
-    if(e.parryT>0||(!e.isPlayer&&e.stunT<=0&&e.ultT<=0&&Math.random()<PARRY[e.team===player.team?1:game.diff]*(f.isPlayer?1:.5))){parried(e,f);return;}
-    any=true;const kb=fin?24:5;e.vel.x+=fx*kb;e.vel.z+=fz*kb;e.vel.y=fin?9:3.5;e.onGround=false;if(fin)e.launchT=.8; // el tercer golpe lanza al rival
-    burst(e.pos.x,e.pos.y+1.1,e.pos.z,0xffffff,fin?16:8,fin?9:5);if(fin)ring(e.pos.x,e.pos.y+.9,e.pos.z,0xffffff,5,.3);
-    if(f===player||e===player){hitstop=fin?.13:.05;shake=fin?.3:.12;if(fin)flash(.45);}
-    damage(e,(f.isPlayer?WPN[1].dmg:34)*(fin?1.3:1),f,fin);
+    if(d>range||Math.abs(dy)>2.6)continue;
+    if(d>.6&&(dx*fx+dz*fz)/d<(heavyHit?.1:.3))continue;
+    const bp=!e.isPlayer&&e.stunT<=0&&e.ultT<=0&&Math.random()<PARRY[e.team===player.team?1:game.diff]*(f.isPlayer?1:.5);
+    if(e.parryT>0||bp){
+      if(heavyHit){stun(e,.7);e.parryT=0;fxWord('¡ROTO!',e.pos.x,e.pos.y+2.6,e.pos.z,'#ffd23f');} // el pesado rompe la guardia
+      else{parried(e,f);return;}}
+    any=true;let kb,vy,dmg=f.isPlayer?WPN[1].dmg:34;
+    if(heavyHit&&!air){kb=4;vy=11.5;dmg*=1.6;e.launchT=.9;}          // lanzador
+    else if(heavyHit){kb=6;vy=-20;dmg*=1.4;e.launchT=.5;}             // clavado desde el aire
+    else if(dashAtk){kb=9;vy=3.5;dmg*=1.3;}
+    else if(air){kb=3;vy=Math.max(e.vel.y,3);}
+    else if(fin){kb=13;vy=5;dmg*=1.3;e.launchT=.5;}
+    else{kb=5;vy=3.5;}
+    e.vel.x+=fx*kb;e.vel.z+=fz*kb;e.vel.y=vy;e.onGround=false;
+    const big=fin||heavyHit;burst(e.pos.x,e.pos.y+1.1,e.pos.z,0xffffff,big?16:8,big?9:5);if(big)ring(e.pos.x,e.pos.y+.9,e.pos.z,0xffffff,5,.3);
+    if(f===player||e===player){hitstop=big?.12:.05;shake=big?.28:.1;if(heavyHit)flash(.35);}
+    damage(e,dmg,f,big);
+    if(!dashAtk)break; // solo la embestida atraviesa a varios
   }
-  if(any){f.combo=fin?0:f.combo+1;f.comboT=now;}
+  if(any&&!heavyHit){f.combo=fin?0:f.combo+1;f.comboT=now;}
 }
 function muzzle(f,out){const fx=-Math.sin(f.yaw),fz=-Math.cos(f.yaw);return out.set(f.pos.x+fx*.8+fz*-.4,f.pos.y+1.5,f.pos.z+fz*.8-fx*-.4);}
 function playerShoot(w){
@@ -1429,7 +1446,7 @@ function wallSlam(f){ // un rival lanzado que choca contra un muro
 
 /* ---------- rayo definitivo y choque de rayos ---------- */
 function startUlt(f){
-  if(!f.alive||f.ult<100||f.ultT>0||f.barrageT>0||f.superT>0||f.stunT>0||game.state!=='playing')return false;
+  if(!f.alive||f.ult<100||f.ultT>0||f.grenT>0||f.gunsT>0||f.superT>0||f.stunT>0||game.state!=='playing')return false;
   const kind=ULTK[f.cls],t=f.isPlayer?lock:f.target,col=TEAM[f.team].color,v=f===player?1:volAt(f.pos),mine=f===player;
   f.ult=0;f.ultKind=kind;f.charging=false;f.pendingMelee=false;ring(f.pos.x,f.pos.y,f.pos.z,col,9,.6);fxShock(f.pos.x,f.pos.y+1,f.pos.z,7,col);
   if(kind==='beam'||kind==='bomb'){
@@ -1438,8 +1455,9 @@ function startUlt(f){
     else{const cp=Math.cos(f.pitch);f.beamDir.set(-Math.sin(f.yaw)*cp,Math.sin(f.pitch),-Math.cos(f.yaw)*cp);}
     if(kind==='beam'){snd('ultc',v);act(f,'cast');}
     else{const b=BOMBS.find(k=>!k.used);if(b){b.used=true;b.g.visible=true;b.glow.material.color.setHex(col);f.bombP=b;}snd('bombc',v);if(mine)banner('¡BOMBA ESPÍRITU!','#ff7a1a',1.2);}
-  }else if(kind==='barrage'){f.barrageT=1.9;f.barrageCd=0;f.barrageI=0;snd('ultc',v);if(mine)banner('¡LLUVIA ASTRAL!','#b58cff',1);}
-  else{f.superT=7;f.protT=Math.max(f.protT,now+7);snd('super',v);fxShock(f.pos.x,f.pos.y+1,f.pos.z,10,0xffd23f);fxWord('¡PODER!',f.pos.x,f.pos.y+3,f.pos.z,'#ffd23f');
+  }else if(kind==='gren'){f.grenT=.35;snd('bombc',v);if(mine)banner('¡GRANADA ESPÍRITU!','#ff7a1a',1);}
+  else if(kind==='guns'){f.gunsT=6.5;gunRig(f).forEach((g,i)=>g.cd=.25+i*.13);snd('ultc',v);if(mine)banner('¡ARMAS DE KI!','#b58cff',1);}
+  else{f.superT=6;const S=SANCT[f.team];Object.assign(S,{life:8,x:f.pos.x,y:f.groundY,z:f.pos.z,tick:0});S.g.position.set(f.pos.x,f.groundY+.05,f.pos.z);S.g.scale.setScalar(S.R);S.g.visible=true;snd('super',v);fxShock(f.pos.x,f.pos.y+1,f.pos.z,10,0xffd23f);fxWord('¡PODER!',f.pos.x,f.pos.y+3,f.pos.z,'#ffd23f');
     if(mine){flash(.6);banner('¡DESPERTAR DORADO!','#ffd23f',1.4);}}
   return true;
 }
@@ -1561,6 +1579,14 @@ function insideBox(x,y,z){for(let i=0;i<boxes.length;i++){const b=boxes[i];if(x>
 function explode(p,hit){
   p.active=false;p.m.visible=false;const x=p.pos.x,y=p.pos.y,z=p.pos.z,o=p.owner,near=player.pos.distanceTo(p.pos)<30;
   lightFlash(x,y+.5,z,p.color,p.kind==='bomb'?7:3,p.kind==='bomb'?26:12,p.kind==='bomb'?.7:.3);
+  if(p.kind==='gren'){ // granada espíritu: empuja, daña y deja un campo de ki que niega la zona
+    const R=7.5,gy=Math.max(0,y-p.r);ring(x,gy,z,p.color,R*1.4,.5);ring(x,gy,z,0xffffff,R*.8,.35);fxCrack(x,gy,z,R);fxDust(x,gy,z,10,7,1.8);
+    fxHit(x,y,z,true,p.color);fxShock(x,y,z,14,p.color);burst(x,y,z,0xffffff,22,11);burst(x,y,z,p.color,22,9);
+    snd('boom',near?1:volAt(p.pos));if(near){flash(.5);shake=.35;hitstop=.08;}
+    for(const e of fighters){if(e.team===p.team||!e.alive)continue;const d=e.pos.distanceTo(p.pos);if(d>R)continue;
+      const k=1-clamp(d/R,0,1);_w.set(e.pos.x-x,0,e.pos.z-z).normalize();e.vel.x+=_w.x*15*k;e.vel.z+=_w.z*15*k;e.vel.y=6*k+3;e.onGround=false;e.launchT=.45;
+      damage(e,45+60*k,o,true);}
+    kiField(o,x,gy,z,6,4.5);return;}
   if(p.kind==='bomb'){ // bomba espíritu: arrasa una zona grande
     const R=10,gy=Math.max(0,y-p.r);ring(x,gy,z,p.color,R*1.6,.7);ring(x,gy,z,0xffffff,R,.5);fxCrack(x,gy,z,R*1.4);fxDust(x,gy,z,16,10,2.4);
     fxHit(x,y,z,true,p.color);fxShock(x,y,z,22,p.color);burst(x,y,z,0xffffff,30,14);burst(x,y,z,p.color,30,12);
@@ -1575,17 +1601,78 @@ function explode(p,hit){
 }
 function updPJ(dt){
   for(const p of PJ){if(!p.active)continue;p.life-=dt;
+    if(p.kind==='gren'){p.vel.y-=22*dt;const st=p.vel.length()*dt;_w.copy(p.vel).normalize();const hh=rayWorld(p.pos,_w,st+p.r);
+      if(hh<st+p.r&&p.bounce>0){p.bounce--;const ox=p.pos.x,oz=p.pos.z;p.pos.addScaledVector(_w,Math.max(0,hh-p.r));
+        if(p.pos.y<=p.r+.05||insideBox(p.pos.x,p.pos.y-p.r-.1,p.pos.z)){p.vel.y=Math.abs(p.vel.y)*.45;p.vel.x*=.6;p.vel.z*=.6;}else{p.vel.x*=-.45;p.vel.z*=-.45;p.vel.y*=.6;}
+        snd('grab',.5);continue;}
+      p.m.rotation.x+=dt*9;}
     if(p.kind==='blast'){const t=p.target;
       if(t&&t.alive){_w.set(t.pos.x-p.pos.x,t.pos.y+1.1-p.pos.y,t.pos.z-p.pos.z).normalize().multiplyScalar(p.speed);}else _w.copy(p.dir).multiplyScalar(p.speed);
       p.vel.lerp(_w,Math.min(1,p.turn*dt));}
-    p.pos.addScaledVector(p.vel,dt);p.m.position.copy(p.pos);reqLight(p.pos.x,p.pos.y,p.pos.z,p.color,p.kind==='bomb'?4:1.7,p.kind==='bomb'?20:9);
+    p.pos.addScaledVector(p.vel,dt);p.m.position.copy(p.pos);reqLight(p.pos.x,p.pos.y,p.pos.z,p.color,p.kind==='bomb'||p.kind==='gren'?3.2:1.7,p.kind==='bomb'||p.kind==='gren'?16:9);
     if(p.kind==='bomb'){p.m.rotation.y+=dt*3;p.m.scale.setScalar(p.r*(1+Math.sin(now*20)*.04));}
     if((p.trail-=dt)<=0){p.trail=p.kind==='bomb'?.02:.03;spr(FXT.spark,p.pos.x,p.pos.y,p.pos.z,{s0:p.r*(p.kind==='bomb'?1.2:2.4),s1:.05,life:.25,color:p.color,bright:1.4,rot:rand(0,6.3)});}
     let hit=null;for(const e of fighters){if(e.team===p.team||!e.alive)continue;const dx=e.pos.x-p.pos.x,dy=e.pos.y+1-p.pos.y,dz=e.pos.z-p.pos.z,rr=p.r+.75;if(dx*dx+dy*dy+dz*dz<rr*rr){hit=e;break;}}
+    if(p.kind==='gren'&&!hit&&p.life>0&&p.bounce>0)continue;
     if(hit||p.life<=0||p.pos.y<p.r*.5||Math.abs(p.pos.x)>HX||Math.abs(p.pos.z)>HZ||insideBox(p.pos.x,p.pos.y,p.pos.z))explode(p,hit);}
 }
 const BOMBS=[];{const ge=new T.SphereGeometry(1,20,14);for(let i=0;i<4;i++){const g=new T.Group(),core=new T.Mesh(ge,basic(0xffffff)),glow=new T.Mesh(ge,basic(0xffffff,{transparent:true,opacity:.4,depthWrite:false}));
   glow.scale.setScalar(1.35);g.add(core);g.add(glow);g.visible=false;scene.add(g);BOMBS.push({g,glow,used:false});}}
+/* ---------- definitivas tácticas: cambian cómo funciona el espacio de combate por un rato ---------- */
+// campos de ki (granada espíritu): zona que daña y frena a los rivales y los obliga a salir de su cobertura
+const KIF=[];{const rg=new T.RingGeometry(.92,1,48),dg=new T.CircleGeometry(1,40);
+  for(let i=0;i<4;i++){const g=new T.Group(),r=new T.Mesh(rg,basic(0xffffff,{transparent:true,opacity:.8,side:T.DoubleSide,depthWrite:false})),d=new T.Mesh(dg,basic(0xffffff,{transparent:true,opacity:.16,depthWrite:false,blending:T.AdditiveBlending}));
+    r.rotation.x=d.rotation.x=-PI/2;g.add(r);g.add(d);g.visible=false;scene.add(g);KIF.push({g,r,d,life:0,team:0,x:0,y:0,z:0,R:6,owner:null,tick:0});}}
+function kiField(o,x,y,z,R,life){const k=KIF.find(q=>q.life<=0)||KIF[0];Object.assign(k,{life,max:life,team:o.team,owner:o,x,y,z,R,tick:0});
+  k.g.visible=true;k.g.position.set(x,y+.06,z);k.g.scale.setScalar(R);k.r.material.color.setHex(TEAM[o.team].color);k.d.material.color.setHex(TEAM[o.team].color);}
+// santuario (despertar dorado): zona visible y disputable que cura y fortalece a tu equipo
+const SANCT=[0,1].map(t=>{const g=new T.Group(),r=new T.Mesh(new T.RingGeometry(.94,1,56),basic(0xffd23f,{transparent:true,opacity:.9,side:T.DoubleSide,depthWrite:false})),
+    d=new T.Mesh(new T.CircleGeometry(1,48),basic(0xffd23f,{transparent:true,opacity:.14,depthWrite:false,blending:T.AdditiveBlending})),
+    c=new T.Mesh(new T.CylinderGeometry(1,1,1,40,1,true),basic(0xffd23f,{transparent:true,opacity:.07,side:T.DoubleSide,depthWrite:false,blending:T.AdditiveBlending}));
+  r.rotation.x=d.rotation.x=-PI/2;c.position.y=1.6;c.scale.set(1,3.2,1);g.add(r);g.add(d);g.add(c);g.visible=false;scene.add(g);return {g,c,r,d,life:0,x:0,y:0,z:0,R:7,tick:0};});
+// armas de ki manifestadas (destello): cuatro cañones que flotan a tu alrededor y disparan solos
+function gunRig(f){if(f.gunRig)return f.gunRig;const col=TEAM[f.team].color,list=[];
+  for(let i=0;i<4;i++){const g=new T.Group(),core=new T.Mesh(new T.OctahedronGeometry(.2,0),basic(0xffffff)),barrel=new T.Mesh(new T.BoxGeometry(.12,.12,.7),basic(col));
+    barrel.material.color.multiplyScalar(1.4);barrel.position.z=-.3;g.add(core);g.add(barrel);const ring=new T.Mesh(new T.TorusGeometry(.24,.03,4,16),basic(col));g.add(ring);
+    g.visible=false;scene.add(g);list.push({g,cd:i*.12});}
+  return f.gunRig=list;}
+function updTactics(dt){
+  for(const k of KIF){if(k.life<=0)continue;k.life-=dt;const a=Math.max(0,k.life/k.max);k.r.material.opacity=.4+.5*a;k.d.material.opacity=.06+.14*a+Math.sin(now*12)*.03;
+    if(Math.random()<dt*24){const an=rand(0,6.283),rr=rand(0,k.R);spr(FXT.spark,k.x+Math.cos(an)*rr,k.y+.2,k.z+Math.sin(an)*rr,{s0:.5,s1:.05,life:.5,color:TEAM[k.team].color,bright:1.4,vy:rand(1.5,3.5)});}
+    reqLight(k.x,k.y+1,k.z,TEAM[k.team].color,1.6*a+.4,k.R*2);
+    if((k.tick-=dt)<=0){k.tick=.25;for(const e of fighters){if(e.team===k.team||!e.alive)continue;const dx=e.pos.x-k.x,dz=e.pos.z-k.z;
+      if(dx*dx+dz*dz<k.R*k.R&&Math.abs(e.pos.y-k.y)<3){e.slowT=.35;damage(e,4,k.owner);}}}
+    if(k.life<=0)k.g.visible=false;}
+  for(const t of [0,1]){const s=SANCT[t];if(s.life<=0)continue;s.life-=dt;const a=Math.min(1,s.life/1.5);s.g.visible=s.life>0;
+    s.c.material.opacity=.035*a;s.d.material.opacity=(.05+Math.sin(now*4)*.02)*a;s.r.material.opacity=.9*a;s.c.rotation.y+=dt*.6;
+    reqLight(s.x,s.y+2,s.z,0xffd23f,1.1*a,s.R*1.8);
+    if(Math.random()<dt*14){const an=rand(0,6.283),rr=rand(0,s.R);spr(FXT.spark,s.x+Math.cos(an)*rr,s.y+.3,s.z+Math.sin(an)*rr,{s0:.45,s1:.05,life:.8,color:0xffd23f,bright:1.4,vy:rand(1,2.6)});}
+    if((s.tick-=dt)<=0){s.tick=.25;for(const e of fighters){if(!e.alive)continue;const dx=e.pos.x-s.x,dz=e.pos.z-s.z;if(dx*dx+dz*dz>s.R*s.R||Math.abs(e.pos.y-s.y)>3)continue;
+      if(e.team===t){e.sanctT=.4;if(e.hp<e.maxHp){e.hp=Math.min(e.maxHp,e.hp+3);if(Math.random()<.4)spr(FXT.spark,e.pos.x,e.pos.y+1.2,e.pos.z,{s0:.6,s1:.05,life:.6,color:0x7be36a,bright:1.4,vy:2});}}}}}
+  for(const f of fighters){
+    if(f.slowT>0)f.slowT-=dt;if(f.sanctT>0)f.sanctT-=dt;if(f.warpCd>0)f.warpCd-=dt;if(f.lungeCd>0)f.lungeCd-=dt;
+    // granada espíritu: breve impulso y lanzamiento en parábola
+    if(f.grenT>0){f.grenT-=dt;if(!f.alive||f.stunT>0){f.grenT=0;continue;}
+      if(f.grenT<=0){const t=f.isPlayer?lock:f.target,fx=-Math.sin(f.yaw),fz=-Math.cos(f.yaw);_a.set(f.pos.x+fx*.6,f.pos.y+1.7,f.pos.z+fz*.6);
+        if(f.isPlayer&&!(t&&t.alive)){camera.getWorldDirection(_b);_b.multiplyScalar(21);_b.y+=5.5;}
+        else if(t&&t.alive){const dx=t.pos.x-_a.x,dz=t.pos.z-_a.z,d=Math.hypot(dx,dz)||1,tt=clamp(d/19,.35,1.6);_b.set(dx/tt,(t.pos.y+.6-_a.y)/tt+13*tt,dz/tt);}
+        else _b.set(fx*20,6,fz*20);
+        const p=shoot('gren',f,_a,_b,null,{speed:0,turn:0,dmg:0,r:.42,life:1.8});p.bounce=2;snd('rush',f===player?1:volAt(f.pos));act(f,'cast');}}
+    // armas de ki
+    if(f.gunsT>0){f.gunsT-=dt;const rig=gunRig(f);const on=f.alive&&f.gunsT>0;
+      let tgt=f.isPlayer?lock:f.target;if(!(tgt&&tgt.alive)){tgt=null;let bd=38*38;for(const e of fighters){if(e.team===f.team||!e.alive)continue;const d=f.pos.distanceToSquared(e.pos);if(d<bd&&los(f,e)){bd=d;tgt=e;}}}
+      rig.forEach((gn,i)=>{gn.g.visible=on;if(!on)return;const a=now*1.6+i*PI/2,rx=Math.cos(a)*1.25,rz=Math.sin(a)*1.25;
+        gn.g.position.set(f.pos.x+rx,f.pos.y+1.9+Math.sin(now*3+i)*.2+(i%2)*.35,f.pos.z+rz);
+        if(tgt)gn.g.lookAt(tgt.pos.x,tgt.pos.y+1.1,tgt.pos.z);else gn.g.rotation.y=f.yaw;
+        if((gn.cd-=dt)<=0&&tgt){gn.cd=.55;_a.copy(gn.g.position);_b.set(tgt.pos.x-_a.x,tgt.pos.y+1.1-_a.y,tgt.pos.z-_a.z).normalize().multiplyScalar(30);_b.x+=rand(-4,4);_b.y+=rand(0,5);_b.z+=rand(-4,4);
+          shoot('blast',f,_a,_b,tgt,{speed:34,turn:3.2,dmg:6,r:.18,life:2});lightFlash(_a.x,_a.y,_a.z,TEAM[f.team].color,1.2,6,.08);snd('pew',f===player?.7:volAt(f.pos)*.7);}});
+      if(f.gunsT<=0)rig.forEach(gn=>gn.g.visible=false);}
+    // golpe pesado: carga corta y comprometida
+    if(f.heavyT>0){f.heavyT-=dt;if(!f.alive||f.stunT>0){f.heavyT=0;}
+      else{if(Math.random()<dt*40)spr(FXT.spark,f.pos.x+rand(-.5,.5),f.pos.y+rand(.8,1.8),f.pos.z+rand(-.5,.5),{s0:.4,s1:.05,life:.25,color:TEAM[f.team].color,bright:1.5});
+        reqLight(f.pos.x,f.pos.y+1.3,f.pos.z,TEAM[f.team].color,1.2,7);if(f.heavyT<=0)meleeHit(f,'heavy');}}
+  }
+}
 function updUlts(dt){
   for(const f of fighters){
     // bomba espíritu: crece sobre la cabeza y luego se lanza
@@ -1607,7 +1694,7 @@ function updUlts(dt){
         const p=shoot('blast',f,_a,_b,t&&t.alive?t:null,{speed:44,turn:4.5,dmg:9,r:.26,life:2.6});if(!(t&&t.alive)){camera.getWorldDirection(_w);if(f.isPlayer)p.dir.copy(_w);else p.dir.set(fx,0,fz);}
         snd('pew',f===player?1:volAt(f.pos));}}
     // despertar dorado: invulnerable y más rápido
-    if(f.superT>0){f.superT-=dt;if(f.alive){f.protT=Math.max(f.protT,now+.05);
+    if(f.superT>0){f.superT-=dt;if(f.alive){
       if((f.fxT-=dt)<=0){f.fxT=.12;spr(FXT.spark,f.pos.x+rand(-.7,.7),f.pos.y+rand(.2,1.8),f.pos.z+rand(-.7,.7),{s0:.5,s1:.05,life:.5,color:0xffd23f,bright:1.6,vy:3.5});}}}
   }
 }
@@ -1627,7 +1714,7 @@ function toggleLock(){if(!player.alive)return;if(lock){lock=null;return;}lock=pi
 
 /* ---------- física de luchador ---------- */
 function physics(f,dt){
-  const sp=SPEED*CLS[f.cls].spd*(f.superT>0?1.15:1)*(f.isPlayer?1-.38*ads:1),v=f.vel,w=f.wish,wl=Math.hypot(w.x,w.z);
+  const sp=SPEED*CLS[f.cls].spd*(f.superT>0?1.15:1)*(f.slowT>0?.6:1)*(f.isPlayer?1-.38*ads:1),v=f.vel,w=f.wish,wl=Math.hypot(w.x,w.z);
   let hs=Math.hypot(v.x,v.z);
   if(f.climbT>0){ // agarrarse del borde o saltar un obstáculo
     f.climbT-=dt;const k=1-Math.max(0,f.climbT)/f.climbD,e=k*k*(3-2*k),A=f.cA,B=f.cB;
@@ -1653,12 +1740,13 @@ function physics(f,dt){
     for(const e of fighters){if(e.team===f.team||!e.alive||f.rushHit.includes(e))continue;const dx=e.pos.x-f.pos.x,dz=e.pos.z-f.pos.z;
       if(dx*dx+dz*dz<4&&Math.abs(e.pos.y-f.pos.y)<2.2){f.rushHit.push(e);e.vel.x+=f.rushDir.x*12;e.vel.z+=f.rushDir.z*12;e.vel.y=6.5;e.onGround=false;
         burst(e.pos.x,e.pos.y+1.1,e.pos.z,0xffffff,12,7);if(f===player)shake=.2;damage(e,45,f,true);}}}
-  else if(f.dashT>0){f.dashT-=dt;v.x=f.dashDir.x*18;v.z=f.dashDir.z*18;if(f.dashT<=0&&f.pendingMelee){f.pendingMelee=false;v.x*=.3;v.z*=.3;meleeHit(f);}}
+  else if(f.dashT>0){f.dashT-=dt;v.x=f.dashDir.x*18;v.z=f.dashDir.z*18;if(f.dashT<=0)f.dashEnd=now;if(f.dashT<=0&&f.pendingMelee){f.pendingMelee=false;v.x*=.3;v.z*=.3;meleeHit(f);}}
   else if(f.wr>0){
     f.wr-=dt;const nx=f.wrNx,nz=f.wrNz;
     v.x=-nz*f.wrDir*f.wrSpd-nx*3;v.z=nx*f.wrDir*f.wrSpd-nz*3; // el empuje hacia el muro mantiene el contacto
     if(f.wr<=0||f.wallT<=0||f.wallN.x!==nx||f.wallN.z!==nz||wl<.1||w.x*nx+w.z*nz>.6){f.wr=0;f.wrCd=.3;}
   }
+  else if(f.heavyT>0&&f.onGround){const k=Math.exp(-9*dt);v.x*=k;v.z*=k;}
   else if(f.charging){const k=Math.exp(-8*dt);v.x*=k;v.z*=k;f.ult=Math.min(100,f.ult+24*dt);f.sp=Math.min(100,f.sp+45*dt);}
   else if(f.launchT>0){const k=Math.exp(-1.2*dt);v.x*=k;v.z*=k;}
   else if(f.sliding){if((f.dustT-=dt)<=0){f.dustT=.07;fxDust(f.pos.x-v.x*.04,f.pos.y,f.pos.z-v.z*.04,1,1.2,.7);}const k=Math.exp(-.8*dt);v.x=v.x*k+w.x*3*dt;v.z=v.z*k+w.z*3*dt;}
@@ -1685,7 +1773,7 @@ function physics(f,dt){
   if(f.onGround&&vy0<-19)slam(f);
   else if(f.onGround&&vy0<-9)fxDust(p.x,p.y,p.z,4,2.5,.9);
   if(p.y>WALLH-H){p.y=WALLH-H;if(v.y>0)v.y=0;}
-  if(f.onGround){f.groundY=p.y;f.jumps=0;f.wr=0;
+  if(f.onGround){f.groundY=p.y;f.jumps=0;f.wr=0;f.airHits=0;
     for(const pd of pads){const dx=p.x-pd.x,dz=p.z-pd.z;if(Math.abs(p.y-pd.y)<.1&&dx*dx+dz*dz<2.3){v.y=pd.pow*1.035;f.onGround=false;f.jumps=1;if(f===player)snd('pad');burst(p.x,p.y+.2,p.z,ARC,6,3);break;}}}
   if(f.spWait>0)f.spWait-=dt;else if(f.sp<100)f.sp=Math.min(100,f.sp+18*dt);
   if(now-f.lastHit>6&&f.hp<f.maxHp)f.hp=Math.min(f.maxHp,f.hp+5*dt);
@@ -1728,7 +1816,7 @@ function animate(f,dt){
 /* ---------- entrada ---------- */
 const keys={};let mouseDown=false,locked=false,wasLocked=false,touchMode=false;
 const joy={x:0,y:0,id:null,ox:0,oy:0},look={id:null,x:0,y:0},tbtn={fire:false,fireId:null};
-let adsHeld=false,ads=0,jumpQ=false,dashQ=false,skillQ=false,parryQ=false,ultQ=false,diveQ=false;
+let adsHeld=false,ads=0,heavyQ=false,jumpQ=false,dashQ=false,skillQ=false,parryQ=false,ultQ=false,diveQ=false;
 function setWeapon(i){if(player.weapon===i)return;player.weapon=i;player.reloadT=0;player.cd=Math.max(player.cd,.2);}
 function lockPtr(){if(touchMode)return;try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{});}catch(e){}}
 document.addEventListener('pointerlockchange',()=>{locked=document.pointerLockElement===canvas;if(locked)wasLocked=true;else{mouseDown=false;if(wasLocked&&!game.menu&&!game.paused&&game.state!=='ended')pause();wasLocked=false;}});
@@ -1748,7 +1836,7 @@ window.addEventListener('keydown',e=>{
 window.addEventListener('keyup',e=>{keys[e.code]=false;});
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouseDown=false;});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&!game.menu&&!game.paused&&game.state!=='ended')pause();});
-canvas.addEventListener('mousedown',e=>{if(game.menu||game.paused)return;initAudio();if(!locked)lockPtr();if(e.button===0){mouseDown=true;if(player.clash)player.push+=1;}if(e.button===2)adsHeld=true;if(e.button===1){e.preventDefault();toggleLock();}});
+canvas.addEventListener('mousedown',e=>{if(game.menu||game.paused)return;initAudio();if(!locked)lockPtr();if(e.button===0){mouseDown=true;if(player.clash)player.push+=1;}if(e.button===2){adsHeld=true;if(player.weapon===1)heavyQ=true;}if(e.button===1){e.preventDefault();toggleLock();}});
 window.addEventListener('mouseup',e=>{if(e.button===0)mouseDown=false;if(e.button===2)adsHeld=false;});
 window.addEventListener('mousemove',e=>{if(game.menu||game.paused||touchMode)return;camYaw-=(e.movementX||0)*.0023;camPitch=clamp(camPitch-(e.movementY||0)*.0023,-1.25,1.25);});
 window.addEventListener('wheel',e=>{if(game.menu||game.paused)return;setWeapon((player.weapon+(e.deltaY>0?1:2))%3);},{passive:true});
@@ -1813,7 +1901,8 @@ function updPlayer(dt){
   ads+=((adsHeld&&w!==1&&p.wr<=0&&p.dashT<=0&&p.climbT<=0?1:0)-ads)*Math.min(1,dt*12);
   if(p.reloadT>0){p.reloadT-=dt;if(p.reloadT<=0)p.ammo[w]=W.mag;}
   const firing=(mouseDown||tbtn.fire)&&game.state==='playing'&&p.rushT<=0&&!p.charging&&!p.pendingMelee;
-  if(firing&&p.cd<=0&&p.reloadT<=0){
+  if(heavyQ){heavyQ=false;if(w===1&&p.cd<=0&&p.heavyT<=0&&heavy(p))p.cd=.75;}
+  if(firing&&p.cd<=0&&p.reloadT<=0&&!(p.heavyT>0)){
     if(w===1||(p.superT>0&&lock)){melee(p);p.cd=p.superT>0?.35:W.cd;}
     else if(p.ammo[w]>0){p.ammo[w]--;playerShoot(w);p.cd=W.cd;if(p.ammo[w]===0)reload();}
     else reload();
@@ -1882,7 +1971,7 @@ function updBot(b,dt){
     b.seeT+=dt;
     if(game.state==='playing'&&b.rushT<=0){
       const D=b.team===player.team?DIFF[1]:DIFF[game.diff];
-      if(td<3&&Math.abs(tg.pos.y-b.pos.y)<2.2){b.weapon=1;if(b.cd<=0&&b.seeT>D.react*.6){melee(b);b.cd=rand(.6,.95);}}
+      if(td<3&&Math.abs(tg.pos.y-b.pos.y)<2.2){b.weapon=1;if(b.cd<=0&&b.seeT>D.react*.6&&!(b.heavyT>0)){if(Math.random()<.22){heavy(b);b.cd=rand(.9,1.2);}else{melee(b);b.cd=rand(.6,.95);}}}
       else{if(b.weapon===1&&b.swingT<=0)b.weapon=0;
         if(b.weapon===0&&b.cd<=0&&b.seeT>D.react){botShoot(b,tg);b.burst--;if(b.burst<=0){b.burst=4+(Math.random()*5|0);b.cd=rand(.45,.95);}else b.cd=.11;}}
     }
@@ -1894,7 +1983,7 @@ function updBot(b,dt){
     else if(L>.01&&gd>20&&Math.random()<dt*.8)useSkill(b,wx,wz);
   }
   if(game.state==='playing'){const di=b.team===player.team?1:game.diff;
-    if(tg&&b.ult>=100&&td>7&&td<(b.cls===2?35:75)&&b.seeT>.5){startUlt(b);return;}
+    if(tg&&b.ult>=100&&td>7&&td<[75,30,35,40][b.cls]&&b.seeT>.5){startUlt(b);return;}
     if(b.superT>0&&tg&&b.cd<=0&&b.stunT<=0){melee(b);b.cd=rand(.4,.6);}
     if(tg&&now-b.lastHit<.25&&td>5&&Math.random()<dt*[0,.5,1.2][di])vanish(b,tg);
     if(!tg&&b.ult<100&&gd>40&&b.botCharge<=0&&Math.random()<dt*.25)b.botCharge=1.6;}
@@ -1921,7 +2010,7 @@ function step(dt){
     if(!f.isPlayer){if(f.stunT>0||f.ultT>0){f.wish.x=f.wish.z=0;f.charging=false;if(f.ultT>0&&!f.clash)botBeamAim(f,dt);}else updBot(f,dt);}
     physics(f,dt);if(game.state==='ended')return;animate(f,dt);
   }
-  updClash(dt);updBeams(dt);updUlts(dt);updPJ(dt);updFx(dt);updSpr(dt);
+  updClash(dt);updBeams(dt);updUlts(dt);updTactics(dt);updPJ(dt);updFx(dt);updSpr(dt);
   for(const pd of pads)pd.m.rotation.z+=dt*1.5;
   for(const t of [0,1])TEAM[t].rune.rotation.z+=dt*.4;
   if(MAPFX.halo)MAPFX.halo.rotation.y+=dt*.12;if(MAPFX.motes){MAPFX.motes.position.y=Math.sin(now*.25)*.6;MAPFX.motes.rotation.y+=dt*.004;}
@@ -2065,7 +2154,7 @@ buildTags();fullReset();
 for(const k of [10,11])loadVRM(k).then(v=>{if(v)refreshLook(k);});
 loadProp('sword').then(v=>{if(v){for(const f of fighters)f.setClass(f.cls,f.look,true);buildTags();}});
 loadAnim('strafe','anims/sword-strafe.json');loadMoves('anims/moves.json');
-window.__game={boxes,setCam:(y,p)=>{camYaw=y;camPitch=p;},PJ,SPR,fxWord,swordModel,PROPS,game,player,fighters,step,startMatch,useSkill,jump,keys,startUlt,toggleLock,clash,melee,getLock:()=>lock};
+window.__game={boxes,setCam:(y,p)=>{camYaw=y;camPitch=p;},PJ,SPR,fxWord,swordModel,PROPS,game,player,fighters,step,startMatch,useSkill,jump,keys,startUlt,toggleLock,clash,melee,heavy,KIF,SANCT,getLock:()=>lock};
 requestAnimationFrame(loop);
 })();
 </script>
