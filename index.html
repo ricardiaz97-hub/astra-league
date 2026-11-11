@@ -434,7 +434,7 @@ const mFinal=shader(`uniform sampler2D t,b,m;uniform float ca,k,sat,con,mist;uni
     float r=length(p);
     vec3 gh=texture2D(b,.5-p*.6).rgb*spec(fract(r*1.7+.15))*.45+texture2D(b,.5-p*1.4).rgb*spec(fract(r*2.6+.55))*.3;
     c+=bl*k+gh*k*smoothstep(.02,.2,r2);float lu=dot(c,vec3(.299,.587,.114));c=mix(vec3(lu),c,sat);c=c*gain+lift*(1.-clamp(c,0.,1.));vec3 cc=clamp(c,0.,1.);c=mix(c,cc*cc*(3.-2.*cc),con);
-    if(mist>0.){vec3 h=(texture2D(m,vUv).rgb*1.5+texture2D(b,vUv).rgb)*mistC*4.2;c=1.-(1.-c)*(1.-clamp(h*mist,0.,1.));float l2=dot(c,vec3(.299,.587,.114));c=mix(c,vec3(l2),-.04*mist);c=mix(c,c*.92+.04,mist*.35*smoothstep(.55,1.,l2));}
+    if(mist>0.){vec3 h=(texture2D(m,vUv).rgb*1.5+texture2D(b,vUv).rgb)*mistC*2.4;c=1.-(1.-c)*(1.-clamp(h*mist,0.,1.));float l2=dot(c,vec3(.299,.587,.114));c=mix(c,vec3(l2),-.04*mist);c=mix(c,c*.92+.04,mist*.35*smoothstep(.55,1.,l2));}
     c*=1.-r2*.38;gl_FragColor=vec4(c,1.);}`,{t:{value:null},b:{value:null},m:{value:null},mist:{value:0},mistC:{value:new T.Vector3(.5,.4,.55)},ca:{value:.013},k:{value:.6},sat:{value:1},con:{value:0},lift:{value:new T.Vector3()},gain:{value:new T.Vector3(1,1,1)}});
 function fxResize(){
   for(const n of ['rt','a','b'])if(FX[n]){FX[n].dispose();FX[n]=null;}
@@ -769,7 +769,7 @@ function buildHotel(){
       const m=(lo+hi)/2,l0=Math.min(lo,hi),l1=Math.max(lo,hi);
       for(const w of[w0+.05,w1-.05]){if(dir[1]==='x'){deco(m-.04,m+.04,top,top+.86,w-.04,w+.04,TRIM,1);deco(l0,l1,top+.86,top+.94,w-.06,w+.06,WOOD,1);}
         else{deco(w-.04,w+.04,top,top+.86,m-.04,m+.04,TRIM,1);deco(w-.06,w+.06,top+.86,top+.94,l0,l1,WOOD,1);}}}};
-  const lamp=(x,y,z,c,i,d,fl,size)=>{const l=new T.PointLight(c,i,d||16,2);l.position.set(x,y,z);scene.add(l);
+  const lamp=(x,y,z,c,i,d,fl,size)=>{i*=1.35;d=(d||16)*1.2;const l=new T.PointLight(c,i,d,2);l.position.set(x,y,z);scene.add(l);
     const m=basic(c);m.color.multiplyScalar(1.6);const b=new T.Mesh(new T.BoxGeometry(size||.5,.12,size||.5),m);b.position.set(x,y+.25,z);scene.add(b);
     lamps.push({l,i,c,fl:fl||0,t:0,on:true,m:fl?m:null});return l;};
   const fakeLamp=(x,y,z,c,r,op)=>{const m=basic(c);m.color.multiplyScalar(1.6);const b=new T.Mesh(new T.BoxGeometry(.5,.12,.5),m);b.position.set(x,y,z);scene.add(b);glowPool(x,.03,z,r||3.5,c,op||.3);};
@@ -839,7 +839,7 @@ function buildHotel(){
   lamp(-45.5,1.6,1,CY,3.2,15);glowPool(-45.5,.03,1,5,CY,.3);
   lamp(-37.5,3.6,-9.5,RED,1.6,10,.6);fakeLamp(-58,8.8,16,ORA,4);
   hdec('poster',2.6,-60.9,2.6,-4,PI/2);hdec('tag',3.2,-36.6,2.2,17,-PI/2);hdec('crest',4,-55,.03,-8,PI/2,true);
-  vol.push([-61,0,-22,-36,9,22,.9]);
+  vol.push([-61,0,-22,-36,9,22,.74]);lamp(-55,7.6,-14,0xffb070,1.5,18,.12);lamp(-42,7.6,14,0xffb070,1.3,16);
   // haz de luz por el hueco del techo
   const shaftM=basic(0xffb878,{transparent:true,opacity:.16,depthWrite:false,blending:T.AdditiveBlending,side:T.DoubleSide});
   for(const r of[0,.9]){const sh=new T.Mesh(new T.PlaneGeometry(8,10.5),shaftM);sh.position.set(-48,4.7,0);sh.rotation.set(0,r,-.12);scene.add(sh);}
@@ -876,7 +876,7 @@ function buildHotel(){
   for(const x of[-40,-22,0,21])wallZ(29,46,x,5.5,10,Q+'stucco',[[33,36,5.5,8.6]],.5,3,0xd8c0c0);
   B(-30,-26,26,28,5.5,6.6,Q+'copper',2,0xb8a8a8);B(14,17,26,28,5.5,6.6,Q+'copper',2,0xb8a8a8);B(50,54,28,30,5.5,6.7,Q+'vent2',2);
   lamp(-50,9.2,34,ORA,1.4,13,.25);fakeLamp(10,9.8,36,0xb06bff,4);hdec('tag',3,-31,7,45.9,PI);hdec('starburst',2.6,30,7,45.9,PI);
-  vol.push([-61,5.5,23,62,10,46,.95]);
+  vol.push([-61,5.5,23,62,10,46,.8]);lamp(-28,9.3,38,0xffb070,1.3,16,.2);lamp(30,9.3,30,0xffb070,1.3,16);
   // escalera interior al segundo piso (desde el pasillo, extremo este)
   stairs(32,40,32.5,36,'+x',0,5.5,11,Q+'plaza');
   // azotea con piscina vacía
@@ -1090,7 +1090,7 @@ function bakeMap(group,opts){
 const MAPS=[
   {name:'AZOTEA',build:buildRooftop,HX:80,HZ:46,base:68,edges:true,hemi:[0xffffff,0xb9a8c8,.64],sun:[0xfff1dc,.5,-20,40,18],fog:[0xd6e9ff,150,420],ink:0x1d1a22,rim:[0,0],lift:[0,0,0],gain:[1,1,1],sat:1,k:.45,ca:.012,con:.25},
   {name:'ATARDECER',build:buildSunset,HX:76,HZ:58,base:62,edges:false,hemi:[0x8c74d8,0x1e1028,.36],sun:[0xffa868,1.2,-90,26,38],fog:[0x4e2c52,95,400],ink:0x2a1834,rim:[0xff9a5a,.42],lift:[.018,.004,.04],gain:[1.06,.98,.96],sat:.92,k:.38,ca:.009,con:.5,mist:.5,mistC:[.64,.48,.44]},
-  {name:'HOTEL AURORA',build:buildHotel,HX:61,HZ:46,base:56,edges:false,hemi:[0x8a78d0,0x2a1834,.5],sun:[0xffb07a,1.1,-60,52,-34],fog:[0x4a2a50,110,420],ink:0x24142e,rim:[0xff9a5a,.38],lift:[.012,.003,.03],gain:[1.06,.98,.96],sat:.94,k:.4,ca:.009,con:.5,indK:.11,bake:true,mist:.6,mistC:[.62,.5,.44],
+  {name:'HOTEL AURORA',build:buildHotel,HX:61,HZ:46,base:56,edges:false,hemi:[0x8a78d0,0x2a1834,.5],sun:[0xffb07a,1.1,-60,52,-34],fog:[0x4a2a50,110,420],ink:0x24142e,rim:[0xff9a5a,.38],lift:[.012,.003,.03],gain:[1.06,.98,.96],sat:.94,k:.4,ca:.009,con:.5,indK:.38,bake:true,mist:.5,mistC:[.62,.5,.44],
    spawns:[[[-55,0,-9],[-55,0,-15],[-56,0,-3]],[[56,2.4,-12],[56,2.4,-6],[58,2.4,2]]],nav:HOTEL_NAV}];
 let mapGroup=null,mapId=-1;
 const SET={words:false,mist:true};try{SET.words=localStorage.getItem('astra-words')==='1';SET.mist=localStorage.getItem('astra-mist')!=='0';}catch(e){}
