@@ -267,6 +267,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
       <div class="grp"><div class="lbl">MAPA</div><div class="seg" id="mapSel"><button data-m="2" class="sel">HOTEL</button><button data-m="1">ATARDECER</button><button data-m="0">AZOTEA</button></div></div>
       <div class="grp"><div class="lbl">DIFICULTAD</div><div class="seg" id="diff"><button data-d="0">FÁCIL</button><button data-d="1" class="sel">NORMAL</button><button data-d="2">DIFÍCIL</button></div></div>
       <div class="grp"><div class="lbl">SOMBRAS</div><div class="seg" id="shSel"><button data-s="2">ALTAS</button><button data-s="1" class="sel">BAJAS</button><button data-s="0">NO</button></div></div>
+      <div class="grp"><div class="lbl">NIEBLA SUAVE</div><div class="seg" id="mistSel"><button data-n="1" class="sel">SÍ</button><button data-n="0">NO</button></div></div>
       <div class="grp"><div class="lbl">EFECTOS DE LUZ</div><div class="seg" id="fxSel"><button data-f="1" class="sel">SÍ</button><button data-f="0">NO</button></div></div>
       <div class="grp"><div class="lbl">TEXTOS DE CÓMIC</div><div class="seg" id="wordSel"><button data-w="1">SÍ</button><button data-w="0" class="sel">NO</button></div></div>
     </div>
@@ -424,7 +425,7 @@ const mBright=shader(`uniform sampler2D t;varying vec2 vUv;void main(){vec3 c=te
   float l=dot(c,vec3(.299,.587,.114));float w=smoothstep(.6,.97,(mx-mn)*mx)*.55+smoothstep(.93,1.,l)*.25;gl_FragColor=vec4(c*w,1.);}`,{t:{value:null}});
 const mBlur=shader(`uniform sampler2D t;uniform vec2 d;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb*.227;
   c+=(texture2D(t,vUv+d*1.385).rgb+texture2D(t,vUv-d*1.385).rgb)*.316;c+=(texture2D(t,vUv+d*3.231).rgb+texture2D(t,vUv-d*3.231).rgb)*.0703;gl_FragColor=vec4(c,1.);}`,{t:{value:null},d:{value:new T.Vector2}});
-const mFinal=shader(`uniform sampler2D t,b;uniform float ca,k,sat,con;uniform vec3 lift,gain;varying vec2 vUv;
+const mFinal=shader(`uniform sampler2D t,b;uniform float ca,k,sat,con,mist;uniform vec3 lift,gain,mistC;varying vec2 vUv;
   vec3 spec(float x){return clamp(vec3(1.5-abs(4.*x-1.),1.5-abs(4.*x-2.),1.5-abs(4.*x-3.)),0.,1.);}
   void main(){vec2 p=vUv-.5;float r2=dot(p,p);vec2 o=p*r2*ca;
     vec3 c=vec3(texture2D(t,vUv-o).r,texture2D(t,vUv).g,texture2D(t,vUv+o).b);
@@ -432,7 +433,8 @@ const mFinal=shader(`uniform sampler2D t,b;uniform float ca,k,sat,con;uniform ve
     float r=length(p);
     vec3 gh=texture2D(b,.5-p*.6).rgb*spec(fract(r*1.7+.15))*.45+texture2D(b,.5-p*1.4).rgb*spec(fract(r*2.6+.55))*.3;
     c+=bl*k+gh*k*smoothstep(.02,.2,r2);float lu=dot(c,vec3(.299,.587,.114));c=mix(vec3(lu),c,sat);c=c*gain+lift*(1.-clamp(c,0.,1.));vec3 cc=clamp(c,0.,1.);c=mix(c,cc*cc*(3.-2.*cc),con);
-    c*=1.-r2*.38;gl_FragColor=vec4(c,1.);}`,{t:{value:null},b:{value:null},ca:{value:.013},k:{value:.6},sat:{value:1},con:{value:0},lift:{value:new T.Vector3()},gain:{value:new T.Vector3(1,1,1)}});
+    if(mist>0.){vec3 bb=texture2D(b,vUv).rgb;c=1.-(1.-c)*(1.-clamp(bb*mist*1.6,0.,1.));float l2=dot(c,vec3(.299,.587,.114));c+=mistC*mist*(.07+.05*(1.-l2))*(1.-r2);}
+    c*=1.-r2*.38;gl_FragColor=vec4(c,1.);}`,{t:{value:null},b:{value:null},mist:{value:0},mistC:{value:new T.Vector3(.5,.4,.55)},ca:{value:.013},k:{value:.6},sat:{value:1},con:{value:0},lift:{value:new T.Vector3()},gain:{value:new T.Vector3(1,1,1)}});
 function fxResize(){
   for(const n of ['rt','a','b'])if(FX[n]){FX[n].dispose();FX[n]=null;}
   if(!FX.on)return;
@@ -724,7 +726,20 @@ function buildSunset(){
 /* ---------- HOTEL AURORA: un hotel de lujo abandonado convertido en campo de batalla ----------
    Oeste: vestíbulo derrumbado (ALFA). Centro: patio con fuente. Norte: ala de 3 niveles con balcones rotos y piscina en la azotea.
    Sur: salón de baile, callejón, cuartos de personal y el pasillo de mantenimiento. Este: terraza de la piscina (BETA) y patio de servicio. */
-const CITY={};
+const CITY={},PROPLIB={};
+function propLib(n){let c=PROPLIB[n];if(c)return c.p;c=PROPLIB[n]={p:fetch('props/'+n+'.json').then(r=>r.json()).then(j=>new Promise(res=>{const bin=atob(j.data),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+    new T.GLTFLoader().parse(u.buffer,'',g=>{g.scene.traverse(m=>{if(!m.isMesh)return;const om=m.material,map=om.map;if(map)map.encoding=T.LinearEncoding;
+      const glow=(om.emissive&&om.emissive.getHex()>0x101010)||/light|glass|bulb|emis/i.test(om.name||'');
+      m.material=glow?basic(0xfff0c8):toon(n==='fences'?0xb8a6b4:0xd8ccd0,{map,alphaTest:om.alphaTest>0||om.transparent?.5:0});if(!map&&!glow)m.material.color.copy(om.color);});g.scene.updateMatrixWorld(true);res(g.scene);},()=>res(null));})).catch(()=>null)};return c.p;}
+// pieza de un paquete: se centra en (x,y,z) apoyada en el piso; opcionalmente ajusta su tamaño mayor
+function placeProp(lib,node,x,y,z,ry,size,opts){const want=CURM;opts=opts||{};propLib(lib).then(sc=>{if(!sc||CURM!==want||!mapGroup)return;
+  const src=node?sc.getObjectByName(node):sc;if(!src)return;const o=src.clone(true);o.position.set(0,0,0);o.rotation.set(0,0,0);o.scale.set(1,1,1);
+  const holder=new T.Group(),inner=new T.Group();inner.add(o);holder.add(inner);
+  if(node){const wm=new T.Matrix4();src.updateWorldMatrix(true,false);wm.copy(src.matrixWorld);o.applyMatrix4(wm);}
+  const bb=new T.Box3().setFromObject(inner),sz=bb.getSize(new V3()),c=bb.getCenter(new V3());let k=1;if(size){k=size/Math.max(sz.x,sz.y,sz.z);}
+  if(opts.rx)inner.rotation.x=opts.rx;inner.scale.setScalar(k);inner.position.set(-c.x*k,-bb.min.y*k,-c.z*k);
+  holder.position.set(x,y,z);holder.rotation.y=ry||0;holder.traverse(m=>{if(m.isMesh){m.castShadow=!opts.flat;m.receiveShadow=true;if(opts.flat){m.userData.noShadow=1;m.material.polygonOffset=true;m.material.polygonOffsetFactor=-2;}}});
+  mapGroup.add(holder);shadeAll(holder);});}
 function loadCity(n,x,z,ry,sc){const want=CURM;const put=src=>{if(CURM!==want||!mapGroup)return;const o=T.SkeletonUtils?T.SkeletonUtils.clone(src):src.clone(true);
     o.position.set(x,0,z);o.rotation.y=ry;o.scale.setScalar(sc);o.traverse(m=>{if(m.isMesh){m.userData.noShadow=1;m.castShadow=m.receiveShadow=false;}});mapGroup.add(o);};
   let c=CITY[n];if(!c){c=CITY[n]={p:fetch('city/'+n+'.json').then(r=>r.json()).then(j=>new Promise(res=>{const bin=atob(j.data),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
@@ -893,7 +908,7 @@ function buildHotel(){
   wallX(-62,62,-46.5,0,12,Q+'brick',[],1,4); // límite sur
   // pasillo de mantenimiento z -46..-42 (techo 3.2)
   floorPlane(-61,44,-46,-42,.012,Q+'grate2',2,0x8a7a8a);
-  wallX(-61,44,-42.25,0,3.2,Q+'concrete',[[-52,-49,0,3],[-34.5,-31.5,0,3],[-14,-11,0,3],[36,39,0,3]],.5,3);
+  wallX(-61,44,-42.25,0,3.2,'tl/c126',[[-52,-49,0,3],[-34.5,-31.5,0,3],[-14,-11,0,3],[36,39,0,3]],.5,3);
   wallZ(-46,-42,44.25,0,3.2,Q+'brick',[],.5,3);
   B(-61,44.5,-46,-42,3.2,3.7,Q+'steel',3,0x9a8aa0);
   for(const x of[-44,-20,4,24])B(x-1,x+1,-45.8,-45,0,2.6,Q+'pipes',2);
@@ -905,7 +920,7 @@ function buildHotel(){
   // cuartos de personal (bajo el vestíbulo)
   floorPlane(-61,-36,-41.75,-22.5,.012,Q+'planks',3,0x9a8890);
   wallZ(-41.75,-22.5,-36.25,0,4,'concrete/conc6',[[-30,-27,0,3.1]],.5,4);
-  wallZ(-41.75,-28,-48,0,4,Q+'stucco',[[-36,-33,0,3.1]],.5,3,0xd0b8b8);
+  wallZ(-41.75,-28,-48,0,4,'tl/c128',[[-36,-33,0,3.1]],.5,3);
   B(-61,-36,-41.75,-22.5,4,4.5,Q+'rooftile',3,0xc89888);
   B(-60,-57,-30,-27,0,1.2,Q+'copper',2,0xa89898);B(-44,-40,-38,-36,0,1.1,Q+'copper',2,0xa89898);
   fakeLamp(-54,3.9,-34,ORA,3);vol.push([-61,0,-41.75,-36,4,-22.5,1]);
@@ -977,7 +992,23 @@ function buildHotel(){
   // bases
   for(const t of[0,1]){const p=t?[56,2.43,-12]:[-55,.04,-9];TEAM[t].rune=new T.Mesh(new T.CircleGeometry(4,36),basic(0xffffff,{map:RUNE[t],transparent:true,depthWrite:false}));
     TEAM[t].rune.rotation.x=-PI/2;TEAM[t].rune.position.set(p[0],p[1],p[2]);scene.add(TEAM[t].rune);}
+  // barreras y bloques de concreto (paquete de Erroratten, CC-BY): cobertura en el patio, la terraza y el patio de servicio
+  {const PIECE={var9:[.8,.94,3],var7:[.8,.7,2.4],var6:[.59,1.08,2],var8:[.59,1,2],var11:[4.34,3.05,4.21],var2:[.6,3.14,5],var10:[.8,1.73,3]};
+    const piece=(n,x,y,z,ry)=>{const d=PIECE[n],rot=Math.abs(Math.sin(ry))>.7,w=rot?d[2]:d[0],l=rot?d[0]:d[2];boxes.push({x0:x-w/2,x1:x+w/2,y0:y,y1:y+d[1],z0:z-l/2,z1:z+l/2,tx:'concrete/conc1'});placeProp('fences',n+'_'+n+'_0',x,y,z,ry);};
+    piece('var9',-25,0,-6,0);piece('var9',4,0,9,PI/2);piece('var7',12,0,-13,PI/2);piece('var7',-16,0,13.5,0);piece('var10',-28,0,16,PI/2);
+    piece('var8',30,2.4,5,0);piece('var6',52,2.4,-2,PI/2);piece('var11',44,0,-27.3,0);piece('var2',60,0,-38,0);piece('var9',33,0,-35,PI/2);piece('var7',-34,0,-30,0);}
+  // suelo roto escaneado (grafi, CC-BY): manchas de concreto quebrado en el patio y el patio de servicio
+  for(const[x,z,r,k]of[[-20,-14,.4,5],[14,4,2.1,4.5],[-30,6,1.2,4],[2,-20,3,4.8],[48,-32,.8,5],[-8,16,2.6,3.6]])placeProp('scan',null,x,.012,z,r,k,{flat:true});
+  // faroles de pared (adventurer, CC-BY) en las fachadas que dan al patio, con su brillo
+  for(const[x,y,z,ry,gx,gz]of[[-35.6,6.4,-9.5,PI/2,-33,-9.5],[-35.6,6.4,9.5,PI/2,-33,9.5],[-12,6.4,-24.2,PI,-12,-21.5],[1,6.4,-24.2,PI,1,-21.5],[-24,8.6,22.2,0,-24,19.5],[24,8.6,22.2,0,24,19.5]]){
+    placeProp('light',null,x,y,z,ry,1.25,{rx:0});neonBar(gx*.0+x+(gx-x)*.55,y-.15,z+(gz-z)*.55,.35,.08,.35,0xffd8a0,1.6);glowPool(gx,.04,gz,3.6,0xffc070,.26);glowPool(x+(gx-x)*.15,y-1.2,z+(gz-z)*.15,2.2,0xffc070,.14,true,ry);}
   BAKE=false;
+  // niebla baja: capas suaves que se mueven despacio (patio, piscina, pasillo y salón)
+  {const mt=tex(256,256,g=>{for(let i=0;i<60;i++){const x=Math.random()*256,y=Math.random()*256,r=20+Math.random()*60,gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,'rgba(255,255,255,.22)');gr.addColorStop(1,'rgba(255,255,255,0)');
+      for(const dx of[-256,0,256])for(const dy of[-256,0,256]){g.save();g.translate(dx,dy);g.fillStyle=gr;g.fillRect(x-r,y-r,r*2,r*2);g.restore();}}});
+    for(const[x0,x1,z0,z1,y,c,op]of[[-36,24,-24,22,.35,0xd8b8d8,.5],[-36,24,-24,22,1.1,0xd0b0d8,.32],[34,48,-10,8,.5,0xa8c8e8,.55],[-61,44,-46,-42,.5,0x9a6a8a,.42],[-30,6,-41.5,-25,.6,0x9a7a98,.4],[-61,-36,-22,22,.6,0x8ab8c8,.35]]){
+      const t=mt.clone();t.needsUpdate=true;t.wrapS=t.wrapT=T.RepeatWrapping;t.repeat.set((x1-x0)/14,(z1-z0)/14);
+      const m=new T.Mesh(new T.PlaneGeometry(x1-x0,z1-z0),basic(c,{map:t,transparent:true,opacity:op,depthWrite:false,fog:true}));m.rotation.x=-PI/2;m.position.set((x0+x1)/2,y,(z0+z1)/2);m.userData.sp=rand(.004,.01);m.userData.noShadow=1;m.renderOrder=3;scene.add(m);MAPFX.mist.push(m);}}
   addPad(-33,-38,0,17); // trampolín en el callejón: sube al techo de los cuartos de personal (atajo)
 }
 const HOTEL_NAV={ // rutas normales para los bots (puertas, pasillos y escaleras)
@@ -995,7 +1026,7 @@ const HOTEL_NAV={ // rutas normales para los bots (puertas, pasillos y escaleras
 /* ---------- acabado del mapa: une la geometría estática, hornea oclusión ambiental y agrega relieve ----------
    Cada caja del mapa se rehace subdividida, con UV alineadas al mundo (las texturas siguen de una pieza a otra),
    oscurecimiento en rincones y contactos, y se agrupa por material para dibujar muy pocas mallas. */
-const NORMALS=new Set(['sunset2/arrow','sunset2/asphalt','sunset2/brick','sunset2/concrete','sunset2/copper','sunset2/corrugated','sunset2/crystal','sunset2/grate2','sunset2/hazard',
+const NORMALS=new Set(['tl/c126','tl/c128','sunset2/arrow','sunset2/asphalt','sunset2/brick','sunset2/concrete','sunset2/copper','sunset2/corrugated','sunset2/crystal','sunset2/grate2','sunset2/hazard',
   'sunset2/lavacrack','sunset2/neonframe','sunset2/pipes','sunset2/planks','sunset2/plaster','sunset2/plaza','sunset2/rooftile','sunset2/runepanel','sunset2/steel','sunset2/stucco','sunset2/vent2',
   ...Array.from({length:18},(_,i)=>'concrete/conc'+(i+1))]);
 const GLOSSY={'sunset2/asphalt':[0x3a3048,26],'sunset2/steel':[0x4a4058,34],'sunset2/copper':[0x6a4a3a,40],'sunset2/runepanel':[0x3a5a70,46],'sunset2/grate2':[0x4a4050,30],'sunset2/plaza':[0x2a2430,14]};
@@ -1060,10 +1091,11 @@ function bakeMap(group,opts){
 }
 const MAPS=[
   {name:'AZOTEA',build:buildRooftop,HX:80,HZ:46,base:68,edges:true,hemi:[0xffffff,0xb9a8c8,.64],sun:[0xfff1dc,.5,-20,40,18],fog:[0xd6e9ff,150,420],ink:0x1d1a22,rim:[0,0],lift:[0,0,0],gain:[1,1,1],sat:1,k:.45,ca:.012,con:.25},
-  {name:'ATARDECER',build:buildSunset,HX:76,HZ:58,base:62,edges:false,hemi:[0x8c74d8,0x1e1028,.36],sun:[0xffa868,1.2,-90,26,38],fog:[0x4e2c52,95,400],ink:0x2a1834,rim:[0xff9a5a,.42],lift:[.018,.004,.04],gain:[1.06,.98,.96],sat:.92,k:.38,ca:.009,con:.5},
-  {name:'HOTEL AURORA',build:buildHotel,HX:61,HZ:46,base:56,edges:false,hemi:[0x8a78d0,0x2a1834,.5],sun:[0xffb07a,1.1,-60,52,-34],fog:[0x4a2a50,110,420],ink:0x24142e,rim:[0xff9a5a,.38],lift:[.012,.003,.03],gain:[1.06,.98,.96],sat:.94,k:.4,ca:.009,con:.5,indK:.11,bake:true,
+  {name:'ATARDECER',build:buildSunset,HX:76,HZ:58,base:62,edges:false,hemi:[0x8c74d8,0x1e1028,.36],sun:[0xffa868,1.2,-90,26,38],fog:[0x4e2c52,95,400],ink:0x2a1834,rim:[0xff9a5a,.42],lift:[.018,.004,.04],gain:[1.06,.98,.96],sat:.92,k:.38,ca:.009,con:.5,mist:.45,mistC:[.6,.4,.55]},
+  {name:'HOTEL AURORA',build:buildHotel,HX:61,HZ:46,base:56,edges:false,hemi:[0x8a78d0,0x2a1834,.5],sun:[0xffb07a,1.1,-60,52,-34],fog:[0x4a2a50,110,420],ink:0x24142e,rim:[0xff9a5a,.38],lift:[.012,.003,.03],gain:[1.06,.98,.96],sat:.94,k:.4,ca:.009,con:.5,indK:.11,bake:true,mist:.55,mistC:[.55,.42,.6],
    spawns:[[[-55,0,-9],[-55,0,-15],[-56,0,-3]],[[56,2.4,-12],[56,2.4,-6],[58,2.4,2]]],nav:HOTEL_NAV}];
 let mapGroup=null,mapId=-1;
+const SET={words:false,mist:true};try{SET.words=localStorage.getItem('astra-words')==='1';SET.mist=localStorage.getItem('astra-mist')!=='0';}catch(e){}
 let CURM=null,NAV=null;
 function prepNav(d){if(d.ready)return d.ready;const ids=Object.keys(d.n),ix={};ids.forEach((k,i)=>ix[k]=i);
   const pts=ids.map(k=>new V3(...d.n[k])),adj=ids.map(()=>[]);
@@ -1072,7 +1104,7 @@ function prepNav(d){if(d.ready)return d.ready;const ids=Object.keys(d.n),ix={};i
 function buildMap(id){
   if(id===mapId)return;mapId=id;const M=MAPS[id];
   if(mapGroup)scene.remove(mapGroup);
-  boxes.length=0;pads.length=0;FLOORS.length=0;MAPFX.halo=MAPFX.motes=MAPFX.lamps=null;MAPFX.indoor=[];CURM=M;NAV=M.nav?prepNav(M.nav):null;HX=M.HX;HZ=M.HZ;TEAM[0].baseX=-M.base;TEAM[1].baseX=M.base;EDGES=M.edges;
+  boxes.length=0;pads.length=0;FLOORS.length=0;MAPFX.halo=MAPFX.motes=MAPFX.lamps=null;MAPFX.indoor=[];MAPFX.mist=[];CURM=M;NAV=M.nav?prepNav(M.nav):null;HX=M.HX;HZ=M.HZ;TEAM[0].baseX=-M.base;TEAM[1].baseX=M.base;EDGES=M.edges;
   const n0=scene.children.length;M.build();
   const g=new T.Group();for(const o of scene.children.slice(n0))g.add(o);scene.add(g);mapGroup=g;
   if(M.bake){const t0=performance.now(),tris=bakeMap(g);console.log('mapa horneado',Math.round(tris),'triángulos',Math.round(performance.now()-t0),'ms');}
@@ -1081,7 +1113,7 @@ function buildMap(id){
   sun.color.setHex(M.sun[0]);sun.intensity=M.sun[1];sun.position.set(M.sun[2],M.sun[3],M.sun[4]).normalize().multiplyScalar(170);sun.target.position.set(0,0,0);
   scene.fog.color.setHex(M.fog[0]);scene.fog.near=M.fog[1];scene.fog.far=M.fog[2];
   INKCOL.setHex(M.ink);RIM.value.setHex(M.rim[0]).multiplyScalar(M.rim[1]);
-  const U=mFinal.uniforms;U.lift.value.fromArray(M.lift);U.gain.value.fromArray(M.gain);U.sat.value=M.sat;U.con.value=M.con||0;U.k.value=M.k;U.ca.value=M.ca;
+  const U=mFinal.uniforms;U.lift.value.fromArray(M.lift);U.gain.value.fromArray(M.gain);U.sat.value=M.sat;U.mist.value=SET.mist?(M.mist||0):0;if(M.mistC)U.mistC.value.fromArray(M.mistC);U.con.value=M.con||0;U.k.value=M.k;U.ca.value=M.ca;
 }
 buildMap(2);
 
@@ -1797,7 +1829,7 @@ function fxHit(x,y,z,big,col){lightFlash(x,y,z,col||0xffffff,big?2.4:1,big?9:5,b
   if(big)spr(FXT.burst,x,y,z,{s0:1.5,s1:7,life:.22,color:col,bright:1.3,rot:rand(0,6.3)});}
 function fxDust(x,y,z,n,spread,size){for(let i=0;i<n;i++){const a=rand(0,6.283);
   spr(FXT.dust,x+Math.cos(a)*.3,y+.35*size,z+Math.sin(a)*.3,{s0:size*.5,s1:size*rand(1.3,1.9),life:rand(.4,.65),vx:Math.cos(a)*spread*rand(.6,1),vy:rand(.4,1.4),vz:Math.sin(a)*spread*rand(.6,1),drag:3.5,rot:rand(0,6.3),spin:rand(-1.5,1.5)});}}
-const SET={words:false};try{SET.words=localStorage.getItem('astra-words')==='1';}catch(e){}
+
 function fxWord(txt,x,y,z,col){if(!SET.words)return;spr(wordTex(txt,col||'#ffd23f'),x,y,z,{s0:1.4,s1:2.6,ax:2,life:.75,hold:.55,top:true,vy:1.2,rot:rand(-.15,.15)});}
 function fxShock(x,y,z,size,col){spr(FXT.ring,x,y,z,{s0:.5,s1:size,life:.35,color:col,bright:1.2});}
 const WORDS=['¡BAM!','¡ZAS!','¡POW!','¡KRAK!'];
@@ -2254,6 +2286,7 @@ function step(dt){
   updClash(dt);updBeams(dt);updUlts(dt);updTactics(dt);updMuzzle(dt);updAudio(dt);updPJ(dt);updFx(dt);updSpr(dt);
   for(const pd of pads)pd.m.rotation.z+=dt*1.5;
   for(const t of [0,1])TEAM[t].rune.rotation.z+=dt*.4;
+  if(MAPFX.mist)for(const m of MAPFX.mist){m.visible=!!SET.mist;m.material.map.offset.x+=dt*m.userData.sp;m.material.map.offset.y+=dt*m.userData.sp*.4;}
   if(MAPFX.halo)MAPFX.halo.rotation.y+=dt*.12;if(MAPFX.motes){MAPFX.motes.position.y=Math.sin(now*.25)*.6;MAPFX.motes.rotation.y+=dt*.004;}
 }
 
@@ -2379,6 +2412,7 @@ pick('diff','d',v=>game.diff=v);pick('clsSel','c',v=>game.cls=v);pick('lookSel',
 pick('mapSel','m',v=>{game.map=v;buildMap(v);fullReset();});
 pick('wordSel','w',v=>{SET.words=!!v;try{localStorage.setItem('astra-words',v?'1':'0');}catch(e){}},SET.words?1:0);
 pick('shSel','s',v=>{SHQ=v;try{localStorage.setItem('astra-sh',String(v));}catch(e){}applyShadows();},SHQ);
+pick('mistSel','n',v=>{SET.mist=!!v;try{localStorage.setItem('astra-mist',v?'1':'0');}catch(e){}if(CURM){const U=mFinal.uniforms;U.mist.value=SET.mist?(CURM.mist||0):0;}},SET.mist?1:0);
 pick('fxSel','f',v=>{FX.on=!!v;try{localStorage.setItem('astra-fx',v?'1':'0');}catch(e){}fxResize();},FX.on?1:0);
 for(const id of ['play','again','resume'])$(id).addEventListener('touchend',()=>enableTouch(),{passive:true});
 

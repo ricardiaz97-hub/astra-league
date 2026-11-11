@@ -36,4 +36,8 @@ Las texturas de `textures/` se generaron con Gemini a partir de la dirección de
 
 ## Créditos de recursos
 - Modelos de blásters y efectos de sonido: Kenney (kenney.nl), licencia CC0, tomados de los Starter Kits de KenneyNL en GitHub.
-- Edificios brutalistas de la ciudad (fondo del Hotel Aurora): modelos de Sketchfab que mandó Ricardo; autoría y licencia por confirmar.
+- Edificios brutalistas de la ciudad (fondo del Hotel Aurora): modelos de Sketchfab que mandó Ricardo. "Brutalist building" de abhayexe (licencia estándar de Sketchfab); el resto, autoría y licencia por confirmar.
+- Paquete de barreras y vallas de concreto: Erroratten (https://sketchfab.com/erroratten), CC-BY 4.0.
+- Farol de pared: adventurer (https://sketchfab.com/ahmagh2e), CC-BY 4.0.
+- Concreto agrietado escaneado: grafi (https://sketchfab.com/zdenkoroman), CC-BY 4.0.
+- Texturas de concreto 126 y 128: Texturelabs (texturelabs.org).
