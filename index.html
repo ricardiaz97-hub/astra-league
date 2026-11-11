@@ -430,7 +430,7 @@ const RUNE=[runeTex(TEAM[0].css),runeTex(TEAM[1].css),runeTex('#b58cff')],BANN=[
 /* ---------- texturas pintadas (archivos propios en textures/) ---------- */
 const TL=new T.TextureLoader(),texJobs={};
 function useTex(mat,name){let j=texJobs[name];
-  if(!j){j=texJobs[name]={t:null,mats:[]};TL.load('textures/'+name+'.jpg',t=>{t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=4;j.t=t;for(const m of j.mats)setTex(m,t);});}
+  if(!j){j=texJobs[name]={t:null,mats:[]};TL.load('textures/'+name+(name.includes('.')?'':'.jpg'),t=>{t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=4;j.t=t;for(const m of j.mats)setTex(m,t);});}
   if(j.t)setTex(mat,j.t);else j.mats.push(mat);}
 function setTex(m,t){m.map=t;m.color.setHex(0xffffff);if(m.userData.decal)m.opacity=1;m.needsUpdate=true;}
 function boxUV(g,sx,sy,sz,tile){const uv=g.attributes.uv;for(let i=0;i<24;i++){const f=i>>2,a=f<2?sz:sx,b=f<2?sy:f<4?sz:sy;uv.setXY(i,uv.getX(i)*a/tile,uv.getY(i)*b/tile);}uv.needsUpdate=true;}
@@ -535,7 +535,7 @@ function buildRooftop(){
 /* ---------- mapa Atardecer: arena con aguja central y anillo elevado ---------- */
 const MAPFX={};
 function buildSunset(){
-  const P='sunset/',hot=(c,k)=>{const m=basic(c);m.color.multiplyScalar(k);return m;};
+  const P='sunset/',Q='sunset2/',DEC=['tag','fist','starburst','poster','stickers','crest'].map(n=>Q+n+'.png');let dI=0;const nd=()=>DEC[dI++%DEC.length];const hot=(c,k)=>{const m=basic(c);m.color.multiplyScalar(k);return m;};
   const flat=(geo,mat,x,y,z)=>{const m=new T.Mesh(geo,mat);m.rotation.x=-PI/2;m.position.set(x,y,z);scene.add(m);return m;};
   const neon=(x,y,z,sx,sy,sz,c,k)=>{const m=new T.Mesh(new T.BoxGeometry(sx,sy,sz),hot(c,(k||2.2)*.7));m.position.set(x,y,z);scene.add(m);return m;};
   const ORA=0xff7a1a,PUR=0xb557ff;
@@ -556,7 +556,7 @@ function buildSunset(){
     const m=new T.Mesh(new T.CylinderGeometry(w*rand(.55,.8),w,h,7),basic(i%2?0x5c2f4e:0x4a2644));m.position.set(Math.cos(a)*r,h/2-6,Math.sin(a)*r);scene.add(m);}
   // piso
   const fg=new T.PlaneGeometry(HX*2,HZ*2);for(let i=0;i<4;i++)fg.attributes.uv.setXY(i,fg.attributes.uv.getX(i)*HX/5,fg.attributes.uv.getY(i)*HZ/5);
-  const floor=new T.Mesh(fg,new T.MeshLambertMaterial({color:0xb09c98}));floor.rotation.x=-PI/2;scene.add(floor);useTex(floor.material,P+'floor');
+  const floor=new T.Mesh(fg,new T.MeshLambertMaterial({color:0xb09c98}));floor.rotation.x=-PI/2;scene.add(floor);useTex(floor.material,Q+'asphalt');
   for(const t of [0,1]){flat(new T.PlaneGeometry(HX,HZ*2),basic(TEAM[t].color,{transparent:true,opacity:.05}),t?HX/2:-HX/2,.01,0);
     TEAM[t].rune=flat(new T.CircleGeometry(8,40),basic(0xffffff,{map:RUNE[t],transparent:true}),TEAM[t].baseX,.04,0);}
   // plaza central mojada con anillos de luz
@@ -565,8 +565,8 @@ function buildSunset(){
   for(let i=0;i<8;i++)flat(new T.RingGeometry(12.2,13.2,16,1,i*PI/4+.08,PI/4-.16),hot(ORA,1.5),0,.03,0);
   flat(new T.RingGeometry(15.6,16,64),hot(PUR,1.3),0,.03,0);
   // aguja central con halo flotante
-  addBox(0,0,10,4,10,0,0x7a6a86,undefined,P+'metal',3);
-  addBox(0,0,4,34,4,4,0x6a5a7a,undefined,P+'neon',4);
+  addBox(0,0,10,4,10,0,0x7a6a86,undefined,Q+'lavacrack',5);
+  addBox(0,0,4,34,4,4,0x6a5a7a,undefined,Q+'runepanel',4);
   for(const [x,z] of [[2.05,2.05],[-2.05,2.05],[2.05,-2.05],[-2.05,-2.05]])neon(x,21,z,.18,34,.18,PUR,2.4);
   for(const [x,z] of [[5.05,0],[-5.05,0]])neon(x,2,z,.15,1.2,6,PUR,2.2);for(const [x,z] of [[0,5.05],[0,-5.05]])neon(x,2,z,6,1.2,.15,PUR,2.2);
   const halo=new T.Group();halo.position.y=32;halo.rotation.x=.12;scene.add(halo);
@@ -578,48 +578,54 @@ function buildSunset(){
     m.position.set(rand(-45,45),28,rand(-35,35));m.rotation.set(0,rand(0,3.14),.5);scene.add(m);}
   // anillo elevado (nivel 2, altura 4) con túneles hacia las bases
   const RX=34,RZ=27,RW=6,RH=4,ringCol=0x9a8aa6;
-  for(const sz of [-1,1]){addBox(0,sz*RZ,2*RX+RW,RH,RW,0,ringCol,ORA,P+'purple',4);
+  for(const sz of [-1,1]){addBox(0,sz*RZ,2*RX+RW,RH,RW,0,ringCol,ORA,Q+'brick',4);
     for(const x of [-26,-13,0,13,26])neon(x,RH+.04,sz*(RZ+RW/2-.3),9,.08,.25,ORA,2);}
-  for(const sx of [-1,1]){for(const sz of [-1,1])addBox(sx*RX,sz*14,RW,RH,20,0,ringCol,ORA,P+'purple',4);
-    addBox(sx*RX,0,RW,.5,8,3.5,0x7a6a86,ORA,P+'plate',2); // losa sobre el túnel
+  for(const sx of [-1,1]){for(const sz of [-1,1])addBox(sx*RX,sz*14,RW,RH,20,0,ringCol,ORA,Q+'brick',4);
+    addBox(sx*RX,0,RW,.5,8,3.5,0x7a6a86,ORA,Q+'steel',2); // losa sobre el túnel
     neon(sx*(RX-RW/2-.05),3.3,0,.12,.25,8,PUR,2.4);}
   // escaleras del anillo al suelo
-  const stairs=(x,z,dx,dz)=>{for(let k=1;k<=6;k++){const h=k*.667,o=(6-k)+.5;if(dx)addBox(x+dx*o,z,1,h,5,0,0xa89aac,undefined,P+'plate',2);else addBox(x,z+dz*o,5,h,1,0,0xa89aac,undefined,P+'plate',2);}};
+  const stairs=(x,z,dx,dz)=>{for(let k=1;k<=6;k++){const h=k*.667,o=(6-k)+.5;if(dx)addBox(x+dx*o,z,1,h,5,0,0xa89aac,undefined,Q+'plaza',2);else addBox(x,z+dz*o,5,h,1,0,0xa89aac,undefined,Q+'plaza',2);}};
   for(const sz of [-1,1])for(const x of [-16,16])stairs(x,sz*(RZ-RW/2),0,-sz);
   for(const sx of [-1,1])for(const z of [-20,20])stairs(sx*(RX-RW/2),z,-sx,0);
   // puentes del anillo a la base de la aguja (altura 4)
-  for(const sz of [-1,1])addBox(0,sz*14.5,4,.5,19,3.5,0x7a6a86,PUR,P+'plate',2);
-  for(const sx of [-1,1])addBox(sx*18,0,26,.5,4,3.5,0x7a6a86,PUR,P+'plate',2);
+  for(const sz of [-1,1])addBox(0,sz*14.5,4,.5,19,3.5,0x7a6a86,PUR,Q+'planks',2);
+  for(const sx of [-1,1])addBox(sx*18,0,26,.5,4,3.5,0x7a6a86,PUR,Q+'planks',2);
   // muros para correr a los lados de los brazos
   for(const sx of [-1,1])for(const sz of [-1,1]){
-    addBox(sx*9,sz*16,1.2,8,13,0,0xb8a8b4,undefined,P+'purple',4);decal(P+'graffiti',5,5,sx*9.62,3.2,sz*16,sx>0?PI/2:-PI/2);
-    addBox(sx*18,sz*9,13,8,1.2,0,0xb8a8b4,undefined,P+'purple',4);decal(P+'graffiti',5,5,sx*18,3.2,sz*9.62,sz>0?0:PI);
+    addBox(sx*9,sz*16,1.2,8,13,0,0xd0c4dc,undefined,Q+'steel',4);decal(nd(),5,5,sx*9.62,3.2,sz*16,sx>0?PI/2:-PI/2);
+    addBox(sx*18,sz*9,13,8,1.2,0,0xd0c4dc,undefined,Q+'steel',4);decal(nd(),5,5,sx*18,3.2,sz*9.62,sz>0?0:PI);
     neon(sx*9,8.05,sz*16,1.25,.1,13,ORA,2);neon(sx*18,8.05,sz*9,13,.1,1.25,ORA,2);}
   // miradores norte y sur
-  for(const sz of [-1,1]){addBox(0,sz*42,18,6,8,0,0x6a5a7a,PUR,P+'metal',4);decal(P+'city',7,3.8,0,3.2,sz*(42-4.03),sz>0?PI:0);
+  for(const sz of [-1,1]){addBox(0,sz*42,18,6,8,0,0x6a5a7a,PUR,Q+'corrugated',4);decal(P+'city',7,3.8,0,3.2,sz*(42-4.03),sz>0?PI:0);
     neon(0,6.05,sz*38.2,18,.1,.25,PUR,2.4);addPad(0,sz*34.5,0,18);}
   // bases de cada equipo
   for(const sx of [-1,1]){const t=sx<0?0:1,e=TEAM[t].color;
-    addBox(sx*(HX-2),0,3,10,30,0,0xb89a88,e,P+'orange',4);decal(P+'screen',7,3.8,sx*(HX-3.53),5.5,0,sx>0?-PI/2:PI/2);
-    for(const sz of [-1,1]){addBox(sx*66,sz*21,6,9,6,0,0x9a8aa6,e,P+'purple',3);
+    addBox(sx*(HX-2),0,3,10,30,0,0xb89a88,e,Q+'concrete',4);decal(P+'screen',7,3.8,sx*(HX-3.53),5.5,0,sx>0?-PI/2:PI/2);
+    for(const sz of [-1,1]){addBox(sx*66,sz*21,6,9,6,0,0x9a8aa6,e,Q+'brick',3);
       const bn=new T.Mesh(new T.PlaneGeometry(2.6,6),basic(0xffffff,{map:BANN[t],transparent:true,alphaTest:.5,side:T.DoubleSide}));bn.rotation.y=PI/2;bn.position.set(sx*(66-3.03),5,sz*21);scene.add(bn);
       neon(sx*66,9.05,sz*21,6.1,.12,6.1,e,2);addPad(sx*58,sz*21,0,16);}
-    addBox(sx*50,0,1.4,1.6,9,0,0xd8b8a0,undefined,P+'orange',1.6);}
+    addBox(sx*50,0,1.4,1.6,9,0,0xd8b8a0,undefined,Q+'hazard',1.6);}
   // pódiums de las esquinas con columnas de neón
   for(const sx of [-1,1])for(const sz of [-1,1]){
-    addBox(sx*54,sz*40,12,2,10,0,0x7a6a86,PUR,P+'grate',3);addPad(sx*54,sz*33,0,15);
-    for(const dx of [-4,4]){addBox(sx*54+dx,sz*43,2,7,2,2,0x8a7a96,undefined,P+'neon',2);neon(sx*54+dx,5.5,sz*43-sz*1.03,.3,5,.06,PUR,2.6);}}
+    addBox(sx*54,sz*40,12,2,10,0,0x7a6a86,PUR,Q+'grate2',3);addPad(sx*54,sz*33,0,15);
+    for(const dx of [-4,4]){addBox(sx*54+dx,sz*43,2,7,2,2,0x8a7a96,undefined,Q+'pipes',2);neon(sx*54+dx,5.5,sz*43-sz*1.03,.3,5,.06,PUR,2.6);}}
   // coberturas
   for(const [x,z] of [[22,20],[-22,20],[22,-20],[-22,-20],[44,8],[44,-8],[-44,8],[-44,-8],[12,38],[-12,38],[12,-38],[-12,-38],[26,0],[-26,0]])
-    addBox(x,z,2.4,1.6,2.4,0,0xd8b8a0,undefined,(x+z)%4?P+'orange':P+'vent',1.6);
+    addBox(x,z,2.4,1.6,2.4,0,0xd8b8a0,undefined,(x+z)%4?Q+'copper':Q+'vent2',1.6);
   for(const sx of [-1,1])addPad(sx*8,sx*8,0,15);
   // estandartes colgando del anillo
   for(const sz of [-1,1])for(const x of [-30,-10,10,30]){const bn=new T.Mesh(new T.PlaneGeometry(2.4,4.6),basic(0xffffff,{map:BANN[x<0?0:1],transparent:true,alphaTest:.5,side:T.DoubleSide}));bn.position.set(x,1.9,sz*(RZ+RW/2+.05));scene.add(bn);}
   // parapeto y barrera
   const bm=basic(0xffc8a0,{transparent:true,opacity:.05,side:T.DoubleSide,depthWrite:false});
-  for(const [x,z,sx,sz] of [[0,-HZ-.5,HX*2+2,1],[0,HZ+.5,HX*2+2,1],[-HX-.5,0,1,HZ*2],[HX+.5,0,1,HZ*2]])addBox(x,z,sx,2.4,sz,0,0xb8a098,ORA,P+'wall',2.4);
+  for(const [x,z,sx,sz] of [[0,-HZ-.5,HX*2+2,1],[0,HZ+.5,HX*2+2,1],[-HX-.5,0,1,HZ*2],[HX+.5,0,1,HZ*2]])addBox(x,z,sx,2.4,sz,0,0xb8a098,ORA,Q+'concrete',2.4);
   for(const s2 of [-1,1]){const a=new T.Mesh(new T.PlaneGeometry(HX*2,WALLH-2.4),bm);a.position.set(0,(WALLH+2.4)/2,s2*HZ);scene.add(a);
     const b=new T.Mesh(new T.PlaneGeometry(HZ*2,WALLH-2.4),bm);b.rotation.y=PI/2;b.position.set(s2*HX,(WALLH+2.4)/2,0);scene.add(b);}
+  // pintura y marcas en el piso
+  const fdec=(n,w,x,z,ry,y)=>{const ma=basic(0xffffff,{transparent:true,opacity:0,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2});ma.userData.decal=1;useTex(ma,Q+n+'.png');
+    const m=new T.Mesh(new T.PlaneGeometry(w,w),ma);m.rotation.set(-PI/2,0,ry);m.position.set(x,(y||0)+.035,z);scene.add(m);};
+  for(const s2 of [-1,1]){fdec('arrow',5,s2*40,0,s2>0?0:PI);fdec('arrow',4,s2*30,s2*14,s2>0?.5:PI+.5);
+    fdec('splat',6,s2*60,s2*10,1.1);fdec('splat',4.5,s2*24,-s2*36,2.3);fdec('scorch',5,s2*12,s2*6,.7);fdec('scorch',4,-s2*44,s2*24,2);
+    fdec('crest',7,TEAM[s2>0?1:0].baseX-s2*14,0,s2>0?-PI/2:PI/2);}
   // polvo flotando en la luz
   const dotT=tex(32,32,g=>{const r=g.createRadialGradient(16,16,0,16,16,16);r.addColorStop(0,'rgba(255,230,190,1)');r.addColorStop(1,'rgba(255,200,150,0)');g.fillStyle=r;g.fillRect(0,0,32,32);});
   const pg=new T.BufferGeometry(),pp=[];for(let i=0;i<700;i++)pp.push(rand(-HX,HX),rand(.3,20),rand(-HZ,HZ));pg.setAttribute('position',new T.Float32BufferAttribute(pp,3));
