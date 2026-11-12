@@ -285,10 +285,10 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
 .v2 .lbl{font:600 11px var(--body);letter-spacing:.18em;color:#a99cb3;margin-bottom:10px}
 
 /* paso 1: personaje (ancho) · clase · arte */
-.st-char{grid-template-columns:minmax(340px,1.35fr) minmax(280px,.85fr) minmax(240px,.9fr);gap:clamp(16px,2.2vw,34px)}
+.st-char{grid-template-columns:minmax(340px,1.25fr) minmax(270px,.8fr) minmax(300px,1.15fr);gap:clamp(16px,2.2vw,34px)}
 .cRoster,.cClass{min-height:0;overflow:auto;scrollbar-width:thin;padding-right:4px}
-#menu.v2 #lookSel{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
-#menu.v2 #lookSel button{position:relative;display:block;aspect-ratio:4/5;width:100%;padding:0;overflow:hidden;background:#241b2c;
+#menu.v2 #lookSel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+#menu.v2 #lookSel button{position:relative;display:block;aspect-ratio:4/5;width:100%;max-height:calc((100dvh - 230px)/4);padding:0;overflow:hidden;background:#241b2c;
   clip-path:polygon(0 0,100% 0,100% 88%,90% 100%,0 100%);transition:transform .35s cubic-bezier(.16,1,.3,1),box-shadow .35s}
 #menu.v2 #lookSel button .ph{position:absolute;inset:0;background:linear-gradient(170deg,#3a2c44,#1d1a22)}
 #menu.v2 #lookSel button img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 8%;transform:scale(1.04);transition:transform .6s cubic-bezier(.16,1,.3,1),filter .4s;filter:saturate(.75) brightness(.8)}
@@ -315,7 +315,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
 .cArt{position:relative;min-height:0;overflow:visible;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);justify-items:center}
 .cArt>*{grid-area:1/1}
 .cArt .bigName{position:absolute;right:0;top:0;font:400 clamp(90px,13vw,220px)/.8 var(--display);color:transparent;-webkit-text-stroke:2px rgba(255,122,26,.55);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:.02em;white-space:nowrap;pointer-events:none}
-.cArt .frame{position:relative;height:100%;max-height:100%;aspect-ratio:2/5;max-width:100%}
+.cArt .frame{position:relative;height:calc(100% + 64px);margin-bottom:-64px;align-self:end;aspect-ratio:2/5;max-width:130%}
 .cArt .frame::before{content:"";position:absolute;inset:6% -4% 0 8%;background:linear-gradient(160deg,var(--alfa),#a13a1c 60%,transparent);clip-path:polygon(18% 0,100% 0,82% 100%,0 100%);opacity:.85}
 .cArt .frame img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:50% 100%;filter:drop-shadow(0 18px 30px rgba(10,6,14,.6))}
 .cArt .frame img.sheet{object-fit:cover;object-position:50% 0;clip-path:polygon(14% 0,100% 0,86% 100%,0 100%)}
@@ -583,7 +583,7 @@ const GUNS={rifle:PRIM[0],shotgun:PRIM[1],smg:PRIM[2],burst:PRIM[3],lance:WPN[2]
 const LANCE0=WPN[2];
 function loadoutIds(f){return f.isPlayer?[WPN[0].id,WPN[2].id]:[primFor(f.cls).id,'lance'];}
 // modelos 3D que mandó Ricardo (aligerados): se cargan en segundo plano; mientras tanto se ven las armas de piezas
-const GUNGLB={rifle:{lib:'gun_rifle',len:.95,rot:0},lance:{lib:'gun_rifle',len:1.2,rot:0},shotgun:{lib:'gun_shotgun',len:.9,rot:-PI/2},smg:{lib:'gun_smg',len:.62,rot:-PI/2}};
+const GUNGLB={rifle:{lib:'gun_rifle',len:.95,rot:0},lance:{lib:'gun_rifle',len:1.2,rot:0},shotgun:{lib:'gun_shotgun',len:.9,rot:PI/2},smg:{lib:'gun_smg',len:.62,rot:-PI/2}};
 let GLBV=0;
 function prepGun(sc,o){const s=sc.clone(true);s.traverse(m=>{if(m.isMesh){const map=m.material.map;m.material=toon(0xffffff,{map});if(!map)m.material.color.copy(new T.Color(0x3a3440));m.castShadow=true;}});
   const inner=new T.Group();inner.add(s);inner.rotation.y=o.rot;const outer=new T.Group();outer.add(inner);outer.updateMatrixWorld(true);
@@ -1548,11 +1548,12 @@ function playFrame(m,a,ft,mirror,k){ // ft = cuadro (con decimales) dentro del t
   const n=a.frames-1;ft=isFinite(ft)?clamp(ft,0,n):0;const i=Math.min(Math.floor(ft),n-1),u=ft-i,set=mirror?a.mirror:a.bones;
   for(const key in set){const b=m.bones[key];if(!b)continue;const d=set[key];_qa.fromArray(d,i*4);_qb.fromArray(d,(i+1)*4);_qa.slerp(_qb,u);poseQ(b,_qa,k);}}
 function playAnim(m,a,t,mirror,k){const n=a.frames-1;playFrame(m,a,((t*a.fps)%n+n)%n,mirror,k===undefined?1:k);}
-const ACTDUR={stumble:1.25,slash:.42,spin:.62,cast:.6,sl1:.44,sl2:.44,swHeavy:.52};
+const ACTDUR={stumble:1.25,swDraw:.48,sheath:.88,slash:.42,spin:.62,cast:.6,sl1:.44,sl2:.44,swHeavy:.52};
 function act(f,key){f.act=key;f.actT=0;}
 function applyVRM(m,f,dt){
   const A=ANIMS,k=1-Math.exp(-22*dt),hs=Math.hypot(f.vel.x,f.vel.z),cy=Math.cos(f.yaw),sy=Math.sin(f.yaw);
   let key=null,mir=false,rate=1;
+  if(f._pw!==undefined&&f._pw!==f.weapon&&!f.act&&f.alive&&hs<3){if(f.weapon===1&&A.swDraw)act(f,'swDraw');else if(f._pw===1&&A.sheath)act(f,'sheath');}f._pw=f.weapon; // sacar y guardar la espada
   if(f.act){f.actT+=dt;if(f.actT>=ACTDUR[f.act]||!A[f.act]||!f.alive)f.act=null;else key=f.act;}
   if(!f.alive)key=A[f.dieKey]?f.dieKey:null;else if(f.climbT>0&&A.climb)key='climb';
   const lat=f.vel.x*cy-f.vel.z*sy,fwd=-(f.vel.x*sy+f.vel.z*cy),tg=f.isPlayer?lock:f.target;
@@ -3035,9 +3036,9 @@ function endMatch(){
       get vol(){return vol;}};})();
 
   // personajes: los de Philly, cada uno con su retrato; mientras llegan sus modelos 3D usan uno parecido
-  const CH=[['milena','MILENA',10],['andres','ANDRÉS',11],['armando','ARMANDO',11],['connie','CONNIE',10],['cris','CRIS',11],['diego','DIEGO',11],['gaby','GABY',10],['isma','ISMA',11],
+  const CH=[['milena','MILENA',10],['ricardo','RICARDO',11],['andres','ANDRÉS',11],['armando','ARMANDO',11],['connie','CONNIE',10],['cris','CRIS',11],['diego','DIEGO',11],['gaby','GABY',10],['isma','ISMA',11],
     ['jenny','JENNY',10],['julio','JULIO',11],['mau','MAU',11],['rebecca','REBECCA',10],['speaker','SPEAKER',11],['tefa','TEFA',10],['yesy','YESY',10]];
-  const art=s=>s==='milena'?'textures/ui/milena.jpg':'textures/chars/'+s+'-pose.jpg',face=s=>'textures/chars/'+s+'-face.jpg';
+  const art=s=>'textures/chars/'+s+'.webp',face=s=>'textures/chars/'+s+'-face.jpg';
   let cur='milena';try{const s=localStorage.getItem('sb-char');if(s&&CH.some(c=>c[0]===s))cur=s;}catch(_){}
   const look=$('lookSel');look.innerHTML='';
   for(const [s,n,l] of CH){const b=document.createElement('button');b.dataset.l=l;b.dataset.ch=s;b.innerHTML='<span class="ph"></span><img alt="" loading="lazy" src="'+face(s)+'"'+'><b>'+n+'</b>';
@@ -3082,7 +3083,7 @@ function endMatch(){
 
   // arte del personaje y textos de la clase
   const fr=ca.querySelector('.frame'),big=ca.querySelector('.bigName');
-  function showChar(anim){const c=CH.find(x=>x[0]===cur),im=fr.querySelector('img');im.className='sheet';im.src=art(cur);big.textContent=c[1];
+  function showChar(anim){const c=CH.find(x=>x[0]===cur),im=fr.querySelector('img');im.className='';im.src=art(cur);big.textContent=c[1];
     if(anim&&!RM.matches){for(const el of [fr,big]){el.classList.remove('swapIn');void el.offsetWidth;el.classList.add('swapIn');}}}
   look.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;cur=b.dataset.ch;try{localStorage.setItem('sb-char',cur);}catch(_){}showChar(true);snd('swap');});
   cs.addEventListener('click',()=>{if(RM.matches)return;for(const el of [info,tag]){el.classList.remove('fadeUp');void el.offsetWidth;el.classList.add('fadeUp');}});
