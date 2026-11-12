@@ -510,8 +510,8 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
     <div class="dHead"><h2>CONTROLES</h2><button class="ghost" id="ctrlX">CERRAR</button></div>
     <div class="keys">
       <div><kbd>W A S D</kbd><span>moverte, el ratón apunta</span></div>
-      <div><kbd>Clic</kbd><span>atacar; con la hoja: combo de tres, tras un dash embiste, en el aire encadena</span></div>
-      <div><kbd>Clic der.</kbd><span>con la hoja: pesado; mantén para cargarlo (3 niveles); rompe la guardia. Tras ligeros: L-H barrido, L-L-H lanzador</span></div>
+      <div><kbd>Clic</kbd><span>atacar; con la hoja: combo de cuatro (haz clic justo al terminar cada corte), tras un dash embiste, en el aire encadena</span></div>
+      <div><kbd>Clic der.</kbd><span>con la hoja: pesado; mantén para cargarlo (3 niveles, el máximo es un salto que golpea a todos alrededor); rompe la guardia. Combos: L-L-L-L remate giratorio, L-H barrido, L-L-H lanzador, L-L-L-H ráfaga de tres cortes</span></div>
       <div><kbd>Clic der.</kbd><span>junto a un rival con poca vida o con la guardia rota: REMATE</span></div>
       <div><kbd>Espacio</kbd><span>salto y doble salto; si casi llegas a un borde, te agarras y subes</span></div>
       <div><kbd>Muro</kbd><span>corre por él; Espacio te lanza hacia el lado con fuerza y conserva tu doble salto: encadena de muro a muro</span></div>
@@ -1553,7 +1553,7 @@ function playFrame(m,a,ft,mirror,k){ // ft = cuadro (con decimales) dentro del t
   const n=a.frames-1;ft=isFinite(ft)?clamp(ft,0,n):0;const i=Math.min(Math.floor(ft),n-1),u=ft-i,set=mirror?a.mirror:a.bones;
   for(const key in set){const b=m.bones[key];if(!b)continue;const d=set[key];_qa.fromArray(d,i*4);_qb.fromArray(d,(i+1)*4);_qa.slerp(_qb,u);poseQ(b,_qa,k);}}
 function playAnim(m,a,t,mirror,k){const n=a.frames-1;playFrame(m,a,((t*a.fps)%n+n)%n,mirror,k===undefined?1:k);}
-const ACTDUR={swA:.4,swB:.45,swC:.95,swDash:.55,hitC:.33,hitH:.45,throw:1.05,roll:.55,knock:.8,stumble:1.25,swDraw:.48,sheath:.88,slash:.42,spin:.62,cast:.6,sl1:.44,sl2:.44,swHeavy:.52};
+const ACTDUR={sl3:.62,jumpAtk:.85,kick:.55,flurry:1.05,recoil:.75,reel:.9,parryOK:.4,swA:.4,swB:.45,swC:.95,swDash:.55,hitC:.33,hitH:.45,throw:1.05,roll:.55,knock:.8,stumble:1.25,swDraw:.48,sheath:.88,slash:.42,spin:.62,cast:.6,sl1:.44,sl2:.44,swHeavy:.52};
 function act(f,key){f.act=key;f.actT=0;}
 const ARMB=['leftShoulder','leftUpperArm','leftLowerArm','leftHand','rightShoulder','rightUpperArm','rightLowerArm','rightHand'];
 function applyVRM(m,f,dt){
@@ -1564,11 +1564,13 @@ function applyVRM(m,f,dt){
   if(!f.alive)key=A[f.dieKey]?f.dieKey:null;else if(f.climbT>0&&A.climb)key='climb';
   const lat=f.vel.x*cy-f.vel.z*sy,fwd=-(f.vel.x*sy+f.vel.z*cy),tg=f.isPlayer?lock:f.target;
   if(!key){
-    if(f.ultT>0||f.stunT>0||f.dashT>0||f.rushT>0){}
+    if(f.stunT>.3&&f.onGround&&A.dazed&&f.ultT<=0)key='dazed'; // aturdido: tambalea
+    else if(f.ultT>0||f.stunT>0||f.dashT>0||f.rushT>0){}
     else if(f.sliding&&f.onGround)key='slide';
     else if(f.crouch&&f.onGround&&A.crouch){if(hs>1&&A.coverMove){key='coverMove';mir=lat<0;rate=clamp(hs/1.7,.6,1.6);}else key='crouch';} // agachado tras una cobertura
     else if(f.charging)key='powerup';
     else if(f.parryT>0||f.block)key='block';
+    else if(f.hcharge>0&&A.charge)key='charge';
     else if(f.hcharge>0&&A.swHeavy)key='swHeavy';
     else if(f.wr>0){key='wallrun';mir=f.wrNx*cy-f.wrNz*sy<0;}
     else if(!f.onGround)key=f.weapon===1&&A.swJump?'swJump':'jump';
@@ -1885,7 +1887,7 @@ function melee(f){ // ataque ligero: combo de tres, embestida justo después de 
 }
 function heavy(f){ // golpe pesado: carga corta en la que quedas expuesto; en el suelo lanza al rival, en el aire lo clava contra el piso
   if(f.heavyT>0||!f.alive||f.stunT>0)return false;f.heavyAir=!f.onGround;f.block=false;
-  if(f.isPlayer){f.heavyT=.1;act(f,ANIMS.swHeavy?'swHeavy':'spin');f.actT=.13;}else{f.hlvl=Math.random()<.3?1:0;f.heavyT=.3;act(f,ANIMS.swHeavy?'swHeavy':'spin');}
+  if(f.isPlayer){if(f.hlvl===2&&ANIMS.jumpAtk&&f.onGround){f.heavyT=.42;act(f,'jumpAtk');const fx=-Math.sin(f.yaw),fz=-Math.cos(f.yaw);f.vel.y=6.5;f.vel.x+=fx*7;f.vel.z+=fz*7;f.onGround=false;}else{f.heavyT=.1;act(f,ANIMS.swHeavy?'swHeavy':'spin');f.actT=.13;}}else{f.hlvl=Math.random()<.3?1:0;f.heavyT=.3;act(f,ANIMS.swHeavy?'swHeavy':'spin');}
   snd('charge',f===player?1:volAt(f.pos));return true;}
 function meleeHit(f,kind){
   f.sp=Math.max(0,f.sp-(kind==='heavy'?20:9));f.spWait=Math.max(f.spWait||0,.5); // cada golpe cansa
@@ -1896,13 +1898,13 @@ function meleeHit(f,kind){
   if(air&&!heavyHit){f.airHits=(f.airHits||0)+1;if(f.airHits<=3)f.vel.y=Math.max(f.vel.y,2.4);}
   if(now-f.comboT>1.3)f.combo=0;if(now-(f.chainT||-9)>1.3)f.chain='';
   // combos de ligero y pesado: L-L-L remolino · L-H barrido · L-L-H lanzador · pesado cargado (3 niveles)
-  const ch=f.chain||'',move=heavyHit?(air?'slam':ch.endsWith('LL')?'launch':ch.endsWith('L')?'sweep':'heavy'):'light';
+  const ch=f.chain||'',move=heavyHit?(air?'slam':ch.endsWith('LLL')?'flurry':ch.endsWith('LL')?'launch':ch.endsWith('L')?'sweep':'heavy'):'light';
   f.chain=(ch+(heavyHit?'H':'L')).slice(-3);f.chainT=now;if(heavyHit)f.combo=0;
   const lvl=move==='heavy'?(f.hlvl||0):0;f.hlvl=0;
-  const fin=!heavyHit&&!dashAtk&&!air&&f.combo>=2;let any=false;
-  const A=ANIMS;if(!(heavyHit&&f.act==='swHeavy'))act(f,!heavyHit&&dashAtk&&A.swDash?'swDash':!heavyHit&&fin&&A.swC?'swC':move==='light'&&!air&&A.swA?(f.combo%2?'swB':'swA'):move==='sweep'||fin?'spin':move==='launch'?(ANIMS.sl2?'sl2':'spin'):heavyHit?(ANIMS.swHeavy?'swHeavy':'spin'):ANIMS.sl1?(f.combo%2?'sl2':'sl1'):'slash');
-  if(move!=='light'&&move!=='slam'&&(move!=='heavy'||lvl>0)&&(f===player||volAt(f.pos)>.2))fxWord(move==='sweep'?'BARRIDO':move==='launch'?'¡ARRIBA!':lvl===2?'¡MÁXIMO!':'¡CARGADO!',f.pos.x,f.pos.y+2.4,f.pos.z,lvl===2?'#ffd23f':'#ffffff');
-  const range=WPN[1].range*(dashAtk?1.15:move==='sweep'?1.25:heavyHit?1.1+lvl*.15:1);
+  const nL=(ch.match(/L*$/)||[''])[0].length,fin=!heavyHit&&!dashAtk&&!air&&nL>=3;if(fin)f.chain='';let any=false; // cuarto ligero seguido: remate giratorio
+  const A=ANIMS;if(!(heavyHit&&(f.act==='swHeavy'||f.act==='jumpAtk')))act(f,!heavyHit&&dashAtk&&A.swDash?'swDash':!heavyHit&&fin&&A.swC?'swC':move==='light'&&!air&&A.swA?['swA','swB','sl1'][nL%3]:move==='flurry'&&A.flurry?'flurry':move==='sweep'&&A.sl3?'sl3':lvl===2&&A.jumpAtk?'jumpAtk':move==='sweep'||fin?'spin':move==='launch'?(ANIMS.sl2?'sl2':'spin'):heavyHit?(ANIMS.swHeavy?'swHeavy':'spin'):ANIMS.sl1?(f.combo%2?'sl2':'sl1'):'slash');
+  if(move!=='light'&&move!=='slam'&&(move!=='heavy'||lvl>0)&&(f===player||volAt(f.pos)>.2))fxWord(move==='sweep'?'BARRIDO':move==='flurry'?'¡RÁFAGA!':move==='launch'?'¡ARRIBA!':lvl===2?'¡MÁXIMO!':'¡CARGADO!',f.pos.x,f.pos.y+2.4,f.pos.z,lvl===2?'#ffd23f':'#ffffff');
+  const range=WPN[1].range*(dashAtk?1.15:move==='sweep'?1.25:lvl===2?1.7:heavyHit?1.1+lvl*.15:1);
   for(const e of fighters){if(e.team===f.team||!e.alive)continue;
     const dx=e.pos.x-f.pos.x,dz=e.pos.z-f.pos.z,dy=e.pos.y-f.pos.y,d=Math.hypot(dx,dz);
     if(d>range||Math.abs(dy)>2.6)continue;
@@ -1918,7 +1920,8 @@ function meleeHit(f,kind){
       if(heavyHit){stun(e,.7);e.parryT=0;fxWord('¡ROTO!',e.pos.x,e.pos.y+2.6,e.pos.z,'#ffd23f');} // el pesado rompe la guardia
       else{parried(e,f);return;}}
     any=true;let kb,vy,dmg=f.isPlayer?WPN[1].dmg:20;
-    if(move==='launch'){kb=2;vy=13;dmg*=1.45;e.launchT=1.1;}          // lanzador del combo: sube al rival para seguir en el aire
+    if(move==='flurry'){kb=1.5;vy=2;dmg*=.6;stun(e,.5);flurryHits(f,e,dmg*.55);} // ráfaga: tres cortes seguidos
+    else if(move==='launch'){kb=2;vy=13;dmg*=1.45;e.launchT=1.1;}          // lanzador del combo: sube al rival para seguir en el aire
     else if(move==='sweep'){kb=8;vy=4.5;dmg*=1.25;e.launchT=.5;stun(e,.45);} // barrido: a todos los que te rodean
     else if(heavyHit&&!air){kb=4+lvl*3;vy=lvl===2?12:lvl===1?8:5;dmg*=[1.4,1.8,2.3][lvl];e.launchT=.6+lvl*.25;if(lvl)stun(e,.25*lvl);}
     else if(heavyHit){kb=6;vy=-20;dmg*=1.4;e.launchT=.5;}             // clavado desde el aire
@@ -1931,7 +1934,8 @@ function meleeHit(f,kind){
     burst(e.pos.x,e.pos.y+1.1,e.pos.z,0xffffff,big?16:8,big?9:5);if(big)ring(e.pos.x,e.pos.y+.9,e.pos.z,0xffffff,5,.3);
     if(f===player||e===player){hitstop=big?.12:.05;shake=big?.28:.1;if(heavyHit)flash(.35);}
     e._mel=1;damage(e,dmg,f,big);e._mel=0;
-    if(!dashAtk&&move!=='sweep')break; // la embestida y el barrido golpean a varios
+    if(!big&&e.alive&&!e.act&&e.stunT<=0)act(e,'hitC'); // el golpe ligero lo sacude
+    if(!dashAtk&&move!=='sweep'&&lvl!==2)break; // la embestida, el barrido y el salto cargado golpean a varios
   }
   if(any&&!heavyHit){f.combo=fin?0:f.combo+1;f.comboT=now;}
 }
@@ -2034,9 +2038,9 @@ function useSkill(f,dx,dz,ally){
 
 /* ---------- combate: aturdir, parar, desvanecerse, impactos ---------- */
 const PARRY=[.06,.14,.24];
-function stun(f,t){f.stunT=t;f.dashT=0;f.rushT=0;f.wr=0;f.pendingMelee=false;f.charging=false;}
+function stun(f,t){if(t>=.6&&f.alive&&ANIMS.reel&&f.act!=='stumble'&&f.act!=='recoil')act(f,'reel');f.stunT=t;f.dashT=0;f.rushT=0;f.wr=0;f.pendingMelee=false;f.charging=false;}
 function parried(e,f){ // e paró el golpe de f
-  stun(f,1.3);const fx=f.pos.x-e.pos.x,fz=f.pos.z-e.pos.z,d=Math.hypot(fx,fz)||1;f.vel.x=fx/d*7;f.vel.z=fz/d*7;
+  if(ANIMS.recoil)act(f,'recoil');if(ANIMS.parryOK)act(e,'parryOK');stun(f,1.3);const fx=f.pos.x-e.pos.x,fz=f.pos.z-e.pos.z,d=Math.hypot(fx,fz)||1;f.vel.x=fx/d*7;f.vel.z=fz/d*7;
   e.parryT=0;e.ult=Math.min(100,e.ult+15);fxBurst(e.pos.x,e.pos.y+1.2,e.pos.z,0xffffff,2.2);ring(e.pos.x,e.pos.y+.9,e.pos.z,0xffffff,4,.3);burst(e.pos.x,e.pos.y+1.2,e.pos.z,0xffffff,12,7);fxHit(e.pos.x,e.pos.y+1.3,e.pos.z,true,0xffffff);if(e===player||f===player)fxWord('¡CLANG!',e.pos.x,e.pos.y+2.6,e.pos.z,'#ffffff');
   const mine=e===player||f===player;snd('parry',mine?1:volAt(e.pos));
   if(mine){hitstop=.1;flash(.35);shake=.2;banner(e===player?'¡PARADA!':'¡TE PARARON!',e===player?'#ffd23f':'#ff4d4d',.9);}
@@ -2200,6 +2204,10 @@ function giveItem(f,it){const k=it.k,mine=f===player;
     WPN[2]=Object.assign({},GUNS[id],{name:GUNS[id].name+' ÉLITE',dmg:GUNS[id].dmg*1.4,mag:Math.round(GUNS[id].mag*1.5),elite:1});f.ammo[2]=WPN[2].mag;applyGunModels(f,f.m);FPV.built='';setWeapon(2);}}
   if(mine){snd('ready');banner(ITEMT[k].name+(k==='elite'?': '+WPN[2].name:''),hex(ITEMT[k].col),1.1);}
   fxBurst(it.x,it.y+1,it.z,ITEMT[k].col,2.2);if(mine||volAt(f.pos)>.2)fxRune(it.x,it.y,it.z,2.6,ITEMT[k].col,.7);return true;}
+const PEND=[];function later(t,fn){PEND.push({t,fn});}
+function updPend(dt){for(let i=PEND.length-1;i>=0;i--){if((PEND[i].t-=dt)<=0){const p=PEND.splice(i,1)[0];try{p.fn();}catch(e){}}}}
+function flurryHits(f,e,dmg){for(const t of [.28,.56])later(t,()=>{if(!f.alive||!e.alive||f.stunT>0)return;const d=f.pos.distanceTo(e.pos);if(d>WPN[1].range*1.3)return;
+  slashFx(f);snd('sword',f===player?1:volAt(f.pos));e._mel=1;damage(e,dmg,f,t>.5);e._mel=0;stun(e,.4);fxStars(e.pos.x,e.pos.y+1.2,e.pos.z,TEAM[f.team].color,3);burst(e.pos.x,e.pos.y+1.1,e.pos.z,0xffffff,8,5);if(f===player||e===player){hitstop=.05;shake=.1;}});}
 function updItems(dt){for(const it of ITEMS){const g=it.g;
   if(it.t>0){it.t-=dt;g.visible=false;if(it.t<=0){g.visible=true;fxBurst(it.x,it.y+1,it.z,ITEMT[it.k].col,1.4);}continue;}
   g.position.y=it.y+1+Math.sin(now*2.2+it.x)*.15;(g.userData.spin||g.userData.core).rotation.y+=dt*1.6;
@@ -2682,8 +2690,9 @@ function updPlayer(dt){
       fxAura(p,dt,p.hcharge>=.9?1.25:.9);for(const th of [.35,.9])if(c0<th&&p.hcharge>=th){if(th>.5)fxBolt(p.pos.x,p.pos.y,p.pos.z,3.2);snd('charge');burst(p.pos.x,p.pos.y+1.2,p.pos.z,th>.5?0xffd23f:TEAM[p.team].color,th>.5?18:10,5);if(th>.5)shake=Math.max(shake,.1);}}
     else if(p.hcharge>0){p.hlvl=p.hcharge>=.9?2:p.hcharge>=.35?1:0;p.hcharge=0;if(heavy(p))p.cd=.75;}}
   else p.hcharge=0;
-  if(firing&&p.cd<=0&&p.reloadT<=0&&!(p.heavyT>0)){
-    if(w===1||(p.superT>0&&lock)){if(p.sp>=6||p.superT>0){melee(p);p.cd=p.superT>0?.35:W.cd;}}
+  if(w===1&&firing&&p.cd>0&&p.cd<.25)p.mbuf=true; // un clic justo antes de terminar el corte encadena el siguiente
+  if((firing||(w===1&&p.mbuf))&&p.cd<=0&&p.reloadT<=0&&!(p.heavyT>0)){
+    if(w===1||(p.superT>0&&lock)){p.mbuf=false;if(p.sp>=6||p.superT>0){melee(p);const n=(p.chain.match(/L*$/)||[''])[0].length;p.cd=p.superT>0?.35:n===0?.62:[.34,.36,.4][Math.min(2,n-1)];}}
     else if(p.ammo[w]>0){p.ammo[w]--;playerShoot(w);p.cd=W.cd;if(W.burst){p.burstQ=W.burst-1;p.burstT=W.burstGap;}if(p.ammo[w]===0)reload();}
     else reload();
   }
@@ -2829,7 +2838,7 @@ function step(dt){
     if(!f.m.g.visible&&!(f===player&&FPV.g.visible)&&!game.photo){f.m.g.visible=true;f.m.sh.visible=true;} // un luchador vivo siempre se ve
   }
   updClash(dt);updBeams(dt);updUlts(dt);updTactics(dt);updMuzzle(dt);updAudio(dt);updPJ(dt);updFx(dt);updSpr(dt);
-  for(const pd of pads)pd.m.rotation.z+=dt*1.5;updRunes(dt);updItems(dt);
+  for(const pd of pads)pd.m.rotation.z+=dt*1.5;updRunes(dt);updItems(dt);updPend(dt);
   for(const t of [0,1])TEAM[t].rune.rotation.z+=dt*.4;
   if(MAPFX.mist)for(const m of MAPFX.mist){m.visible=!!SET.mist;m.material.map.offset.x+=dt*m.userData.sp;m.material.map.offset.y+=dt*m.userData.sp*.4;}
   if(MAPFX.halo)MAPFX.halo.rotation.y+=dt*.12;if(MAPFX.motes){MAPFX.motes.position.y=Math.sin(now*.25)*.6;MAPFX.motes.rotation.y+=dt*.004;}
@@ -3232,7 +3241,7 @@ function loop(t){
 buildTags();fullReset();
 for(const k of [10,11,12])loadVRM(k).then(v=>{if(v)refreshLook(k);});
 window.__loadGuns();loadProp('sword').then(v=>{if(v){for(const f of fighters)f.setClass(f.cls,f.look,true);buildTags();}});
-loadAnim('strafe','anims/sword-strafe.json');loadMoves('anims/moves.json');loadMoves('anims/sword.json');loadMoves('anims/cover.json');loadMoves('anims/ual.json');
+loadAnim('strafe','anims/sword-strafe.json');loadMoves('anims/moves.json');loadMoves('anims/sword.json');loadMoves('anims/cover.json');loadMoves('anims/ual.json');loadMoves('anims/melee.json');
 window.__fx={mFinal,mSoft,FX,SET,fxBoom,guardBreak,act,gunModel,GUNGLB};window.__game={camera,boxes,setCam:(y,p)=>{camYaw=y;camPitch=p;},PJ,SPR,fxWord,swordModel,PROPS,game,player,fighters,step,startMatch,photoOn,photoOff,photoShot,PH,useSkill,jump,keys,startUlt,toggleLock,clash,melee,heavy,KIF,SANCT,getLock:()=>lock};
 requestAnimationFrame(loop);
 })();
