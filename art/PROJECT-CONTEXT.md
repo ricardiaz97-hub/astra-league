@@ -30,3 +30,8 @@ Use this file to continue the character-art work in a future chat.
 ## Continuation notes
 - The source photos were supplied by the user in this project's conversation. They are not copied into the repository.
 - New work belongs in the two character-art folders above. Update `art/README.md` when the roster changes.
+
+## Handoff
+- Selection menu PNG: rt/character-select-menu.png (2560×1440).
+- Shared chat context: https://chatgpt.com/s/cx_6af613e7c0048191b62eaf88ab77219b
+
