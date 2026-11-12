@@ -316,7 +316,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
       <div><kbd>Clic</kbd><span>atacar; con la hoja: combo de tres, tras un dash embiste, en el aire encadena</span></div>
       <div><kbd>Clic der.</kbd><span>con la hoja: pesado; mantén para cargarlo (3 niveles); rompe la guardia. Tras ligeros: L-H barrido, L-L-H lanzador</span></div>
       <div><kbd>Clic der.</kbd><span>junto a un rival con poca vida o con la guardia rota: REMATE</span></div>
-      <div><kbd>Espacio</kbd><span>salto; si casi llegas a un borde, te agarras y subes</span></div>
+      <div><kbd>Espacio</kbd><span>salto y doble salto; si casi llegas a un borde, te agarras y subes</span></div>
       <div><kbd>Muro</kbd><span>corre por él; Espacio salta desde el muro</span></div>
       <div><kbd>Shift</kbd><span>dash y esquiva: al empezar atraviesas los ataques; quieto y con rival fijado, apareces detrás</span></div>
       <div><kbd>C</kbd><span>deslizarte; en el aire, caída en picada</span></div>
@@ -363,7 +363,7 @@ const rand=(a,b)=>a+Math.random()*(b-a), clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const hex=c=>'#'+c.toString(16).padStart(6,'0');
 
 /* ---------- constantes ---------- */
-let HX=80,HZ=46;const WALLH=26,R=.4,H=1.8,G=27,JUMP=7.6,SPEED=6.8,DMGK=.45,MATCH=300,KILLS=25;
+let HX=80,HZ=46;const WALLH=26,R=.4,H=1.8,G=27,JUMP=7.6,SPEED=7.3,DMGK=.45,MATCH=300,KILLS=25;
 const ARC=0xb58cff,INKC=0x1d1a22,CREAM=0xf1ece4,CHAR=0x3b3840;
 const TEAM=[{name:'ALFA',color:0xff7a1a,css:'#ff7a1a',baseX:-68},{name:'BETA',color:0x18c8f0,css:'#18c8f0',baseX:68}];
 const WPN=[
@@ -1705,7 +1705,11 @@ function jump(f){
     const n=f.wallN;v.y=JUMP*.55;v.x+=n.x*7;v.z+=n.z*7;
     f.wr=0;f.wrCd=.3;f.wallT=0;f.jumps=1;
     if(f===player)snd('jump');burst(f.pos.x-n.x*.4,f.pos.y+.3,f.pos.z-n.z*.4,0xffffff,5,3);fxDust(f.pos.x-n.x*.5,f.pos.y+.8,f.pos.z-n.z*.5,4,2,.9);return true;}
-  return false; // un solo salto: para subir más alto hay que agarrarse de un borde
+  if(f.jumps<2){ // doble salto: permite corregir el rumbo en el aire
+    f.jumps=2;v.y=JUMP*.8;
+    const wl=Math.hypot(f.wish.x,f.wish.z);if(wl>.1){const hs=Math.max(Math.hypot(v.x,v.z),SPEED*.8);v.x=v.x*.35+f.wish.x/wl*hs*.65;v.z=v.z*.35+f.wish.z/wl*hs*.65;}
+    if(f===player)snd('jump2');burst(f.pos.x,f.pos.y+.1,f.pos.z,TEAM[f.team].color,8,3.5,2);return true;}
+  return false;
 }
 
 /* ---------- poderes de clase ---------- */
