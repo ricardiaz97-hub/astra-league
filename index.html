@@ -363,7 +363,7 @@ const rand=(a,b)=>a+Math.random()*(b-a), clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const hex=c=>'#'+c.toString(16).padStart(6,'0');
 
 /* ---------- constantes ---------- */
-let HX=80,HZ=46;const WALLH=26,R=.4,H=1.8,G=27,JUMP=7.6,SPEED=6.2,DMGK=.45,MATCH=300,KILLS=25;
+let HX=80,HZ=46;const WALLH=26,R=.4,H=1.8,G=27,JUMP=7.6,SPEED=6.8,DMGK=.45,MATCH=300,KILLS=25;
 const ARC=0xb58cff,INKC=0x1d1a22,CREAM=0xf1ece4,CHAR=0x3b3840;
 const TEAM=[{name:'ALFA',color:0xff7a1a,css:'#ff7a1a',baseX:-68},{name:'BETA',color:0x18c8f0,css:'#18c8f0',baseX:68}];
 const WPN=[
@@ -1590,7 +1590,7 @@ function damage(t,amt,by,big){
 function melee(f){ // ataque ligero: combo de tres, embestida justo después de un dash, o golpe aéreo
   if(f.superT>0){const t=f.isPlayer?lock:f.target;if(t&&t.alive&&!(f.warpCd>0)&&superWarp(f,t)){f.warpCd=.9;return;}}
   if(f.isPlayer&&lock&&lock.alive&&f.sp>=22&&!(f.lungeCd>0)){const dx=lock.pos.x-f.pos.x,dz=lock.pos.z-f.pos.z,d=Math.hypot(dx,dz);
-    if(d>3.2&&d<8){f.sp-=22;f.spWait=.6;f.lungeCd=1.2;f.dashT=Math.min(.42,(d-2)/13);f.dashDir.x=dx/d;f.dashDir.z=dz/d;f.pendingMelee=true;f.wr=0;f.vel.y=clamp((lock.pos.y-f.pos.y)*3,-6,8);snd('dash');return;}}
+    if(d>3.2&&d<8){f.sp-=22;f.spWait=.6;f.lungeCd=1.2;f.dashT=Math.min(.42,(d-2)/15);f.dashDir.x=dx/d;f.dashDir.z=dz/d;f.pendingMelee=true;f.wr=0;f.vel.y=clamp((lock.pos.y-f.pos.y)*3,-6,8);snd('dash');return;}}
   meleeHit(f,'light');
 }
 function heavy(f){ // golpe pesado: carga corta en la que quedas expuesto; en el suelo lanza al rival, en el aire lo clava contra el piso
@@ -1694,7 +1694,7 @@ function botShoot(b,t){
 }
 function dash(f,dx,dz){
   if(f.sp<25||f.dashCd>0||!f.alive)return;const L=Math.hypot(dx,dz);if(L<.01)return;
-  f.sp-=25;f.spWait=.8;f.dashT=.16;f.dashCd=.75;f.iframeT=now+.24;f.block=false;f.dashDir.x=dx/L;f.dashDir.z=dz/L;f.wr=0;
+  f.sp-=25;f.spWait=.8;f.dashT=.18;f.dashCd=.7;f.iframeT=now+.24;f.block=false;f.dashDir.x=dx/L;f.dashDir.z=dz/L;f.wr=0;
   if(f===player)snd('dash');burst(f.pos.x,f.pos.y+.4,f.pos.z,TEAM[f.team].color,3,2);if(f.onGround)fxDust(f.pos.x,f.pos.y,f.pos.z,2,1.6,.7);
 }
 function jump(f){
@@ -2083,7 +2083,7 @@ function physics(f,dt){
     for(const e of fighters){if(e.team===f.team||!e.alive||f.rushHit.includes(e))continue;const dx=e.pos.x-f.pos.x,dz=e.pos.z-f.pos.z;
       if(dx*dx+dz*dz<4&&Math.abs(e.pos.y-f.pos.y)<2.2){f.rushHit.push(e);e.vel.x+=f.rushDir.x*12;e.vel.z+=f.rushDir.z*12;e.vel.y=6.5;e.onGround=false;
         burst(e.pos.x,e.pos.y+1.1,e.pos.z,0xffffff,12,7);if(f===player)shake=.2;damage(e,45,f,true);}}}
-  else if(f.dashT>0){f.dashT-=dt;v.x=f.dashDir.x*13;v.z=f.dashDir.z*13;if(f.dashT<=0){f.dashEnd=now;const h=Math.hypot(v.x,v.z),c=sp*1.05/(h||1);if(c<1){v.x*=c;v.z*=c;}}if(f.dashT<=0&&f.pendingMelee){f.pendingMelee=false;v.x*=.3;v.z*=.3;meleeHit(f);}}
+  else if(f.dashT>0){f.dashT-=dt;v.x=f.dashDir.x*15;v.z=f.dashDir.z*15;if(f.dashT<=0){f.dashEnd=now;const h=Math.hypot(v.x,v.z),c=sp*1.2/(h||1);if(c<1){v.x*=c;v.z*=c;}}if(f.dashT<=0&&f.pendingMelee){f.pendingMelee=false;v.x*=.3;v.z*=.3;meleeHit(f);}}
   else if(f.wr>0){
     f.wr-=dt;const nx=f.wrNx,nz=f.wrNz;
     v.x=-nz*f.wrDir*f.wrSpd-nx*3;v.z=nx*f.wrDir*f.wrSpd-nz*3; // el empuje hacia el muro mantiene el contacto
