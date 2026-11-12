@@ -1292,6 +1292,7 @@ function buildVRM(team,cls,look){
   else g.add(wg);
   const gun=new T.Group();wg.add(gun);ink(add(gun,B(.46,.13,.17),toon(0x1d1a22),-.2,0,0));add(gun,B(.34,.05,.19),glow,-.2,0,0);
   const sword=new T.Group();wg.add(sword);const sm=swordModel();
+  sword.rotation.x=PI/2; // empuñadura a dos manos: la hoja sale hacia adelante del puño, como piden las animaciones de espadón
   if(sm)sword.add(sm);else{add(sword,B(.12,.24,.12),toon(0x1d1a22),0,.08,0);add(sword,B(.08,1.5,.03),glow,0,.9,0);add(sword,B(.03,1.5,.08),basic(0xffffff),0,.9,0);}sword.visible=false;
   let stones=null;
   if(cls===2){stones=new T.Group();stones.position.y=1.25;g.add(stones);for(let i=0;i<3;i++){const a=i*2.094;add(stones,geo.stone,basic(0xffffff),Math.cos(a)*.75,0,Math.sin(a)*.75);add(stones,geo.stone,basic(c,{transparent:true,opacity:.5}),Math.cos(a)*.75,0,Math.sin(a)*.75).scale.setScalar(1.6);}}
@@ -1314,7 +1315,7 @@ function playFrame(m,a,ft,mirror,k){ // ft = cuadro (con decimales) dentro del t
   const n=a.frames-1;ft=clamp(ft,0,n);const i=Math.min(Math.floor(ft),n-1),u=ft-i,set=mirror?a.mirror:a.bones;
   for(const key in set){const b=m.bones[key];if(!b)continue;const d=set[key];_qa.fromArray(d,i*4);_qb.fromArray(d,(i+1)*4);_qa.slerp(_qb,u);poseQ(b,_qa,k);}}
 function playAnim(m,a,t,mirror,k){const n=a.frames-1;playFrame(m,a,((t*a.fps)%n+n)%n,mirror,k===undefined?1:k);}
-const ACTDUR={slash:.42,spin:.62,cast:.6};
+const ACTDUR={slash:.42,spin:.62,cast:.6,sl1:.44,sl2:.44,swHeavy:.52};
 function act(f,key){f.act=key;f.actT=0;}
 function applyVRM(m,f,dt){
   const A=ANIMS,k=1-Math.exp(-22*dt),hs=Math.hypot(f.vel.x,f.vel.z),cy=Math.cos(f.yaw),sy=Math.sin(f.yaw);
@@ -1328,12 +1329,13 @@ function applyVRM(m,f,dt){
     else if(f.charging)key='powerup';
     else if(f.parryT>0)key='block';
     else if(f.wr>0){key='wallrun';mir=f.wrNx*cy-f.wrNz*sy<0;}
-    else if(!f.onGround)key='jump';
+    else if(!f.onGround)key=f.weapon===1&&A.swJump?'swJump':'jump';
     else if(f.weapon===1&&tg&&tg.alive&&Math.abs(lat)>2.5&&Math.abs(lat)>Math.abs(fwd)*.8){key='strafe';mir=lat<0;rate=Math.abs(lat)/((A.strafe&&A.strafe.speed)||3);} // rodear al rival fijado
     else if(f.onGround&&hs>3&&f.weapon!==1&&A.runF){ // con arma de fuego: correr hacia adelante, de lado o de espaldas sin dejar de apuntar
       if(Math.abs(lat)>Math.abs(fwd)*1.1){key=lat>0?'runR':'runL';rate=clamp(hs/4.8,.7,1.8);}else{key='runF';rate=clamp(hs/4.8,.7,1.8)*(fwd<0?-1:1);}}
-    else if(f.onGround&&hs>3){key='run';rate=clamp(hs/5.5,.7,2.2);}
+    else if(f.onGround&&hs>3){if(f.weapon===1&&A.swRun){key='swRun';rate=clamp(hs/5,.7,2);}else{key='run';rate=clamp(hs/5.5,.7,2.2);}}
     else if(f.onGround&&f.weapon!==1&&A.aim)key='aim';
+    else if(f.onGround&&f.weapon===1&&A.swIdle){if(hs>.8&&A.swWalk){key='swWalk';rate=clamp(hs/1.7,.6,2);}else key='swIdle';} // espada a dos manos
     if(key&&!A[key])key=null;}
   if(key!==f.curKey){f.curKey=key;f.keyT=0;}else f.keyT+=dt;
   if(key){const a=A[key];
@@ -1527,6 +1529,7 @@ const game={map:2,menu:true,paused:false,free:false,photo:false,state:'playing',
 const player=new Fighter(0,'Tú',0,true,0,10);
 new Fighter(0,'Nova',1,false,1,11);new Fighter(0,'Lince',2,false,2,11);
 new Fighter(1,'Vex',0,false,0,11);new Fighter(1,'Brasa',1,false,1,11);new Fighter(1,'Orión',2,false,2,11);
+let SHOULDER=1;try{if(localStorage.getItem('astra-shoulder')==='-1')SHOULDER=-1;}catch(e){}
 let camYaw=-PI/2,camPitch=-.08,camRoll=0,shake=0,hitstop=0,flashV=0,lock=null,lockLost=0;
 function flash(v){flashV=Math.max(flashV,v);}
 
@@ -1570,7 +1573,7 @@ function meleeHit(f,kind){
   if(f.onGround&&!heavyHit){const p=dashAtk?11:6;f.vel.x+=fx*p;f.vel.z+=fz*p;}
   if(air&&!heavyHit){f.airHits=(f.airHits||0)+1;if(f.airHits<=3)f.vel.y=Math.max(f.vel.y,2.4);}
   if(now-f.comboT>1.3)f.combo=0;
-  const fin=!heavyHit&&!dashAtk&&!air&&f.combo>=2;let any=false;act(f,fin||heavyHit?'spin':'slash');
+  const fin=!heavyHit&&!dashAtk&&!air&&f.combo>=2;let any=false;act(f,heavyHit&&ANIMS.swHeavy?'swHeavy':fin||heavyHit?'spin':ANIMS.sl1?(f.combo%2?'sl2':'sl1'):'slash');
   const range=WPN[1].range*(dashAtk?1.15:heavyHit?1.1:1);
   for(const e of fighters){if(e.team===f.team||!e.alive)continue;
     const dx=e.pos.x-f.pos.x,dz=e.pos.z-f.pos.z,dy=e.pos.y-f.pos.y,d=Math.hypot(dx,dz);
@@ -2108,7 +2111,7 @@ window.addEventListener('keydown',e=>{
   if(e.code==='ShiftLeft'||e.code==='ShiftRight')dashQ=true;
   if(e.code==='KeyE')skillQ=true;
   if(e.code==='Digit1')setWeapon(0);if(e.code==='Digit2')setWeapon(1);if(e.code==='Digit3')setWeapon(2);
-  if(e.code==='KeyQ')setWeapon((player.weapon+1)%3);
+  if(e.code==='KeyQ')setWeapon((player.weapon+1)%3);if(e.code==='KeyZ'){SHOULDER=-SHOULDER;try{localStorage.setItem('astra-shoulder',SHOULDER);}catch(_){}}
   if(e.code==='KeyR')reload();
   if(e.code==='KeyP'||(e.code==='Escape'&&!wasLocked)){if(game.paused)resume();else if(game.state!=='ended')pause();}
 });
@@ -2318,9 +2321,9 @@ function updCamera(dt){if(window.__camOverride)return;if(game.photo){updPhoto(dt
   }
   const cp=Math.cos(camPitch),fx=-Math.sin(camYaw)*cp,fy=Math.sin(camPitch),fz=-Math.cos(camYaw)*cp,rx=Math.cos(camYaw),rz=-Math.sin(camYaw);
   const wn=p.alive&&p.wr>0?p.wrNx*rx+p.wrNz*rz:0; // al correr por un muro, la cámara se aparta del muro
-  camSide+=((ulting?3.2:wn?Math.sign(wn)*1.3:.8+.2*ads)-camSide)*Math.min(1,dt*(ulting?3:7));
-  const back=ulting?8.5:4.3-1.9*ads;
-  _d.set(-fx*back+rx*camSide,-fy*back+.5-.15*ads+(ulting?1.2:0),-fz*back+rz*camSide);const L=_d.length();_d.multiplyScalar(1/L);
+  camSide+=((ulting?3.2:wn?Math.sign(wn)*1.8:SHOULDER*1.75)-camSide)*Math.min(1,dt*(ulting?3:7));
+  const back=ulting?8.5:5.1-1.9*ads;
+  _d.set(-fx*back+rx*camSide,-fy*back+.62-.15*ads+(ulting?1.2:0),-fz*back+rz*camSide);const L=_d.length();_d.multiplyScalar(1/L);
   const t=rayWorld(camT,_d,L+.3);const use=Math.max(.6,Math.min(L,t-.3));
   camera.position.copy(camT).addScaledVector(_d,use);if(camera.position.y<.25)camera.position.y=.25;
   if(FPV.k>.001&&p.alive){ // primera persona: de la cámara de atrás a los ojos
@@ -2506,7 +2509,7 @@ function loop(t){
 buildTags();fullReset();
 for(const k of [10,11])loadVRM(k).then(v=>{if(v)refreshLook(k);});
 loadProp('sword').then(v=>{if(v){for(const f of fighters)f.setClass(f.cls,f.look,true);buildTags();}});
-loadAnim('strafe','anims/sword-strafe.json');loadMoves('anims/moves.json');
+loadAnim('strafe','anims/sword-strafe.json');loadMoves('anims/moves.json');loadMoves('anims/sword.json');
 window.__fx={mFinal,mSoft,FX,SET};window.__game={camera,boxes,setCam:(y,p)=>{camYaw=y;camPitch=p;},PJ,SPR,fxWord,swordModel,PROPS,game,player,fighters,step,startMatch,photoOn,photoOff,photoShot,PH,useSkill,jump,keys,startUlt,toggleLock,clash,melee,heavy,KIF,SANCT,getLock:()=>lock};
 requestAnimationFrame(loop);
 })();
