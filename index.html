@@ -318,7 +318,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
       <div><kbd>Clic der.</kbd><span>junto a un rival con poca vida o con la guardia rota: REMATE</span></div>
       <div><kbd>Espacio</kbd><span>salto y doble salto; si casi llegas a un borde, te agarras y subes</span></div>
       <div><kbd>Muro</kbd><span>corre por él; Espacio salta desde el muro</span></div>
-      <div><kbd>Shift</kbd><span>dash y esquiva: al empezar atraviesas los ataques; quieto y con rival fijado, apareces detrás</span></div>
+      <div><kbd>Shift</kbd><span>dash; mantenlo para seguir corriendo (más lento que el dash, gasta un poco de energía). Esquiva: al empezar atraviesas los ataques; quieto y con rival fijado, apareces detrás</span></div>
       <div><kbd>C</kbd><span>deslizarte; en el aire, caída en picada</span></div>
       <div><kbd>W</kbd><span>contra un obstáculo bajo, lo saltas sin parar</span></div>
       <div><kbd>Ratón</kbd><span>con la hoja el rival se fija solo; mueve la cámara rápido a un lado para cambiar de rival (Tab también)</span></div>
@@ -2061,7 +2061,7 @@ function toggleLock(){if(!player.alive)return;if(lock){lock=null;return;}lock=pi
 
 /* ---------- física de luchador ---------- */
 function physics(f,dt){
-  const sp=SPEED*CLS[f.cls].spd*(f.superT>0?1.15:1)*(f.slowT>0?.6:1)*(f.isPlayer?1-.38*ads:1),v=f.vel,w=f.wish,wl=Math.hypot(w.x,w.z);
+  const sp=SPEED*CLS[f.cls].spd*(f.superT>0?1.15:1)*(f.slowT>0?.6:1)*(f.isPlayer?1-.38*ads:1)*(f.sprint?1.32:1),v=f.vel,w=f.wish,wl=Math.hypot(w.x,w.z);
   let hs=Math.hypot(v.x,v.z);
   if(f.climbT>0){ // agarrarse del borde o saltar un obstáculo
     f.climbT-=dt;const k=1-Math.max(0,f.climbT)/f.climbD,e=k*k*(3-2*k),A=f.cA,B=f.cB;
@@ -2203,7 +2203,7 @@ window.addEventListener('touchstart',e=>{
   enableTouch();if(game.menu||game.paused||game.state==='ended')return;initAudio();
   for(const t of e.changedTouches){const id=t.target&&t.target.id;
     if(id==='bJump'){jumpQ=true;}
-    else if(id==='bDash'){dashQ=true;}
+    else if(id==='bDash'){dashQ=true;tbtn.dashId=t.identifier;}
     else if(id==='bSkill'){skillQ=true;}
     else if(id==='bUlt'){ultQ=true;}
     else if(id==='bParry'){if(player.weapon===1){parryQ=true;blockHeld=true;tbtn.blkId=t.identifier;}else reload();}
@@ -2229,7 +2229,7 @@ function tEnd(e){for(const t of e.changedTouches){
   if(t.identifier===joy.id){joy.id=null;joy.x=joy.y=0;$('knob').style.transform='';const J=$('joy');J.classList.remove('live');J.style.left=J.style.top='';}
   if(t.identifier===look.id)look.id=null;
   if(t.identifier===tbtn.fireId){tbtn.fire=false;tbtn.fireId=null;}
-  if(t.identifier===tbtn.blkId){blockHeld=false;tbtn.blkId=null;}if(t.identifier===tbtn.hvId){heavyHeld=false;adsHeld=false;tbtn.hvId=null;}
+  if(t.identifier===tbtn.blkId){blockHeld=false;tbtn.blkId=null;}if(t.identifier===tbtn.dashId)tbtn.dashId=null;if(t.identifier===tbtn.hvId){heavyHeld=false;adsHeld=false;tbtn.hvId=null;}
 }}
 window.addEventListener('touchend',tEnd);window.addEventListener('touchcancel',tEnd);
 
@@ -2333,6 +2333,11 @@ function updPlayer(dt){
   if(parryQ){parryQ=false;if(p.weapon!==1&&p.parryCd<=0){p.parryT=.3;p.parryCd=.9;snd('parryup');}}
   if(diveQ){diveQ=false;if(!p.onGround&&p.sp>=20&&p.vel.y>-30){p.sp-=20;p.spWait=.6;p.vel.y=-38;p.vel.x*=.3;p.vel.z*=.3;p.wr=0;snd('dash');}} // caída en picada
   if(jumpQ){jumpQ=false;if(!p.charging)jump(p);}
+  { // correr: mantén el dash después de lanzarlo (más lento que el dash, gasta un poco de energía)
+    const held=keys.ShiftLeft||keys.ShiftRight||tbtn.dashId!=null,fwd=f>.3;
+    const ok=held&&fwd&&p.dashT<=0&&!adsHeld&&!p.block&&!(p.hcharge>0)&&COV.k<.5&&p.ultT<=0&&p.sp>1&&!p.charging;
+    if(ok&&!p.sprint&&!(p.dashEnd>0&&now-p.dashEnd<1.2))p.sprint=false;else p.sprint=ok;
+    if(p.sprint){p.sp=Math.max(0,p.sp-7*dt);p.spWait=.4;}}
   if(dashQ){dashQ=false;if(lock&&L<.1&&vanish(p,lock)){}else if(L>.1)dash(p,p.wish.x,p.wish.z);else dash(p,fx,fz);}
   if(skillQ){skillQ=false;if(p.cls===3&&L>.1)useSkill(p,p.wish.x,p.wish.z);else useSkill(p,fx,fz);}
   const w=p.weapon,W=WPN[w];
@@ -2437,7 +2442,7 @@ function updBot(b,dt){
   }
   if(b.stuckT>0){b.stuckT-=dt;wx=b.stuckDir.x;wz=b.stuckDir.z;}
   else{b.progT+=dt;if(b.progT>.8){if(L>.01&&b.pos.distanceTo(b.lastPos)<1.1){const a=rand(0,6.283);b.stuckT=.6;b.stuckDir.x=Math.cos(a);b.stuckDir.z=Math.sin(a);b.side=-b.side;jump(b);}b.lastPos.copy(b.pos);b.progT=0;}}
-  b.wish.x=wx;b.wish.z=wz;
+  b.wish.x=wx;b.wish.z=wz;b.sprint=!tg&&gd>16&&b.onGround&&b.sp>30; // sin rival a la vista, corre hacia su objetivo
   if(b.blocked){if(b.onGround)jump(b);else if(Math.random()<dt*4)jump(b);}
   if(b.onGround&&b.sp>=30&&L>.01){
     if(now-b.lastHit<.5&&Math.random()<dt*2.5)dash(b,-wz*b.strafe,wx*b.strafe);
