@@ -271,6 +271,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
 /* ---------- menú v2: personaje · armas · mapa (SUNBURNT) ---------- */
 #menu.v2{display:grid!important;grid-template-rows:auto minmax(0,1fr) auto;grid-template-columns:1fr!important;width:100vw;max-width:100vw;height:100dvh;overflow:hidden;padding:0;
   background:linear-gradient(90deg,rgba(22,13,30,.92) 0%,rgba(22,13,30,.62) 46%,rgba(22,13,30,.35) 70%,rgba(22,13,30,.7) 100%)}
+#menu.v2[hidden]{display:none!important}
 #menu.v2 .mL,#menu.v2 .mHero,#menu.v2 #gunInfo{display:none!important}
 #menu.v2::after{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-linear-gradient(115deg,transparent 0 46px,rgba(255,122,26,.035) 46px 48px);z-index:0}
 .v2Top{position:relative;z-index:2;display:flex;align-items:center;gap:22px;padding:clamp(14px,2.6vh,26px) clamp(18px,3vw,44px) 0}
