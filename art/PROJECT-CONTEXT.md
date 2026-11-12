@@ -38,3 +38,8 @@ Use this file to continue the character-art work in a future chat.
 
 - The current character selection menu uses posed illustrations cropped from character-sheets/; it does not use the T-pose images.
 
+
+## Transparent selection assets
+- All 16 individual character portraits, the Ricardo+Milena duo cutout, and the 16-character menu PNG are in rt/character-select-transparent/ with transparent backgrounds.
+- The composite menu is also at rt/character-select-menu.png and outputs/astra-league-character-select.png in the workspace outputs folder.
+
