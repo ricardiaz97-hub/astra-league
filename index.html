@@ -437,7 +437,7 @@ const ARC=0xb58cff,INKC=0x1d1a22,CREAM=0xf1ece4,CHAR=0x3b3840;
 const TEAM=[{name:'ALFA',color:0xff7a1a,css:'#ff7a1a',baseX:-68},{name:'BETA',color:0x18c8f0,css:'#18c8f0',baseX:68}];
 const WPN=[
   {name:'RÁFAGA DE KI',mag:30,cd:.085,dmg:10,reload:1.5,spread:.016},
-  {name:'HOJA ARCANA',mag:0,cd:.55,dmg:28,range:3.2},
+  {name:'HOJA ARCANA',mag:0,cd:.55,dmg:22,range:2.9},
   {name:'LANZA RÚNICA',mag:4,cd:1.1,dmg:75,reload:2.2,spread:0}];
 const CLS=[
   {name:'IMPACTO',hp:100,spd:1,skill:'EMBESTIDA DE KI',cd:7,ult:'ONDA ASTRAL'},
@@ -1662,7 +1662,8 @@ function damage(t,amt,by,big){
   if(!t._mel&&(t.heavyT>0||t.hcharge>.1||t.swingT>.12)&&by&&by!==t){t.heavyT=0;t.hcharge=0;t.act=null;stun(t,.22);if(t===player||by===player)fxWord('¡INTERRUMPIDO!',t.pos.x,t.pos.y+2.4,t.pos.z,'#ffd23f');} // un disparo corta el golpe cuerpo a cuerpo
   if(by&&by.strT>now)amt*=1.3;
   if(t.shield>0){const a=Math.min(t.shield,amt);t.shield-=a;amt-=a;if(t===player)fxWord('ESCUDO',t.pos.x,t.pos.y+2.2,t.pos.z,'#b58cff');if(amt<=0)return;}
-  if(t.block&&!t._mel&&facing(t,by)){amt*=.45;t.sp=Math.max(0,t.sp-amt*.4);}
+  if(t.block&&!t._mel&&facing(t,by)){amt*=.7;t.sp=Math.max(0,t.sp-amt*.6);}
+  if(!t._mel&&t.weapon===1&&by&&by.weapon!==1)amt*=1.15; // la hoja pierde contra las armas a distancia
   if(t.parryT>0)amt*=.3;
   const raw=amt;amt*=DMGK;if(t.superT>0)amt*=.6;if(t.sanctT>0)amt*=.8;if(by.sanctT>0)amt*=1.2;
   {const bg=big||raw>=30;fxHit(t.pos.x,t.pos.y+1.2,t.pos.z,bg,TEAM[by.team].color);if(bg&&(by===player||t===player)&&raw>=40)fxWord(WORDS[Math.random()*WORDS.length|0],t.pos.x,t.pos.y+2.6,t.pos.z,by.team?'#18c8f0':'#ff7a1a');}
@@ -1680,8 +1681,8 @@ function damage(t,amt,by,big){
 }
 function melee(f){ // ataque ligero: combo de tres, embestida justo después de un dash, o golpe aéreo
   if(f.superT>0){const t=f.isPlayer?lock:f.target;if(t&&t.alive&&!(f.warpCd>0)&&superWarp(f,t)){f.warpCd=.9;return;}}
-  if(f.isPlayer&&lock&&lock.alive&&f.sp>=22&&!(f.lungeCd>0)&&lock.pos.distanceTo(f.pos)<6){const dx=lock.pos.x-f.pos.x,dz=lock.pos.z-f.pos.z,d=Math.hypot(dx,dz);
-    if(d>3.2&&d<8){f.sp-=22;f.spWait=.6;f.lungeCd=1.7;f.dashT=Math.min(.42,(d-2)/15);f.dashDir.x=dx/d;f.dashDir.z=dz/d;f.pendingMelee=true;f.wr=0;f.vel.y=clamp((lock.pos.y-f.pos.y)*3,-6,8);snd('dash');return;}}
+  if(f.isPlayer&&lock&&lock.alive&&f.sp>=30&&!(f.lungeCd>0)&&lock.pos.distanceTo(f.pos)<5.5){const dx=lock.pos.x-f.pos.x,dz=lock.pos.z-f.pos.z,d=Math.hypot(dx,dz);
+    if(d>3.2&&d<5.5){f.sp-=30;f.spWait=.8;f.lungeCd=2.6;f.dashT=Math.min(.42,(d-2)/15);f.dashDir.x=dx/d;f.dashDir.z=dz/d;f.pendingMelee=true;f.wr=0;f.vel.y=clamp((lock.pos.y-f.pos.y)*3,-6,8);snd('dash');return;}}
   meleeHit(f,'light');
 }
 function heavy(f){ // golpe pesado: carga corta en la que quedas expuesto; en el suelo lanza al rival, en el aire lo clava contra el piso
@@ -1689,11 +1690,11 @@ function heavy(f){ // golpe pesado: carga corta en la que quedas expuesto; en el
   if(f.isPlayer){f.heavyT=.1;act(f,ANIMS.swHeavy?'swHeavy':'spin');f.actT=.13;}else{f.hlvl=Math.random()<.3?1:0;f.heavyT=.3;act(f,ANIMS.swHeavy?'swHeavy':'spin');}
   snd('charge',f===player?1:volAt(f.pos));return true;}
 function meleeHit(f,kind){
-  f.sp=Math.max(0,f.sp-(kind==='heavy'?14:6));f.spWait=Math.max(f.spWait||0,.5); // cada golpe cansa
+  f.sp=Math.max(0,f.sp-(kind==='heavy'?20:9));f.spWait=Math.max(f.spWait||0,.5); // cada golpe cansa
   kind=kind||'light';const heavyHit=kind==='heavy',air=heavyHit?f.heavyAir:!f.onGround,dashAtk=!heavyHit&&(f.dashT>0||now-(f.dashEnd||-9)<.25);
   f.swingT=.28;slashFx(f);snd('sword',f===player?1:volAt(f.pos));
   const fx=-Math.sin(f.yaw),fz=-Math.cos(f.yaw);
-  if(f.onGround&&!heavyHit){const p=dashAtk?11:6;f.vel.x+=fx*p;f.vel.z+=fz*p;}
+  if(f.onGround&&!heavyHit){const p=dashAtk?8:4;f.vel.x+=fx*p;f.vel.z+=fz*p;}
   if(air&&!heavyHit){f.airHits=(f.airHits||0)+1;if(f.airHits<=3)f.vel.y=Math.max(f.vel.y,2.4);}
   if(now-f.comboT>1.3)f.combo=0;if(now-(f.chainT||-9)>1.3)f.chain='';
   // combos de ligero y pesado: L-L-L remolino · L-H barrido · L-L-H lanzador · pesado cargado (3 niveles)
@@ -1718,10 +1719,10 @@ function meleeHit(f,kind){
     if(e.parryT>0||bp){
       if(heavyHit){stun(e,.7);e.parryT=0;fxWord('¡ROTO!',e.pos.x,e.pos.y+2.6,e.pos.z,'#ffd23f');} // el pesado rompe la guardia
       else{parried(e,f);return;}}
-    any=true;let kb,vy,dmg=f.isPlayer?WPN[1].dmg:24;
+    any=true;let kb,vy,dmg=f.isPlayer?WPN[1].dmg:20;
     if(move==='launch'){kb=2;vy=13;dmg*=1.45;e.launchT=1.1;}          // lanzador del combo: sube al rival para seguir en el aire
     else if(move==='sweep'){kb=8;vy=4.5;dmg*=1.25;e.launchT=.5;stun(e,.45);} // barrido: a todos los que te rodean
-    else if(heavyHit&&!air){kb=4+lvl*3;vy=lvl===2?12:lvl===1?8:5;dmg*=[1.5,2,2.7][lvl];e.launchT=.6+lvl*.25;if(lvl)stun(e,.25*lvl);}
+    else if(heavyHit&&!air){kb=4+lvl*3;vy=lvl===2?12:lvl===1?8:5;dmg*=[1.4,1.8,2.3][lvl];e.launchT=.6+lvl*.25;if(lvl)stun(e,.25*lvl);}
     else if(heavyHit){kb=6;vy=-20;dmg*=1.4;e.launchT=.5;}             // clavado desde el aire
     else if(dashAtk){kb=9;vy=3.5;dmg*=1.3;}
     else if(air){kb=3;vy=Math.max(e.vel.y,3);}
@@ -1742,16 +1743,16 @@ function playerShoot(w){
   const W=WPN[w],p=player,n=W.pellets||1;muzzle(p,_a);_e.copy(_a);
   camera.getWorldDirection(_w);
   if(lock){const c=camera.position;_w.set(lock.pos.x-c.x,lock.pos.y+1.15-c.y,lock.pos.z-c.z).normalize();}
-  else if(AAT&&AAT.alive&&AAA<(touchMode?.055:.032)){const c=camera.position;_w.set(AAT.pos.x-c.x,AAT.pos.y+1.2-c.y,AAT.pos.z-c.z).normalize();} // la bala se ajusta al rival si casi le apuntabas
-  const mv=Math.hypot(p.vel.x,p.vel.z)>2||!p.onGround,base=W.spread*(1-.75*ads)*(mv&&ads<.5?1.7:1)+(lock?.012:0);
+  else if(AAT&&AAT.alive&&AAA<(touchMode?.085:.06)){const c=camera.position;_w.set(AAT.pos.x-c.x,AAT.pos.y+1.2-c.y,AAT.pos.z-c.z).normalize();} // la bala se ajusta al rival si casi le apuntabas
+  const mv=Math.hypot(p.vel.x,p.vel.z)>2||!p.onGround,base=W.spread*(1-.75*ads)*(mv&&ads<.5?1.3:1)+(lock?.012:0);
   let any=false,dealt=0,headAny=false;
   for(let k=0;k<n;k++){
     _d.copy(_w);const sp=n>1?W.spread*(1-.35*ads):base;if(sp){_d.x+=rand(-sp,sp);_d.y+=rand(-sp,sp);_d.z+=rand(-sp,sp);_d.normalize();}
     _o.copy(camera.position);let t=rayWorld(_o,_d,300,p.team),hit=null,head=false;
     for(const e of fighters){if(e.team===p.team||!e.alive)continue;
-      const cr=e.crouch?.55:0;let h=raySphere(_o,_d,e.pos.x,e.pos.y+1.8-cr,e.pos.z,.34);if(h>=0&&h<t){t=h;hit=e;head=true;continue;}
-      h=raySphere(_o,_d,e.pos.x,e.pos.y+1.25-cr,e.pos.z,.5);if(h>=0&&h<t){t=h;hit=e;head=false;}
-      h=raySphere(_o,_d,e.pos.x,e.pos.y+.5,e.pos.z,.48);if(h>=0&&h<t){t=h;hit=e;head=false;}}
+      const cr=e.crouch?.55:0;let h=raySphere(_o,_d,e.pos.x,e.pos.y+1.8-cr,e.pos.z,.38);if(h>=0&&h<t){t=h;hit=e;head=true;continue;}
+      h=raySphere(_o,_d,e.pos.x,e.pos.y+1.25-cr,e.pos.z,.6);if(h>=0&&h<t){t=h;hit=e;head=false;}
+      h=raySphere(_o,_d,e.pos.x,e.pos.y+.5,e.pos.z,.56);if(h>=0&&h<t){t=h;hit=e;head=false;}}
     _b.copy(_o).addScaledVector(_d,t);
     const col=w===2?ARC:TEAM[p.team].color;
     tracer(_e,_b,w===2?ARC:(n>1?0xffd0a0:0xffb066),w===2?.16:n>1?.04:.07,w===2?.3:.07);
@@ -2365,7 +2366,7 @@ window.addEventListener('touchend',tEnd);window.addEventListener('touchcancel',t
 let AAT=null,AAA=1,LFX=0,AAS=1,blockHeld=false,heavyHeld=false,autoT=0;
 function bearing(f,e){return Math.atan2(-(e.pos.x-f.pos.x),-(e.pos.z-f.pos.z));}
 function angD(a,b){let d=a-b;while(d>PI)d-=6.2832;while(d<-PI)d+=6.2832;return d;}
-function lockable(e,maxD){maxD=Math.min(maxD,9);return e&&e.alive&&e.team!==player.team&&player.pos.distanceToSquared(e.pos)<maxD*maxD&&los(player,e);}
+function lockable(e,maxD){maxD=Math.min(maxD,7);return e&&e.alive&&e.team!==player.team&&player.pos.distanceToSquared(e.pos)<maxD*maxD&&los(player,e);}
 function autoLock(dt){ // con la hoja, el rival más cercano frente a la cámara queda fijado solo
   if(lock&&lock.alive&&player.pos.distanceToSquared(lock.pos)<14*14)return;if(lock&&player.weapon===1)lock=null;
   if((autoT-=dt)>0)return;autoT=.15;let best=null,bs=1e9;
@@ -2383,12 +2384,12 @@ function lookIn(dx,dy){ // toda la entrada de cámara (ratón y pantalla táctil
 }
 function aimAssist(dt,firing){ // con armas: la mira frena un poco sobre un rival y en pantalla táctil lo sigue suave
   AAS=1;AAT=null;const p=player;if(p.weapon===1||FPV.k<.5||!p.alive)return;
-  camera.getWorldDirection(_d);let best=null,ba=.11;
+  camera.getWorldDirection(_d);let best=null,ba=.17;
   for(const e of fighters){if(e.team===p.team||!e.alive)continue;_b.set(e.pos.x,e.pos.y+1.15,e.pos.z).sub(camera.position);const L=_b.length();if(L>70)continue;
     const a=Math.acos(clamp(_b.dot(_d)/L,-1,1));if(a<ba&&los(p,e)){ba=a;best=e;}}
   if(!best)return;
-  AAS=ba<.07?(touchMode?.4:.5):1;AAT=best;AAA=ba;
-  const moving=Math.hypot(p.wish.x,p.wish.z)>.1,k=(touchMode?(firing||moving?5.5:3):(firing?2.6:.6))*(1-ba/.11)*(1-.5*ads);
+  AAS=ba<.1?(touchMode?.35:.45):1;AAT=best;AAA=ba;
+  const moving=Math.hypot(p.wish.x,p.wish.z)>.1,k=(touchMode?(firing||moving?7:3.5):(firing?5:1.4))*(1-ba/.17)*(1-.2*ads);
   if(k>0){_b.set(best.pos.x,best.pos.y+1.15,best.pos.z).sub(camera.position);const ty=Math.atan2(-_b.x,-_b.z),tp=Math.atan2(_b.y,Math.hypot(_b.x,_b.z));
     camYaw=angLerp(camYaw,ty,Math.min(1,dt*k));camPitch+=(tp-camPitch)*Math.min(1,dt*k);}
 }
