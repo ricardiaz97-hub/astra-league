@@ -1553,8 +1553,9 @@ function playFrame(m,a,ft,mirror,k){ // ft = cuadro (con decimales) dentro del t
   const n=a.frames-1;ft=isFinite(ft)?clamp(ft,0,n):0;const i=Math.min(Math.floor(ft),n-1),u=ft-i,set=mirror?a.mirror:a.bones;
   for(const key in set){const b=m.bones[key];if(!b)continue;const d=set[key];_qa.fromArray(d,i*4);_qb.fromArray(d,(i+1)*4);_qa.slerp(_qb,u);poseQ(b,_qa,k);}}
 function playAnim(m,a,t,mirror,k){const n=a.frames-1;playFrame(m,a,((t*a.fps)%n+n)%n,mirror,k===undefined?1:k);}
-const ACTDUR={hitC:.33,hitH:.45,throw:1.05,roll:.55,knock:.8,stumble:1.25,swDraw:.48,sheath:.88,slash:.42,spin:.62,cast:.6,sl1:.44,sl2:.44,swHeavy:.52};
+const ACTDUR={swA:.4,swB:.45,swC:.95,swDash:.55,hitC:.33,hitH:.45,throw:1.05,roll:.55,knock:.8,stumble:1.25,swDraw:.48,sheath:.88,slash:.42,spin:.62,cast:.6,sl1:.44,sl2:.44,swHeavy:.52};
 function act(f,key){f.act=key;f.actT=0;}
+const ARMB=['leftShoulder','leftUpperArm','leftLowerArm','leftHand','rightShoulder','rightUpperArm','rightLowerArm','rightHand'];
 function applyVRM(m,f,dt){
   const A=ANIMS,k=1-Math.exp(-22*dt),hs=Math.hypot(f.vel.x,f.vel.z),cy=Math.cos(f.yaw),sy=Math.sin(f.yaw);
   let key=null,mir=false,rate=1;
@@ -1587,9 +1588,9 @@ function applyVRM(m,f,dt){
     else if(a.mode==='hold'){const ft=Math.min(f.keyT*a.fps*a.rate,a.frames-1);playFrame(m,a,ft,mir,k);if(a.drop)m.g.position.y+=a.drop[Math.round(ft)]*1.05;} // al deslizarse, el cuerpo baja
     else{f.animT=(f.animT||0)+dt*rate*a.rate;playAnim(m,a,f.animT,mir,k);if(a.drop){const n=a.frames-1,ft=((f.animT*a.fps)%n+n)%n;m.g.position.y+=a.drop[Math.round(ft)]*1.05;}}
     m.g.rotation.x=0;if(key==='wallrun')m.g.rotation.z=0;
-    if(f.weapon!==1&&!f.act&&f.alive&&key!=='powerup'&&key!=='block'&&key!=='climb'){ // con arma de fuego, el brazo derecho sigue apuntando
-      _eu.set(-m.armR.rotation.x,0,1.4,'XYZ');_q.setFromEuler(_eu);if(m.bones.rightUpperArm)poseQ(m.bones.rightUpperArm,_q,k);
-      _eu.set(0,.1,0,'XYZ');_q.setFromEuler(_eu);if(m.bones.rightLowerArm)poseQ(m.bones.rightLowerArm,_q,k);}
+    if(f.weapon!==1&&!f.act&&f.alive&&key!=='powerup'&&key!=='block'&&key!=='climb'&&key!=='wallrun'&&A.aim){ // con arma de fuego: los brazos sostienen el arma a dos manos aunque las piernas corran
+      if(key!=='aim'){const set=A.aim.bones;for(const n of ARMB){const b=m.bones[n];if(!b||!set[n])continue;_qa.fromArray(set[n],0);poseQ(b,_qa,k);}}
+      const b=m.bones.upperChest||m.bones.chest;if(b){_eu.set(-clamp(f.pitch,-1,1)*.5,0,0,'XYZ');_q.setFromEuler(_eu);_qt.copy(b.Ai).multiply(_q).multiply(b.A).multiply(b.o.quaternion);b.o.quaternion.copy(_qt);}} // el pecho sigue la mira arriba y abajo
     return;}
   const B=m.bones,lL=m.legL.rotation.x,lR=m.legR.rotation.x,air=!f.onGround&&f.wr<=0,ar=m.armR.rotation;
   const sb=(b,x,y,z)=>{if(!b)return;_eu.set(x,y,z,'XYZ');_q.setFromEuler(_eu);poseQ(b,_q,k);};
@@ -1899,7 +1900,7 @@ function meleeHit(f,kind){
   f.chain=(ch+(heavyHit?'H':'L')).slice(-3);f.chainT=now;if(heavyHit)f.combo=0;
   const lvl=move==='heavy'?(f.hlvl||0):0;f.hlvl=0;
   const fin=!heavyHit&&!dashAtk&&!air&&f.combo>=2;let any=false;
-  if(!(heavyHit&&f.act==='swHeavy'))act(f,move==='sweep'||fin?'spin':move==='launch'?(ANIMS.sl2?'sl2':'spin'):heavyHit?(ANIMS.swHeavy?'swHeavy':'spin'):ANIMS.sl1?(f.combo%2?'sl2':'sl1'):'slash');
+  const A=ANIMS;if(!(heavyHit&&f.act==='swHeavy'))act(f,!heavyHit&&dashAtk&&A.swDash?'swDash':!heavyHit&&fin&&A.swC?'swC':move==='light'&&!air&&A.swA?(f.combo%2?'swB':'swA'):move==='sweep'||fin?'spin':move==='launch'?(ANIMS.sl2?'sl2':'spin'):heavyHit?(ANIMS.swHeavy?'swHeavy':'spin'):ANIMS.sl1?(f.combo%2?'sl2':'sl1'):'slash');
   if(move!=='light'&&move!=='slam'&&(move!=='heavy'||lvl>0)&&(f===player||volAt(f.pos)>.2))fxWord(move==='sweep'?'BARRIDO':move==='launch'?'¡ARRIBA!':lvl===2?'¡MÁXIMO!':'¡CARGADO!',f.pos.x,f.pos.y+2.4,f.pos.z,lvl===2?'#ffd23f':'#ffffff');
   const range=WPN[1].range*(dashAtk?1.15:move==='sweep'?1.25:heavyHit?1.1+lvl*.15:1);
   for(const e of fighters){if(e.team===f.team||!e.alive)continue;
