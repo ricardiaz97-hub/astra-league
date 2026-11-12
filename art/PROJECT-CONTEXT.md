@@ -35,3 +35,6 @@ Use this file to continue the character-art work in a future chat.
 - Selection menu PNG: rt/character-select-menu.png (2560×1440).
 - Shared chat context: https://chatgpt.com/s/cx_6af613e7c0048191b62eaf88ab77219b
 
+
+- The current character selection menu uses posed illustrations cropped from character-sheets/; it does not use the T-pose images.
+
