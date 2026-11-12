@@ -45,6 +45,7 @@ html,body{height:100%;margin:0;background:#8fc2f5;color:var(--text);font-family:
 .dmg.big{font-size:36px;color:var(--alfa)}
 @keyframes dmg{0%{margin-top:0;opacity:1}100%{margin-top:-46px;opacity:0}}
 #vitals{position:absolute;left:14px;bottom:14px;width:min(220px,40vw);display:flex;flex-direction:column;gap:3px}
+body.touch #vitals{bottom:auto;top:14px;left:calc(14px + env(safe-area-inset-left,0px));width:min(200px,30vw)} /* en el celular la vida va arriba: abajo está el pulgar */
 #hpT{font-size:20px;text-shadow:2px 2px 0 var(--ink);line-height:1}
 .bar{height:8px;background:var(--panel);transform:skewX(-20deg)}
 .bar span{display:block;height:100%;transform-origin:left;background:#7be36a}
@@ -55,14 +56,12 @@ html,body{height:100%;margin:0;background:#8fc2f5;color:var(--text);font-family:
 @keyframes blink{to{opacity:.4}}
 #finP{position:absolute;left:0;top:0;display:none;margin:-64px 0 0 -48px;width:96px;text-align:center;font:700 15px var(--display);letter-spacing:.12em;color:#1d1a22;background:#ffd23f;padding:3px 0;clip-path:polygon(8% 0,100% 0,92% 100%,0 100%);animation:finP .5s ease-in-out infinite alternate}
 @keyframes finP{to{transform:scale(1.1)}}
+#covI{position:absolute;left:50%;bottom:18%;transform:translateX(-50%);font:700 12px var(--display);letter-spacing:.2em;color:#f3ece2;background:rgba(29,26,34,.55);padding:3px 12px;border-left:3px solid #7be36a}
+#covI.peek{border-left-color:#ffd23f;opacity:.6}
 #lockR{position:absolute;left:0;top:0;width:46px;height:46px;margin:-23px 0 0 -23px;display:none}
 #lockR::before{content:"";position:absolute;inset:7px;border:3px solid #ffd23f;box-shadow:0 0 0 1px var(--ink);animation:spin 2.4s linear infinite}
 @keyframes spin{from{transform:rotate(45deg)}to{transform:rotate(405deg)}}
 #flash{position:absolute;inset:0;background:#fff;opacity:0}
-#bUlt{right:120px;bottom:214px;width:54px;height:54px;border-color:#ffd23f}
-#bParry{right:192px;bottom:108px;width:52px;height:52px}
-#bHeavy{right:120px;bottom:186px;width:58px;height:58px;border-color:#ffd23f}
-#bLock{right:184px;bottom:176px;width:48px;height:48px}
 #right{position:absolute;right:14px;bottom:14px;display:flex;gap:12px;align-items:flex-end;text-shadow:2px 2px 0 var(--ink)}
 #skill{position:relative;width:34px;height:34px;display:grid;place-items:center;font-size:15px;color:var(--dim)}
 #skill::before{content:"";position:absolute;inset:4px;transform:rotate(45deg);border:2px solid var(--dim);background:var(--panel)}
@@ -81,17 +80,26 @@ html,body{height:100%;margin:0;background:#8fc2f5;color:var(--text);font-family:
 #banner.on{opacity:1}
 #dead{position:absolute;left:0;right:0;top:42%;text-align:center;font-size:22px;text-shadow:2px 2px 0 var(--ink)}
 #hurt{position:absolute;inset:0;box-shadow:inset 0 0 140px 30px rgba(255,40,40,.7);opacity:0}
-#touch{position:absolute;inset:0}
-#joy{position:absolute;left:28px;bottom:84px;width:120px;height:120px;border-radius:50%;border:2px solid var(--line);background:rgba(29,26,34,.25)}
+#touch{position:absolute;inset:0;--sr:env(safe-area-inset-right,0px);--sb:env(safe-area-inset-bottom,0px)}
+/* controles táctiles (pase 4): todo al alcance del pulgar derecho, el joystick aparece donde pones el pulgar izquierdo */
+#joy{position:absolute;left:calc(46px + env(safe-area-inset-left,0px));bottom:calc(70px + var(--sb));width:120px;height:120px;margin:0 0 -60px -60px;transform:translate(0,0);border-radius:50%;border:2px solid var(--line);background:rgba(29,26,34,.25);pointer-events:none}
+#joy.live{left:0;bottom:auto;top:0;margin:-60px 0 0 -60px}
+#bFire{right:calc(26px + var(--sr));bottom:calc(92px + var(--sb));width:86px;height:86px;border-color:var(--alfa);font-size:13px}
+#bHeavy{right:calc(126px + var(--sr));bottom:calc(128px + var(--sb));width:62px;height:62px;border-color:#ffd23f}
+#bJump{right:calc(128px + var(--sr));bottom:calc(48px + var(--sb));width:60px;height:60px}
+#bParry{right:calc(204px + var(--sr));bottom:calc(66px + var(--sb));width:56px;height:56px}
+#bDash{right:calc(20px + var(--sr));bottom:calc(196px + var(--sb));width:58px;height:58px}
+#bSkill{right:calc(92px + var(--sr));bottom:calc(214px + var(--sb));width:54px;height:54px;border-color:var(--arc)}
+#bUlt{right:calc(166px + var(--sr));bottom:calc(204px + var(--sb));width:54px;height:54px;border-color:#ffd23f}
+#bLock{right:calc(216px + var(--sr));bottom:calc(140px + var(--sb));width:46px;height:46px}
+#bSwap{right:calc(16px + var(--sr));bottom:calc(272px + var(--sb));width:48px;height:48px}
+#bPause{right:calc(12px + var(--sr));top:48px;width:38px;height:38px;border-radius:6px}
+#bShoulder{right:calc(58px + var(--sr));top:48px;width:38px;height:38px;border-radius:6px;font-size:16px}
+.tb.on{background:rgba(255,210,63,.35)}
+#touch.gun #bLock{display:none}
 #knob{position:absolute;left:35px;top:35px;width:50px;height:50px;border-radius:50%;background:var(--alfa)}
-.tb{position:absolute;pointer-events:auto;border-radius:50%;border:2px solid var(--line);background:rgba(29,26,34,.5);color:var(--text);
+.tb{position:absolute;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;border-radius:50%;border:2px solid var(--line);background:rgba(29,26,34,.5);color:var(--text);
   font:400 12px var(--display);display:grid;place-items:center}
-#bFire{right:26px;bottom:100px;width:80px;height:80px;border-color:var(--alfa)}
-#bJump{right:120px;bottom:70px;width:62px;height:62px}
-#bDash{right:114px;bottom:146px;width:54px;height:54px}
-#bSkill{right:48px;bottom:194px;width:56px;height:56px;border-color:var(--arc)}
-#bSwap{right:10px;bottom:262px;width:46px;height:46px}
-#bPause{right:12px;top:48px;width:38px;height:38px;border-radius:6px}
 /* capas */
 .ov{position:fixed;inset:0;display:grid;place-items:center;padding:16px;overflow:auto;touch-action:pan-y;background:rgba(29,26,34,.45)}
 .card{position:relative;width:min(760px,100%);background:var(--paper);color:var(--ink);padding:26px 28px;display:flex;flex-direction:column;gap:14px;
@@ -224,6 +232,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
   <div id="mkEnemy" class="mk"></div>
   <div id="lockR"></div>
   <div id="finP">REMATE</div>
+  <div id="covI" hidden>COBERTURA</div>
   <div id="cross"><i></i><i></i><i></i><i></i><u id="hitm"></u></div>
   <div id="vitals">
     <div id="hpT">100</div>
@@ -252,6 +261,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
     <div class="tb" id="bHeavy">PESADO</div>
     <div class="tb" id="bLock">FIJAR</div>
     <div class="tb" id="bPause">II</div>
+    <div class="tb" id="bShoulder" title="Cambiar de hombro">⇄</div>
   </div>
 </div>
 
@@ -313,6 +323,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
       <div><kbd>W</kbd><span>contra un obstáculo bajo, lo saltas sin parar</span></div>
       <div><kbd>Ratón</kbd><span>con la hoja el rival se fija solo; mueve la cámara rápido a un lado para cambiar de rival (Tab también)</span></div>
       <div><kbd>Z</kbd><span>cambiar de hombro la cámara</span></div>
+      <div><kbd>Cobertura</kbd><span>con armas, acércate a algo bajo y te agachas solo detrás; apunta o dispara para asomarte</span></div>
       <div><kbd>F</kbd><span>con la hoja: mantén para cubrirte; al empezar a cubrirte paras el golpe</span></div>
       <div><kbd>V</kbd><span>mantén para cargar ki</span></div>
       <div><kbd>X</kbd><span>definitiva de tu clase: cambia la zona del combate por un rato</span></div>
@@ -1416,7 +1427,7 @@ class Fighter{
     this.wallT=0;this.swingT=0;this.phase=0;this.lastHit=-99;this.protT=now+2;this.groundY=0;this.skillCd=1.5;this.rushT=0;this.castT=0;
     this.jumps=0;this.climbT=0;this.wallBox=null;this.wr=0;this.wrCd=0;this.wrDir=1;this.wrSpd=0;this.wrNx=0;this.wrNz=0;this.slide=false;this.sliding=false;this.slideCd=0;
     this.stunT=0;this.parryT=0;this.parryCd=0;this.charging=false;this.heavyT=this.grenT=this.gunsT=this.slowT=this.sanctT=this.warpCd=this.lungeCd=this.airHits=0;this.dashEnd=-9;if(this.gunRig)this.gunRig.forEach(g=>g.g.visible=false);if(this.bombP){this.bombP.g.visible=false;this.bombP.used=false;}this.ultT=0;this.ultKind=null;this.barrageT=0;this.superT=0;this.bombP=null;this.bombThrown=false;this.dustT=0;this.launchT=0;this.combo=0;this.comboT=-9;this.pendingMelee=false;this.hover=false;this.botCharge=0;this.clash=false;this.push=0;
-    this.m.g.visible=true;this.m.sh.visible=true;this.block=false;this.blockT=0;this.hcharge=0;this.finT=0;this.iframeT=0;this.gbT=0;this.chain='';this.lastPos.copy(this.pos);this.stuckT=0;
+    this.m.g.visible=true;this.m.sh.visible=true;this.crouch=false;this.block=false;this.blockT=0;this.hcharge=0;this.finT=0;this.iframeT=0;this.gbT=0;this.chain='';this.lastPos.copy(this.pos);this.stuckT=0;
   }
 }
 
@@ -1671,8 +1682,10 @@ function botShoot(b,t){
   const D=b.team===player.team?DIFF[1]:DIFF[game.diff];
   const d=b.pos.distanceTo(t.pos);
   let p=D.acc*clamp(1.25-d/45,.25,1);if(t.dashT>0||t.rushT>0)p*=.35;if(!t.onGround)p*=.7;if(Math.hypot(t.vel.x,t.vel.z)>15)p*=.65;
-  muzzle(b,_a);_b.set(t.pos.x,t.pos.y+1.15,t.pos.z);
-  const hit=Math.random()<p;
+  muzzle(b,_a);_b.set(t.pos.x,t.pos.y+(t.crouch?.8:1.15),t.pos.z);
+  let hit=Math.random()<p;
+  if(hit&&t.crouch){_w.copy(_b).sub(_a);const L=_w.length();_w.multiplyScalar(1/L);const hh=rayWorld(_a,_w,L);
+    if(hh<L-.35){hit=false;_b.copy(_a).addScaledVector(_w,hh);tracer(_a,_b,TEAM[b.team].color,.06,.08);burst(_b.x,_b.y,_b.z,0xffe0b0,4,3);fxDecal(_b,_w);if(t===player)snd('parry',.18);return;}}
   if(!hit){_b.x+=rand(-1.4,1.4);_b.y+=rand(-.6,1.4);_b.z+=rand(-1.4,1.4);}
   const BW=primFor(b.cls);tracer(_a,_b,TEAM[b.team].color,BW.pellets?.05:.07,.08);snd(BW.sndk,volAt(b.pos)*.7,b.pos);if(volAt(b.pos)>.25)muzzleFlash(_a,TEAM[b.team].color,BW.pellets?1.4:.9);
   if(hit){burst(_b.x,_b.y,_b.z,0xffffff,3,3);damage(t,D.dmg*(BW.dmg/10)*(BW.pellets?BW.pellets*.5:1)*falloff(BW,d),b);}else if(Math.random()<.3){_w.copy(_b).sub(_a).normalize();const hh=rayWorld(_a,_w,80);if(hh<80){_b.copy(_a).addScaledVector(_w,hh);fxDecal(_b,_w);}}
@@ -2158,7 +2171,7 @@ window.addEventListener('mousemove',e=>{if(game.photo){PH.yaw-=(e.movementX||0)*
 window.addEventListener('wheel',e=>{if(game.photo){PH.fov=clamp(PH.fov*(e.deltaY>0?1.08:1/1.08),12,100);return;}if(game.menu||game.paused)return;setWeapon((player.weapon+(e.deltaY>0?1:2))%3);},{passive:true});
 window.addEventListener('contextmenu',e=>e.preventDefault());
 function reload(){const W=WPN[player.weapon];if(!W.mag||player.reloadT>0||player.ammo[player.weapon]>=W.mag)return;player.reloadT=W.reload;snd('reload');}
-function enableTouch(){if(touchMode)return;touchMode=true;$('touch').hidden=false;}
+function enableTouch(){if(touchMode)return;touchMode=true;$('touch').hidden=false;document.body.classList.add('touch');}
 window.addEventListener('touchstart',e=>{
   enableTouch();if(game.menu||game.paused||game.state==='ended')return;initAudio();
   for(const t of e.changedTouches){const id=t.target&&t.target.id;
@@ -2166,13 +2179,14 @@ window.addEventListener('touchstart',e=>{
     else if(id==='bDash'){dashQ=true;}
     else if(id==='bSkill'){skillQ=true;}
     else if(id==='bUlt'){ultQ=true;}
-    else if(id==='bParry'){parryQ=true;blockHeld=true;tbtn.blkId=t.identifier;}
-    else if(id==='bHeavy'){heavyQ=true;heavyHeld=true;tbtn.hvId=t.identifier;}
+    else if(id==='bParry'){if(player.weapon===1){parryQ=true;blockHeld=true;tbtn.blkId=t.identifier;}else reload();}
+    else if(id==='bHeavy'){tbtn.hvId=t.identifier;if(player.weapon===1){heavyQ=true;heavyHeld=true;}else adsHeld=true;}
+    else if(id==='bShoulder'){SHOULDER=-SHOULDER;try{localStorage.setItem('astra-shoulder',SHOULDER);}catch(_){}}
     else if(id==='bLock'){if(lock&&player.weapon===1)switchLock(1);else toggleLock();}
     else if(id==='bSwap'){setWeapon((player.weapon+1)%3);}
     else if(id==='bPause'){pause();}
     else if(id==='bFire'){if(player.clash)player.push+=1;tbtn.fire=true;tbtn.fireId=t.identifier;look.x=t.clientX;look.y=t.clientY;if(look.id===null)look.id=t.identifier;}
-    else if(t.clientX<window.innerWidth*.42&&joy.id===null){joy.id=t.identifier;joy.ox=t.clientX;joy.oy=t.clientY;}
+    else if(t.clientX<window.innerWidth*.42&&joy.id===null){joy.id=t.identifier;joy.ox=t.clientX;joy.oy=t.clientY;const J=$('joy');J.classList.add('live');J.style.left=t.clientX+'px';J.style.top=t.clientY+'px';}
     else if(look.id===null){look.id=t.identifier;look.x=t.clientX;look.y=t.clientY;}
   }
   e.preventDefault();
@@ -2185,10 +2199,10 @@ window.addEventListener('touchmove',e=>{
   if(!game.menu&&!game.paused&&game.state!=='ended')e.preventDefault();
 },{passive:false});
 function tEnd(e){for(const t of e.changedTouches){
-  if(t.identifier===joy.id){joy.id=null;joy.x=joy.y=0;$('knob').style.transform='';}
+  if(t.identifier===joy.id){joy.id=null;joy.x=joy.y=0;$('knob').style.transform='';const J=$('joy');J.classList.remove('live');J.style.left=J.style.top='';}
   if(t.identifier===look.id)look.id=null;
   if(t.identifier===tbtn.fireId){tbtn.fire=false;tbtn.fireId=null;}
-  if(t.identifier===tbtn.blkId){blockHeld=false;tbtn.blkId=null;}if(t.identifier===tbtn.hvId){heavyHeld=false;tbtn.hvId=null;}
+  if(t.identifier===tbtn.blkId){blockHeld=false;tbtn.blkId=null;}if(t.identifier===tbtn.hvId){heavyHeld=false;adsHeld=false;tbtn.hvId=null;}
 }}
 window.addEventListener('touchend',tEnd);window.addEventListener('touchcancel',tEnd);
 
@@ -2247,6 +2261,25 @@ function botBlock(b,tg,td,dt){ // los bots se cubren cuando les van a pegar con 
     if((tg.hcharge>.3||tg.heavyT>0)&&b.sp>=25&&Math.random()<.5){const tx=tg.pos.x-b.pos.x,tz=tg.pos.z-b.pos.z;dash(b,-tz*b.strafe,tx*b.strafe);return false;}
     b.blockT=rand(.35,.8);b.block=true;if(Math.random()<[.15,.3,.45][lvl])b.parryT=.22;return true;}
   return false;}
+/* ---------- cobertura automática (pase 2): con armas, al llegar a un objeto bajo te agachas solo detrás de él; apuntar o disparar te asoma ---------- */
+const COV={k:0,peek:0,peekT:0,on:false,lastT:0};
+function lowCoverAhead(p){
+  const fx=-Math.sin(camYaw),fz=-Math.cos(camYaw);
+  for(const dd of [.7,1.05])for(const sd of [0,-.35,.35]){const x=p.pos.x+fx*dd+fz*sd*-1,z=p.pos.z+fz*dd+fx*sd;
+    for(let i=0;i<boxes.length;i++){const b=boxes[i],h=b.y1-p.pos.y;if(h<.72||h>1.55||b.y0>p.pos.y+.35)continue;
+      if(x>b.x0&&x<b.x1&&z>b.z0&&z<b.z1)return true;}}
+  return false;}
+function updCover(dt,p,firing){
+  const hs=Math.hypot(p.vel.x,p.vel.z);
+  const can=p.alive&&p.weapon!==1&&FPV.k>.5&&p.onGround&&!p.sliding&&p.dashT<=0&&p.ultT<=0&&hs<SPEED*.8;
+  if(can&&(COV.lastT-=dt)<=0){COV.lastT=.1;const was=COV.on;COV.on=lowCoverAhead(p);if(COV.on&&!was)snd('slide',.35);}
+  if(!can)COV.on=false;
+  if(adsHeld||firing)COV.peekT=.35;else COV.peekT=Math.max(0,COV.peekT-dt);
+  COV.k+=((COV.on?1:0)-COV.k)*Math.min(1,dt*10);COV.peek+=((COV.peekT>0?1:0)-COV.peek)*Math.min(1,dt*14);
+  p.crouch=COV.k>.5&&COV.peek<.5; // agachado de verdad: los disparos que vienen del otro lado chocan con la cobertura
+  if(COV.k>.5){p.wish.x*=.55;p.wish.z*=.55;}
+  const ind=$('covI');const show=COV.k>.5;if(ind.hidden===show)ind.hidden=!show;if(show)ind.classList.toggle('peek',COV.peek>.5);
+}
 function updPlayer(dt){
   const p=player;
   if(keys.ArrowLeft)camYaw+=2.2*dt;if(keys.ArrowRight)camYaw-=2.2*dt;
@@ -2279,7 +2312,7 @@ function updPlayer(dt){
   if(p.reloadT>0){p.reloadT-=dt;if(p.reloadT<=0)p.ammo[w]=W.mag;}
   if(p.burstQ>0&&w===0&&p.reloadT<=0){p.burstT-=dt;if(p.burstT<=0){if(p.ammo[w]>0){p.ammo[w]--;playerShoot(w);p.burstQ--;p.burstT=W.burstGap;}else p.burstQ=0;}}
   const firing=(mouseDown||tbtn.fire)&&game.state==='playing'&&p.rushT<=0&&!p.charging&&!p.pendingMelee&&!p.block&&!(p.hcharge>0);
-  aimAssist(dt,firing);
+  aimAssist(dt,firing);updCover(dt,p,firing);
   if(heavyQ){heavyQ=false;const ft=w===1&&p.stunT<=0?finTarget(p):null;if(ft){finisher(p,ft);heavyHeld=false;return;}}
   if(w===1&&!p.block){ // pesado cargado: mantén para cargar (3 niveles), suelta para golpear
     if(heavyHeld&&p.cd<=0&&!(p.heavyT>0)&&p.stunT<=0&&p.alive){const c0=p.hcharge||0;p.hcharge=c0+dt;p.wish.x*=.4;p.wish.z*=.4;
@@ -2426,12 +2459,16 @@ function updCamera(dt){if(window.__camOverride)return;if(game.photo){updPhoto(dt
   const wn=p.alive&&p.wr>0?p.wrNx*rx+p.wrNz*rz:0; // al correr por un muro, la cámara se aparta del muro
   camSide+=((ulting?3.2:wn?Math.sign(wn)*1.8:SHOULDER*1.75)-camSide)*Math.min(1,dt*(ulting?3:7));
   const back=ulting?8.5:5.1-1.9*ads;
-  _d.set(-fx*back+rx*camSide,-fy*back+.62-.15*ads+(ulting?1.2:0),-fz*back+rz*camSide);const L=_d.length();_d.multiplyScalar(1/L);
-  const t=rayWorld(camT,_d,L+.3);const use=Math.max(.6,Math.min(L,t-.3));
+  _d.set(-fx*back+rx*camSide,-fy*back+.62-.15*ads+(ulting?1.2:0),-fz*back+rz*camSide);let L=_d.length();_d.multiplyScalar(1/L);
+  let t=rayWorld(camT,_d,L+.3);
+  if(t<L*.7&&!ulting){ // la toma de tercios choca con algo: prueba la cámara más centrada antes de acercarla
+    _b.set(-fx*back+rx*camSide*.25,-fy*back+.62,-fz*back+rz*camSide*.25);const L2=_b.length();_b.multiplyScalar(1/L2);const t2=rayWorld(camT,_b,L2+.3);
+    if(t2>t+.4){_d.copy(_b);L=L2;t=t2;camSide*=.9;}}
+  const use=Math.max(.6,Math.min(L,t-.3));
   camera.position.copy(camT).addScaledVector(_d,use);if(camera.position.y<.25)camera.position.y=.25;
   if(FPV.k>.001&&p.alive){ // primera persona: de la cámara de atrás a los ojos
     const e=FPV.k*FPV.k*(3-2*FPV.k),hs=Math.hypot(p.vel.x,p.vel.z),gr=p.onGround&&!p.sliding,
-      eh=p.sliding?1.05:1.62,bob=gr?Math.abs(Math.sin(FPV.bob))*Math.min(hs/SPEED,1.3)*.045*(1-ads*.7):0;
+      eh=p.sliding?1.05:1.62-.78*COV.k*(1-COV.peek),bob=gr?Math.abs(Math.sin(FPV.bob))*Math.min(hs/SPEED,1.3)*.045*(1-ads*.7):0;
     _o.set(p.pos.x,p.pos.y+eh+bob,p.pos.z);camera.position.lerp(_o,e);}
   if(shake>0){shake=Math.max(0,shake-dt*1.2);camera.position.x+=rand(-shake,shake)*.6;camera.position.y+=rand(-shake,shake)*.6;}
   // la cámara se inclina al correr por un muro y abre el campo de visión con la velocidad
@@ -2497,6 +2534,9 @@ function place(el,x,y,z,edge){ // devuelve true si el punto queda fuera de la pa
 let frame=0;
 function updHUD(dt){
   const p=player;frame++;
+  if(touchMode){const tw=p.weapon===1?'b':'g';if(cache.tw!==tw){cache.tw=tw;$('touch').classList.toggle('gun',tw==='g');
+    setTxt('bFire',tw==='b'?'ATAQUE':'DISPARO');setTxt('bHeavy',tw==='b'?'PESADO':'MIRA');setTxt('bParry',tw==='b'?'GUARDIA':'RECARGA');setTxt('bLock',tw==='b'?'CAMBIO':'FIJAR');}
+    $('bParry').classList.toggle('on',!!p.block);$('bHeavy').classList.toggle('on',p.hcharge>0||(tw==='g'&&adsHeld));}
   setTxt('sA',game.score[0]);setTxt('sB',game.score[1]);
   const s=Math.ceil(game.time);setTxt('clock',(s/60|0)+':'+String(s%60).padStart(2,'0'));$('clock').classList.toggle('low',s<=30);
   $('hpF').style.transform=`scaleX(${clamp(p.hp/p.maxHp,0,1)})`;setTxt('hpT',Math.max(0,Math.ceil(p.hp)));
