@@ -1546,6 +1546,8 @@ const MAPS=[
 let mapGroup=null,mapId=-1;
 const SET={words:false,mist:true};try{SET.words=localStorage.getItem('astra-words')==='1';SET.mist=localStorage.getItem('astra-mist')!=='0';}catch(e){}
 let CURM=null,NAV=null;
+function aimMode(f){if(!f.alive||f.ultT>0||f.act||f.clash)return true;if(f.weapon===1)return !!(f.isPlayer?lock:f.target&&f.target.alive&&f.pos.distanceTo(f.target.pos)<6)||f.swingT>0||f.block||f.hcharge>0;
+  if(f.isPlayer)return adsHeld||now-(f.shotT||-9)<1.1||!!lock||(typeof mouseDown!=='undefined'&&mouseDown);return !!(f.target&&f.target.alive)||now-(f.shotT||-9)<1.1;}
 function prepNav(d){if(d.ready)return d.ready;const ids=Object.keys(d.n),ix={};ids.forEach((k,i)=>ix[k]=i);
   const pts=ids.map(k=>new V3(...d.n[k])),adj=ids.map(()=>[]);
   for(const e of d.e.trim().split(/\s+/)){const[a,b]=e.split('-');if(ix[a]===undefined||ix[b]===undefined){console.warn('nav',e);continue;}adj[ix[a]].push(ix[b]);adj[ix[b]].push(ix[a]);}
@@ -1765,7 +1767,7 @@ const ACTDUR={sl3:.62,jumpAtk:.85,kick:.55,flurry:1.05,recoil:.75,reel:.9,parryO
 function act(f,key){f.act=key;f.actT=0;}
 const ARMB=['leftShoulder','leftUpperArm','leftLowerArm','leftHand','rightShoulder','rightUpperArm','rightLowerArm','rightHand'];
 function applyVRM(m,f,dt){
-  const A=ANIMS,k=1-Math.exp(-22*dt),hs=Math.hypot(f.vel.x,f.vel.z),cy=Math.cos(f.yaw),sy=Math.sin(f.yaw);
+  const A=ANIMS,k=1-Math.exp(-22*dt),hs=Math.hypot(f.vel.x,f.vel.z),vy=f.visYaw===undefined?f.yaw:f.visYaw,cy=Math.cos(vy),sy=Math.sin(vy);
   let key=null,mir=false,rate=1;
   if(f._pw!==undefined&&f._pw!==f.weapon&&!f.act&&f.alive&&hs<3){if(f.weapon===1&&A.swDraw)act(f,'swDraw');else if(f._pw===1&&A.sheath)act(f,'sheath');}f._pw=f.weapon; // sacar y guardar la espada
   if(f.act){f.actT+=dt;if(f.actT>=ACTDUR[f.act]||!A[f.act]||!f.alive)f.act=null;else key=f.act;}
@@ -1784,7 +1786,7 @@ function applyVRM(m,f,dt){
     else if(!f.onGround)key=f.weapon===1&&A.swJump?'swJump':A.jLoop?'jLoop':'jump';
     else if(f.weapon===1&&tg&&tg.alive&&Math.abs(lat)>2.5&&Math.abs(lat)>Math.abs(fwd)*.8){key='strafe';mir=lat<0;rate=Math.abs(lat)/((A.strafe&&A.strafe.speed)||3);} // rodear al rival fijado
     else if(f.kind==='civ'&&f.onGround){if(hs>2.5&&A.hmrF){key=(m.fem?'hf':'hm')+(hs>6.5?'sF':'rF');rate=hs>6.5?clamp(hs/8,.7,1.4):clamp(hs/4.6,.7,1.6);}else if(hs>2.5&&A.sprint){key='sprint';rate=clamp(hs/9.5,.6,1.5);}else key=f.crouch&&A.crouch?'crouch':A.dazed?'dazed':'aim';} // civiles: sin arma, corren o se encogen
-    else if(f.onGround&&f.weapon!==1&&A.hmrF&&hs>.8){ // con arma: piernas y torso naturales en 8 direcciones (Human Basic Motions); los brazos siguen sosteniendo el arma
+    else if(f.onGround&&f.weapon!==1&&!f.aimM&&A.hmrF&&hs>.8){ // con arma: piernas y torso naturales en 8 direcciones (Human Basic Motions); los brazos siguen sosteniendo el arma
       const ang=Math.atan2(lat,fwd),D=['F','FR','R','BR','B','BL','L','FL'][((Math.round(ang/(Math.PI/4))%8)+8)%8],gx=m.fem?'hf':'hm';let set=f.sprint&&hs>SPEED*1.05?'s':hs>3?'r':'w';if(set==='s'&&!A[gx+'s'+D])set='r';
       key=gx+set+D;rate=set==='s'?clamp(hs/8.5,.8,1.5):set==='r'?clamp(hs/4.8,.7,1.7):clamp(hs/1.6,.6,1.8);}
     else if(f.onGround&&f.weapon!==1&&A.r8F&&hs>.8){ // con rifle: 8 direcciones (caminar, correr y esprintar) sin dejar de apuntar
@@ -2160,7 +2162,7 @@ function meleeHit(f,kind){
 function muzzle(f,out){if(f===player&&FPV.g.visible)return out.copy(FPV.mz);const fx=-Math.sin(f.yaw),fz=-Math.cos(f.yaw);return out.set(f.pos.x+fx*.8+fz*-.4,f.pos.y+1.5,f.pos.z+fz*.8-fx*-.4);}
 function falloff(W,d){const f=W.fall;if(!f)return 1;return d<=f[0]?1:d>=f[1]?f[2]:1-(1-f[2])*(d-f[0])/(f[1]-f[0]);}
 function playerShoot(w){
-  const W=WPN[w],p=player,n=W.pellets||1;muzzle(p,_a);_e.copy(_a);
+  player.shotT=now;const W=WPN[w],p=player,n=W.pellets||1;muzzle(p,_a);_e.copy(_a);
   camera.getWorldDirection(_w);
   if(lock&&!gunAim()){const c=camera.position;_w.set(lock.pos.x-c.x,lock.pos.y+1.15-c.y,lock.pos.z-c.z).normalize();}
   else if(AAT&&AAT.alive&&AAA<(touchMode?.085:.06)){const c=camera.position;_w.set(AAT.pos.x-c.x,AAT.pos.y+1.2-c.y,AAT.pos.z-c.z).normalize();} // la bala se ajusta al rival si casi le apuntabas
@@ -2193,7 +2195,7 @@ function fxDecal(p,dir){if(p.y<.01)return;const m=HOLES[holeI++%HOLES.length];m.
 const MF=[];{for(let i=0;i<6;i++){const s=new T.Sprite(new T.SpriteMaterial({color:0xffffff,transparent:true,blending:T.AdditiveBlending,depthWrite:false,opacity:0}));s.visible=false;scene.add(s);MF.push({s,t:0});}}
 let mfI=0;function muzzleFlash(p,col,k){const f=MF[mfI++%MF.length];f.t=.05;f.s.visible=true;f.s.position.copy(p);f.s.material.color.setHex(col);f.s.material.opacity=1;f.s.scale.setScalar(.55*k);f.s.material.rotation=rand(0,6.3);if(FXT.burst)f.s.material.map=FXT.burst;lightFlash(p.x,p.y,p.z,col,1.6*k,8,.06);}
 function updMuzzle(dt){for(const f of MF){if(f.t<=0)continue;f.t-=dt;f.s.material.opacity=Math.max(0,f.t/.05);if(f.t<=0)f.s.visible=false;}}
-function botShoot(b,t){
+function botShoot(b,t){b.shotT=now;
   const D=b.team===player.team?DIFF[1]:DIFF[game.diff];
   const d=b.pos.distanceTo(t.pos);
   let p=D.acc*clamp(1.25-d/45,.25,1);if(t.dashT>0||t.rushT>0)p*=.35;if(!t.onGround)p*=.7;if(Math.hypot(t.vel.x,t.vel.z)>15)p*=.65;
@@ -2781,7 +2783,10 @@ function physics(f,dt){
 }
 const _tip=new V3(),_gq=new T.Quaternion(),_gq2=new T.Quaternion(),_ge=new T.Euler(),_gv=new V3();
 function animate(f,dt){
-  const m=f.m;m.g.position.copy(f.pos);m.g.rotation.y=f.yaw;m.sh.position.set(f.pos.x,f.groundY+.03,f.pos.z);
+  const m=f.m;{ // sin apuntar, el personaje mira hacia donde corre; al apuntar, disparar o pelear mira hacia la mira
+    const hv=Math.hypot(f.vel.x,f.vel.z);f.aimM=aimMode(f);if(f.visYaw===undefined)f.visYaw=f.yaw;
+    const ty=f.aimM||hv<1.2||f.wr>0||!f.alive?(f.aimM||!f.alive?f.yaw:f.visYaw):Math.atan2(-f.vel.x,-f.vel.z);f.visYaw=angLerp(f.visYaw,ty,Math.min(1,dt*(f.aimM?18:11)));}
+  m.g.position.copy(f.pos);m.g.rotation.y=f.visYaw;m.sh.position.set(f.pos.x,f.groundY+.03,f.pos.z);
   const hs=Math.hypot(f.vel.x,f.vel.z);f.phase+=hs*dt*1.3;
   const sw=Math.sin(f.phase)*Math.min(1,hs/6)*.95,fast=f.dashT>0||f.rushT>0;
   if(f.onGround){m.legL.rotation.x=sw;m.legR.rotation.x=-sw;m.armL.rotation.x=-sw*.8;}
