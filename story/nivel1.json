@@ -1,0 +1,42 @@
+{
+  "_nota": "TEXTO TEMPORAL. Cambia cada \"t\" por tu diálogo. \"who\" puede ser: player (el personaje que eligió el jugador), radio, civil, aliado1 / aliado2 / aliado3 (el escuadrón que te espera) o el nombre de cualquier personaje (andres, connie, isma, milena...). Cuando ya sea el texto final, cambia \"temporal\" a false.",
+  "temporal": true,
+  "siguiente": "Siguiente: Hotel Aurora",
+  "intro": [
+    {"who": "radio", "t": "...¿alguien me escucha? Habla la base. Los invasores entraron por la avenida. Repito: entraron por la avenida."},
+    {"who": "player", "t": "Te escucho. Estoy en la plaza. Hay gente atrapada por todos lados."},
+    {"who": "radio", "t": "El mercado todavía aguanta. Llévalos ahí. Nosotros intentamos reagrupar al equipo."},
+    {"who": "player", "t": "Entendido. Nadie se queda atrás."}
+  ],
+  "civil_gracias": [
+    {"who": "civil", "t": "¡Gracias! ¡Corro al mercado!"}
+  ],
+  "civil_sigue": [
+    {"who": "civil", "t": "¡Ya voy, ya voy!"}
+  ],
+  "defender": [
+    {"who": "radio", "t": "Buen trabajo. Pero los vieron entrar... vienen Acechadores por la avenida."},
+    {"who": "player", "t": "Entonces no pasan de aquí."}
+  ],
+  "oleada2": [
+    {"who": "radio", "t": "¡Cuidado, vienen por los dos lados!"}
+  ],
+  "barricada": [
+    {"who": "radio", "t": "La plaza está despejada. El escuadrón está al este, en la calle norte."},
+    {"who": "radio", "t": "Las calles grandes están bloqueadas. Tu única salida es el callejón del oeste."},
+    {"who": "player", "t": "Voy para allá."}
+  ],
+  "rastrero": [
+    {"who": "player", "t": "¿Qué es eso en los andamios?"},
+    {"who": "radio", "t": "Un Rastrero. Escupe desde lejos y tiene la salida cubierta. Sácalo de ahí o no llegas."}
+  ],
+  "rastrero_fin": [
+    {"who": "radio", "t": "¡Lo tumbaste! Sigue mi señal, el escuadrón está al final de la calle."}
+  ],
+  "reunion": [
+    {"who": "aliado1", "t": "¡Llegaste! Pensamos que te habíamos perdido."},
+    {"who": "aliado2", "t": "Los civiles están a salvo en el mercado. Buen trabajo."},
+    {"who": "aliado3", "t": "Hay algo más: alguien que estuvo con nosotros dejó información en el Hotel Aurora."},
+    {"who": "player", "t": "Entonces ahí vamos."}
+  ]
+}
