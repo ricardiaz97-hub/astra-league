@@ -7,3 +7,8 @@ Accent colors: orange for Armando, Cris, Isma, Mau, Tefa, speaker, Yesy, Gaby, A
 Julio's eyes are gently closed in both references. The three WhatsApp photos of Jenny were used as references for the same character. `speaker.png` refers to the unnamed person in an earlier WhatsApp image. Andrés is the lead singer and the three supplied Andrés images show the same person.
 
 Transparent selection assets are collected in `character-select-transparent/`: sixteen individual character cutouts, a Ricardo-and-Milena duo cutout, and the transparent 16-character menu PNG. The menu uses posed cutouts based on the character sheets, not the T-poses.
+# Astra League character art
+
+Player character sheets, T-poses, and selection art are in the sibling folders. Enemy concepts are in `mobs/`.
+
+- `mobs/regular-mob.png`: standard average-build enemy concept sheet with light urban armor and wine/violet accents.
