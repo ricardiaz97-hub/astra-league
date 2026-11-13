@@ -588,9 +588,9 @@ const GUNS={rifle:PRIM[0],shotgun:PRIM[1],smg:PRIM[2],burst:PRIM[3],lance:WPN[2]
 const LANCE0=WPN[2];
 function loadoutIds(f){return f.isPlayer?[WPN[0].id,WPN[2].id]:[primFor(f.cls).id,'lance'];}
 // modelos 3D que mandó Ricardo (aligerados): se cargan en segundo plano; mientras tanto se ven las armas de piezas
-const GUNGLB={rifle:{lib:'gun_rifle',len:.95,rot:0},lance:{lib:'gun_rifle',len:1.2,rot:0},shotgun:{lib:'gun_shotgun',len:.9,rot:PI/2},smg:{lib:'gun_smg',len:.62,rot:-PI/2}};
+const GUNGLB={rifle:{lib:'bl_rifle',len:.95,rot:0,kc:1},lance:{lib:'bl_lance',len:1.25,rot:0,kc:1},shotgun:{lib:'bl_shotgun',len:.78,rot:0,kc:1},smg:{lib:'bl_smg',len:.66,rot:0,kc:1},burst:{lib:'bl_burst',len:.92,rot:0,kc:1}}; // Blaster Kit de Kenney: todas las armas del mismo estilo
 let GLBV=0;
-function prepGun(sc,o){const s=sc.clone(true);s.traverse(m=>{if(m.isMesh){const map=m.material.map;m.material=toon(0xffffff,{map});if(!map)m.material.color.copy(new T.Color(0x3a3440));m.castShadow=true;}});
+function prepGun(sc,o){const s=sc.clone(true);s.traverse(m=>{if(m.isMesh){const map=m.material.map,oc=m.material.color&&m.material.color.clone();m.material=toon(0xffffff,{map});if(!map)m.material.color.copy(o.kc&&oc?oc:new T.Color(0x3a3440));m.castShadow=true;}});
   const inner=new T.Group();inner.add(s);inner.rotation.y=o.rot;const outer=new T.Group();outer.add(inner);outer.updateMatrixWorld(true);
   const b=new T.Box3().setFromObject(outer),sz=b.getSize(new V3()),c=b.getCenter(new V3()),k=o.len/sz.z;
   inner.position.copy(c).multiplyScalar(-k);inner.scale.setScalar(k);inner.position.z+=o.len*.12;return outer;}
