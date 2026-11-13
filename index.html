@@ -1676,7 +1676,7 @@ function buildChar(team,cls,look){
   rimAll(g);scene.add(g);return {g,head,armL,armR,legL,legR,gun,sword,sh,aura,stones};
 }
 /* ---------- personajes 3D de VRoid (VRM aligerado a .glb) ---------- */
-const VRMS={10:{url:'chars/milena.json',h:1.69},11:{url:'chars/avatar-c.json'},12:{url:'chars/ricardo-tripo.json',h:1.84},13:{url:'chars/connie.json',h:1.60},14:{url:'chars/tefa.json',h:1.45},15:{url:'chars/yesy.json',h:1.45},16:{url:'chars/andres.json',h:1.84},17:{url:'chars/isma.json',h:1.83},18:{url:'chars/rebecca.json',h:1.60}}; // el .glb va codificado en JSON para poder publicarse como página
+const VRMS={10:{url:'chars/milena.json',h:1.69},11:{url:'chars/avatar-c.json'},12:{url:'chars/ricardo-tripo.json',h:1.84},13:{url:'chars/connie.json',h:1.60},14:{url:'chars/tefa.json',h:1.45},15:{url:'chars/yesy.json',h:1.45},16:{url:'chars/andres.json',h:1.84},17:{url:'chars/isma.json',h:1.83},18:{url:'chars/rebecca.json',h:1.60},19:{url:'chars/armando.json',h:1.75},20:{url:'chars/diego.json',h:1.75},21:{url:'chars/mau.json',h:1.75}}; // el .glb va codificado en JSON para poder publicarse como página
 const OUTL=basic(INKC,{side:T.BackSide,skinning:true});OUTL.color=INKCOL;
 OUTL.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n  transformed+=normalize(normal)*.0042;');};
 function loadVRM(k){const v=VRMS[k];if(v.p)return v.p;
@@ -2032,7 +2032,7 @@ function saveLoad(){try{localStorage.setItem('astra-load',JSON.stringify({p:game
 const player=new Fighter(0,'Tú',0,true,0,10);
 new Fighter(0,'Andrés',1,false,1,16);new Fighter(0,'Connie',2,false,2,13);
 new Fighter(1,'Yesy',0,false,0,15);new Fighter(1,'Isma',1,false,1,17);new Fighter(1,'Tefa',2,false,2,14);
-new Fighter(0,'Ricardo',3,false,3,12);new Fighter(0,'Armando',4,false,0,11);new Fighter(1,'Cris',3,false,3,11);new Fighter(1,'Mau',4,false,1,11); // equipos de 4 y 5
+new Fighter(0,'Ricardo',3,false,3,12);new Fighter(0,'Armando',4,false,0,19);new Fighter(1,'Cris',3,false,3,11);new Fighter(1,'Mau',4,false,1,21); // equipos de 4 y 5
 let SHOULDER=1;try{if(localStorage.getItem('astra-shoulder')==='-1')SHOULDER=-1;}catch(e){}
 let camYaw=-PI/2,camPitch=-.08,camRoll=0,shake=0,hitstop=0,flashV=0,lock=null,lockLost=0;
 function flash(v){flashV=Math.max(flashV,v);}
@@ -3503,7 +3503,7 @@ STORY.begin=function(){
   STORY.on=true;document.body.classList.add('story');try{if(!STORY.amb){STORY.amb=new Audio('music/warzone.mp3');STORY.amb.loop=true;}STORY.amb.volume=.16;STORY.amb.currentTime=0;STORY.amb.play().catch(()=>{});}catch(_){}STORY.ph='intro';STORY.saved=0;STORY.wave=0;STORY.flags={};STORY.units.length=0;STORY.t=0;
   STORY.cp=[-30,0,-3,-PI/2];player.pos.set(-30,0,-3);player.yaw=-PI/2;camYaw=-PI/2;camPitch=-.05;
   // escuadrón que te espera: tres del equipo que no seas tú
-  const me=mySlug();STORY.squad=['andres','connie','isma','yesy','tefa','rebecca','ricardo','milena'].filter(s=>s!==me).slice(0,3);
+  const me=mySlug();STORY.squad=['andres','connie','armando','isma','diego','mau','yesy','tefa','rebecca','ricardo','milena'].filter(s=>s!==me).slice(0,3);
   // calles cortadas: solo queda el callejón del oeste
   for(const [x,z,w,d] of [[-1,-12.5,16,1.2],[32.8,-12.5,8,1.2],[-57.5,-13,13,1.2]])sBox(x,z,w,7,d,0,'city/metal.jpg',2.5);
   // callejón: una barricada baja, fuego en el piso y una alta al final
@@ -3610,8 +3610,8 @@ $('sMenu').addEventListener('click',()=>{$('sEnd').hidden=true;toMenu();});
       get vol(){return vol;}};})();
 
   // personajes: los de Philly, cada uno con su retrato; mientras llegan sus modelos 3D usan uno parecido
-  const CH=[['milena','MILENA',10],['ricardo','RICARDO',12],['andres','ANDRÉS',16],['armando','ARMANDO',11],['connie','CONNIE',13],['cris','CRIS',11],['diego','DIEGO',11],['gaby','GABY',10],['isma','ISMA',17],
-    ['jenny','JENNY',10],['julio','JULIO',11],['mau','MAU',11],['rebecca','REBECCA',18],['speaker','SPEAKER',11],['tefa','TEFA',14],['yesy','YESY',15]];
+  const CH=[['milena','MILENA',10],['ricardo','RICARDO',12],['andres','ANDRÉS',16],['armando','ARMANDO',19],['connie','CONNIE',13],['cris','CRIS',11],['diego','DIEGO',20],['gaby','GABY',10],['isma','ISMA',17],
+    ['jenny','JENNY',10],['julio','JULIO',11],['mau','MAU',21],['rebecca','REBECCA',18],['speaker','SPEAKER',11],['tefa','TEFA',14],['yesy','YESY',15]];
   window.__CH=CH;
   const art=s=>'textures/chars/'+s+'.webp',face=s=>'textures/chars/'+s+'-face.jpg';
   let cur='milena';try{const s=localStorage.getItem('sb-char');if(s&&CH.some(c=>c[0]===s))cur=s;}catch(_){}
@@ -3728,7 +3728,7 @@ function loop(t){
   render();
 }
 buildTags();fullReset();
-window.__VRMS=VRMS;for(const k of [10,11,12,13,14,15,16,17,18])loadVRM(k).then(v=>{if(v)refreshLook(k);});
+window.__VRMS=VRMS;for(const k of [10,11,12,13,14,15,16,17,18,19,20,21])loadVRM(k).then(v=>{if(v)refreshLook(k);});
 window.__loadGuns();loadProp('sword').then(v=>{if(v){for(const f of fighters)f.setClass(f.cls,f.look,true);buildTags();}});
 loadAnim('strafe','anims/sword-strafe.json');loadMoves('anims/moves.json');loadMoves('anims/sword.json');loadMoves('anims/cover.json');loadMoves('anims/ual.json');loadMoves('anims/melee.json');loadMoves('anims/rifle8.json');
 window.__fx={mFinal,mSoft,FX,SET,fxBoom,guardBreak,act,gunModel,GUNGLB};window.__game={camera,boxes,setCam:(y,p)=>{camYaw=y;camPitch=p;},PJ,SPR,fxWord,swordModel,PROPS,game,player,fighters,step,startMatch,photoOn,photoOff,photoShot,PH,useSkill,jump,keys,startUlt,toggleLock,clash,melee,heavy,KIF,SANCT,getLock:()=>lock};
