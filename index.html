@@ -644,7 +644,7 @@ const PRIM=[
   {id:'shotgun',name:'ESCOPETA ARCANA',mag:6,cd:.82,dmg:13,pellets:8,reload:2.1,spread:.07,fall:[7,20,.25],kick:.045,sndk:'shotgun',ads:58},
   {id:'smg',name:'SUBFUSIL DE ENERGÍA',mag:40,cd:.068,dmg:8,reload:1.6,spread:.03,fall:[12,32,.4],kick:.004,sndk:'smgk',ads:54},
   {id:'burst',name:'FUSIL DE RÁFAGA',mag:24,cd:.44,dmg:12.5,burst:3,burstGap:.065,reload:1.8,spread:.006,head:2.3,fall:[30,70,.7],kick:.01,sndk:'burst',ads:40}];
-WPN[2]=Object.assign(WPN[2],{name:'LANZA RÚNICA',fall:[60,140,.8],kick:.03,sndk:'rail',ads:30,head:1.6});
+WPN[2]=Object.assign(WPN[2],{name:'FRANCOTIRADOR M338',fall:[60,140,.8],kick:.03,sndk:'rail',ads:30,head:1.6});
 function primFor(cls){return PRIM[cls]||PRIM[0];}
 /* ---------- tipos de arma: eliges principal y secundaria en el menú; en el mapa hay armas élite ---------- */
 WPN[2].id='lance';
@@ -653,7 +653,7 @@ const GUNS={rifle:PRIM[0],shotgun:PRIM[1],smg:PRIM[2],burst:PRIM[3],lance:WPN[2]
 const LANCE0=WPN[2];
 function loadoutIds(f){return f.isPlayer?[WPN[0].id,WPN[2].id]:[primFor(f.cls).id,'lance'];}
 // modelos 3D que mandó Ricardo (aligerados): se cargan en segundo plano; mientras tanto se ven las armas de piezas
-const GUNGLB={rifle:{lib:'bl_rifle',len:.95,rot:0,kc:1},lance:{lib:'bl_lance',len:1.25,rot:0,kc:1},shotgun:{lib:'bl_shotgun',len:.78,rot:0,kc:1},smg:{lib:'bl_smg',len:.66,rot:0,kc:1},burst:{lib:'bl_burst',len:.92,rot:0,kc:1}}; // Blaster Kit de Kenney: todas las armas del mismo estilo
+const GUNGLB={rifle:{lib:'sf_rifle',len:.98,rot:PI/2},burst:{lib:'sf_sniper',len:1.15,rot:PI/2},lance:{lib:'m338',len:1.3,rot:PI},smg:{lib:'gun_smg',len:.66,rot:-PI/2},shotgun:{lib:'gun_shotgun',len:.9,rot:PI/2}}; // armas sci-fi realistas (Sci-Fi Essentials, M338 de francotirador)
 let GLBV=0;
 function prepGun(sc,o){const s=sc.clone(true);s.traverse(m=>{if(m.isMesh){const map=m.material.map,oc=m.material.color&&m.material.color.clone();m.material=toon(0xffffff,{map});if(!map)m.material.color.copy(o.kc&&oc?oc:new T.Color(0x3a3440));m.castShadow=true;}});
   const inner=new T.Group();inner.add(s);inner.rotation.y=o.rot;const outer=new T.Group();outer.add(inner);outer.updateMatrixWorld(true);
@@ -663,7 +663,7 @@ window.__loadGuns=()=>{for(const id in GUNGLB){const o=GUNGLB[id];propLib(o.lib)
 };
 // modelos de armas hechos de piezas (cilindros y biseles: no solo cajas); apuntan hacia +Z
 function gunModel(id,col){
-  {const o=GUNGLB[id];if(o&&o.tpl){const g=o.tpl.clone(true);if(id==='lance'||id==='burst'){const s=new T.Mesh(new T.BoxGeometry(.012,.02,o.len*.7),basic(col));s.material.color.multiplyScalar(1.5);s.position.set(.04,.03,o.len*.05);g.add(s);}return g;}}
+  {const o=GUNGLB[id];if(o&&o.tpl){const g=o.tpl.clone(true);return g;}}
   const g=new T.Group(),dark=toon(0x231e2a),mid=toon(0x4a4256),light=toon(0xd8cfc8),glow=basic(col);glow.color.multiplyScalar(1.5);
   const box=(sx,sy,sz,x,y,z,m,rx)=>{const o=new T.Mesh(new T.BoxGeometry(sx,sy,sz),m);o.position.set(x,y,z);if(rx)o.rotation.x=rx;g.add(o);return o;};
   const cyl=(r,l,x,y,z,m,seg)=>{const o=new T.Mesh(new T.CylinderGeometry(r,r,l,seg||12),m);o.rotation.x=PI/2;o.position.set(x,y,z);g.add(o);return o;};
@@ -3531,6 +3531,7 @@ window.__storyPre=()=>{creatureModel('acechador');creatureModel('rastrero');for(
 window.__startStory=function(){if(STORY.on)STORY.end();STORY.prevMap=game.map;game.map=3;game.story=true;STORY.starting=true;
   for(const k of [31,32,33,34])loadVRM(k).then(v=>{if(v)refreshLook(k);});
   try{startMatch(true);}finally{STORY.starting=false;}
+  window.__MUS&&window.__MUS.play('story');
   for(const f of fighters)if(!f.isPlayer&&!f.story){f.alive=false;f.respawnT=1e9;}
   STORY.begin();};
 $('sAgain').addEventListener('click',()=>{$('sEnd').hidden=true;window.__startStory();});
@@ -3540,7 +3541,7 @@ $('sMenu').addEventListener('click',()=>{$('sEnd').hidden=true;toMenu();});
   const M=$('menu'),RM=matchMedia('(prefers-reduced-motion:reduce)');
   // música: Poderoso en los menús (su intro instrumental, en bucle), el mix de Philly en la partida, Solo de Jesús al final
   const MUS=window.__MUS=(function(){let vol=.6;try{const v=localStorage.getItem('sb-music');if(v!==null)vol=+v;}catch(_){}
-    const TR={menu:{src:'music/poderoso-intro.mp3',loopAt:29.6,loopTo:12.0},match:{src:'music/mix-philly.mp3',loop:true},end:{src:'music/solo-de-jesus.mp3',loop:true}};
+    const TR={menu:{src:'music/poderoso.mp3',loop:true},story:{src:'music/enfoque.mp3',loop:true},match:{src:'music/mix-philly.mp3',loop:true},end:{src:'music/solo-de-jesus.mp3',loop:true}};
     let cur=null,want=null,duck=1;
     const fade=(a,to,ms,done)=>{const from=a.volume,t0=performance.now();const iv=setInterval(()=>{const k=Math.min(1,(performance.now()-t0)/ms);a.volume=Math.max(0,Math.min(1,from+(to-from)*k));if(k>=1){clearInterval(iv);done&&done();}},30);};
     const lvl=()=>vol*duck;
@@ -3587,7 +3588,7 @@ $('sMenu').addEventListener('click',()=>{$('sEnd').hidden=true;toMenu();});
   // paso 2
   const sg=document.createElement('section');sg.className='st-gun';stage.appendChild(sg);
   const gl=document.createElement('div');gl.className='gLists';gl.dataset.a='';
-  const GN={rifle:'RIFLE',smg:'SUBFUSIL',shotgun:'ESCOPETA',burst:'RÁFAGA',lance:'LANZA'};
+  const GN={rifle:'RIFLE',smg:'SUBFUSIL',shotgun:'ESCOPETA',burst:'RÁFAGA',lance:'M338'};
   for(const id of ['primSel','secSel']){const g=grp(id);g.querySelector('.lbl').textContent=id==='primSel'?'PRINCIPAL':'SECUNDARIA';
     for(const b of $(id).querySelectorAll('button')){const k=b.dataset.g;b.innerHTML='<img alt="" src="textures/ui/gun-'+k+'.png"><span>'+GN[k]+'</span>';}gl.appendChild(g);}
   const bl=document.createElement('div');bl.className='gBlade';bl.textContent='Siempre llevas también la hoja arcana, para cuando te acorralen.';gl.appendChild(bl);
