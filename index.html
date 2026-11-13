@@ -1491,7 +1491,7 @@ function buildChar(team,cls,look){
   rimAll(g);scene.add(g);return {g,head,armL,armR,legL,legR,gun,sword,sh,aura,stones};
 }
 /* ---------- personajes 3D de VRoid (VRM aligerado a .glb) ---------- */
-const VRMS={10:{url:'chars/milena.json'},11:{url:'chars/avatar-c.json'},12:{url:'chars/ricardo-tripo.json'},13:{url:'chars/connie.json',h:1.60},14:{url:'chars/tefa.json',h:1.45},15:{url:'chars/yesy.json',h:1.45},16:{url:'chars/andres.json',h:1.84},17:{url:'chars/isma.json',h:1.83}}; // el .glb va codificado en JSON para poder publicarse como página
+const VRMS={10:{url:'chars/milena.json'},11:{url:'chars/avatar-c.json'},12:{url:'chars/ricardo-tripo.json',h:1.84},13:{url:'chars/connie.json',h:1.60},14:{url:'chars/tefa.json',h:1.45},15:{url:'chars/yesy.json',h:1.45},16:{url:'chars/andres.json',h:1.84},17:{url:'chars/isma.json',h:1.83}}; // el .glb va codificado en JSON para poder publicarse como página
 const OUTL=basic(INKC,{side:T.BackSide,skinning:true});OUTL.color=INKCOL;
 OUTL.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n  transformed+=normalize(normal)*.008;');};
 function loadVRM(k){const v=VRMS[k];if(v.p)return v.p;
