@@ -1904,7 +1904,7 @@ function initAudio(){if(AC){if(AC.state==='suspended')AC.resume();audioBus();ret
 let BUS=null,OUT=null;const SAMP={};
 function audioBus(){if(BUS||!AC)return;const comp=AC.createDynamicsCompressor();comp.threshold.value=-16;comp.ratio.value=4;comp.attack.value=.004;comp.release.value=.2;
   BUS=AC.createGain();BUS.gain.value=.9;BUS.connect(comp);comp.connect(AC.destination);
-  for(const n of['blaster','blaster_repeater','land','jump_a','weapon_change','enemy_hurt','enemy_destroy','break','ambience_city'])
+  for(const n of['sf_shot1','sf_shot2','sf_burst','sf_heavy','sf_ehit','sf_metal','sf_conc','blaster','blaster_repeater','land','jump_a','weapon_change','enemy_hurt','enemy_destroy','break','ambience_city'])
     fetch('sounds/'+n+'.ogg').then(r=>r.arrayBuffer()).then(b=>AC.decodeAudioData(b)).then(buf=>{SAMP[n]=buf;if(n==='ambience_city')startAmbience();}).catch(()=>{});
   startAmbience();}
 function outNode(){return OUT||BUS||AC.destination;}
@@ -1946,14 +1946,14 @@ function noise(dur,vol,freq){if(!AC)return;const t=AC.currentTime,s=AC.createBuf
 function snd(k,v,pos){if(!AC||game.menu)return;v=v===undefined?1:v;if(v<.03)return;audioBus();OUT=pos?panFor(pos):null;try{sndK(k,v);}finally{OUT=null;}}
 function sndK(k,v){
   switch(k){
-    case 'rifle':playS('blaster',.3*v,rand(1.08,1.18));noise(.05,.1*v,2600);tone('square',220,90,.06,.05*v);break;
-    case 'smgk':playS('blaster_repeater',.26*v,rand(1.25,1.4));noise(.035,.07*v,3400);break;
-    case 'burst':playS('blaster',.24*v,rand(1.4,1.5));tone('triangle',1300,500,.05,.06*v);noise(.03,.06*v,3000);break;
-    case 'shotgun':playS('blaster',.42*v,.62);noise(.28,.34*v,900);tone('sine',150,45,.25,.26*v);noise(.08,.18*v,3500);tone('square',420,380,.04,.05*v,.32);tone('square',300,260,.05,.05*v,.42);break;
+    case 'rifle':playS('sf_shot1',.34*v,rand(1.02,1.1));tone('sine',140,60,.07,.06*v);break;
+    case 'smgk':playS('sf_shot2',.26*v,rand(1.22,1.34));break;
+    case 'burst':playS('sf_shot2',.3*v,rand(.92,.98));tone('sine',160,70,.06,.05*v);break;
+    case 'shotgun':playS('sf_shot1',.46*v,.7);playS('sf_heavy',.22*v,1.3);tone('sine',120,40,.22,.18*v);break;
     case 'land':playS('land',.5*v,.8);tone('sine',95,40,.14,.22*v);noise(.12,.16*v,500);break;
     case 'swap':playS('weapon_change',.35);break;
     case 'smg':tone('triangle',900,300,.07,.09*v);noise(.04,.07*v,3000);break;
-    case 'rail':tone('sawtooth',1500,120,.35,.13*v);tone('sine',300,900,.3,.08*v);break;
+    case 'rail':playS('sf_shot1',.5*v,.62);playS('sf_heavy',.3*v,1.15);tone('sine',110,35,.3,.2*v);break;
     case 'sword':noise(.16,.2*v,3400);tone('sine',800,300,.14,.06*v);break;
     case 'hit':tone('triangle',1100,900,.05,.12);playS('enemy_hurt',.16,1.5);break;
     case 'hurt':tone('sine',150,60,.14,.25);break;
@@ -1975,13 +1975,13 @@ function sndK(k,v){
     case 'ultc':tone('sawtooth',120,700,.6,.12*v);tone('sine',240,1400,.6,.08*v);break;
     case 'beam':tone('sawtooth',90,60,2.1,.14*v);tone('square',660,330,2.1,.035*v);break;
     case 'clash':tone('square',200,900,.4,.14);noise(.4,.25,2000);break;
-    case 'boom':playS('break',.5*v,.7);noise(.5,.4*v,300);tone('sine',120,35,.5,.3*v);break;
+    case 'boom':playS('sf_heavy',.6*v,.9);playS('sf_burst',.35*v,.8);noise(.4,.25*v,300);tone('sine',110,35,.5,.25*v);break;
     case 'parry':tone('triangle',1600,2400,.12,.16*v);tone('triangle',2400,1200,.2,.1*v,.08);break;
     case 'parryup':tone('sine',900,1200,.07,.05);break;
     case 'lock':tone('square',1200,1200,.04,.05);tone('square',1600,1600,.05,.05,.06);break;
     case 'charge':tone('sine',200,420,.26,.07);break;
     case 'ready':[784,1047,1568].forEach((f,i)=>tone('triangle',f,f,.18,.1,i*.07));break;
-    case 'pew':tone('sine',1500,600,.07,.05*v);break;
+    case 'pew':playS('sf_burst',.12*v,rand(1.7,1.9));break;
     case 'bombc':tone('sawtooth',70,420,2,.1*v);tone('sine',140,840,2,.06*v);break;
     case 'super':[262,330,392,523,659].forEach((f,i)=>tone('sawtooth',f,f*1.01,.5,.06*v,i*.05));noise(.6,.2*v,600);break;
     case 'reload':tone('square',180,240,.05,.05);tone('square',240,320,.05,.05,.12);break;
@@ -2115,7 +2115,7 @@ function playerShoot(w){
     tracer(_e,_b,w===2?ARC:(n>1?0xffd0a0:0xffb066),w===2?.16:n>1?.05:.09,w===2?.3:.09);
     if(k<3||hit)burst(_b.x,_b.y,_b.z,hit?0xffffff:col,hit?5:2,n>1?3:4);if(!hit&&(n===1||k<3)){for(let q=0;q<3;q++)spr(FXT.spark,_b.x,_b.y,_b.z,{s0:.35,s1:.05,life:rand(.15,.3),vx:-_d.x*4+rand(-3,3),vy:rand(1,4),vz:-_d.z*4+rand(-3,3),drag:5,color:0xffd9a0,bright:1.3});fxDust(_b.x,_b.y-.2,_b.z,1,.6,.35);}
     if(hit){const d=hit.pos.distanceTo(p.pos),dm=W.dmg*(head?(W.head||2):1)*falloff(W,d);damage(hit,dm,p,head&&n===1);any=true;dealt+=dm;headAny=headAny||head;}
-    else if(n===1||k<2)fxDecal(_b,_d);}
+    else if(n===1||k<2){fxDecal(_b,_d);if(k===0&&Math.random()<.6)playS(Math.random()<.5?'sf_conc':'sf_metal',.1*volAt(_b),rand(1.1,1.4));}}
   // retroceso, destello y sonido
   p.recoil=1;camPitch+=W.kick*1.35*(1-.45*ads)+rand(-.002,.002)*(n>1?2:1);camYaw+=rand(-1,1)*W.kick*.35;
   muzzleFlash(_e,w===2?ARC:0xffb066,n>1||w===2?1.6:1);
