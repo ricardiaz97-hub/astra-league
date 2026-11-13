@@ -1403,14 +1403,14 @@ function buildCity(){
   const skyM=basic(0xffffff,{map:skyT,side:T.BackSide,fog:false,depthWrite:false});scene.add(new T.Mesh(new T.SphereGeometry(560,48,24),skyM));
   TL.load('textures/sunset2/sky.jpg',t=>{t.wrapS=T.RepeatWrapping;t.repeat.set(1,1.668);t.offset.set(.25,-.668);t.anisotropy=4;skyM.map=t;skyM.needsUpdate=true;});
   // suelo base bajo todo
-  const gr=new T.Mesh(new T.PlaneGeometry(260,200),toon(0x6a6070));gr.rotation.x=-PI/2;gr.position.y=-.03;scene.add(gr);useTex(gr.material,'city/asphalt.jpg');gr.geometry.attributes.uv.array.forEach((v,i,a)=>a[i]=v*60);gr.geometry.attributes.uv.needsUpdate=true;
+  const gr=new T.Mesh(new T.PlaneGeometry(460,420),toon(0x6a6070));gr.rotation.x=-PI/2;gr.position.y=-.03;scene.add(gr);useTex(gr.material,'city/asphalt.jpg');gr.geometry.attributes.uv.array.forEach((v,i,a)=>a[i]=v*105);gr.geometry.attributes.uv.needsUpdate=true;
   const solid=(x0,x1,z0,z1,y0,y1)=>boxes.push({x0,x1,y0,y1,z0,z1}); // choque invisible: lo que se ve es el modelo
   const PUT=[];const put=(n,x,z,ry,y)=>PUT.push([n,x,y||0,z,ry||0]);
   // edificios del kit: huella (frente hacia +z con giro 0) y altura
   const BLD={L:['Building_Large_2',-9.32,11.32,-16.32,.32,28],M:['Building_Medium_2_001',-7.53,7.53,-12.49,.57,25],S:['Building_Small_1',-7.23,5.23,-12.23,2.31,17]};
-  const bld=(k,x,z,ry)=>{const b=BLD[k];put(b[0],x,z,ry);const c=Math.cos(ry),s=Math.sin(ry);let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
+  const HKP=[];let hkI=0;const bld=(k,x,z,ry)=>{const b=BLD[k];const c=Math.cos(ry),s=Math.sin(ry);let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
     for(const [px,pz] of [[b[1],b[3]],[b[2],b[3]],[b[1],b[4]],[b[2],b[4]]]){const wx=x+px*c+pz*s,wz=z-px*s+pz*c;x0=Math.min(x0,wx);x1=Math.max(x1,wx);z0=Math.min(z0,wz);z1=Math.max(z1,wz);}
-    solid(x0,x1,z0,z1,0,b[5]);};
+    solid(x0,x1,z0,z1,0,b[5]);HKP.push([(x0+x1)/2,(z0+z1)/2,x1-x0,z1-z0,b[5],ry,hkI++]);};
   // calles: avenida de 4 carriles (z=0), calle norte (z=-31) y sur (z=36) de 2 carriles, transversal (x=0)
   for(let x=-63;x<=63;x+=6){if(Math.abs(x)<12)continue;put('Street_4Lane',x,0,0);}
   put('Street_4WayIntersection',0,0,0);
@@ -1454,6 +1454,16 @@ function buildCity(){
   for(let x=-48;x<=48;x+=24)for(const z of [-8,8]){const l=new T.PointLight(0xffb070,1.1,18,2);l.position.set(x+(z>0?12:0),5.5,z);scene.add(l);}
   // modelos del kit: llegan después y se suman a este mapa
   const grp=new T.Group();scene.add(grp);
+  // edificios de Hong Kong: ocupan cada manzana del mapa y, por fuera, varias filas más hasta el horizonte (ya no se acaba la ciudad)
+  {let sd=7;const rnd=()=>(sd=(sd*9301+49297)%233280)/233280;
+    for(const [ox,oz,w,d] of [[-100,0,24,110],[100,0,24,110],[0,-62,170,22],[0,68,170,22],[-100,-62,24,22],[100,-62,24,22],[-100,68,24,22],[100,68,24,22]])
+      for(let x=ox-w/2+8;x<=ox+w/2-8;x+=17)for(let z=oz-d/2+8;z<=oz+d/2-8;z+=17)HKP.push([x+rnd()*3,z+rnd()*3,15+rnd()*4,15+rnd()*4,26+rnd()*26,(rnd()*4|0)*PI/2,(rnd()*5|0),1]);
+    for(const [x,z] of [[-82,-30],[-82,30],[82,-30],[82,30],[-40,-50],[0,-50],[40,-50],[-40,55],[0,55],[40,55]])HKP.push([x,z,16,16,30+rnd()*20,(rnd()*4|0)*PI/2,(rnd()*5|0),1]);
+    propLib('hk').then(sc=>{if(!sc||CURM!==M)return;const g=new T.Group();scene.add(g);
+      for(const [x,z,W,D,H,ry,i] of HKP){const src=sc.getObjectByName('HK_'+(i%5));if(!src)continue;const o=src.clone(true);o.position.set(0,0,0);o.rotation.set(0,0,0);o.scale.set(1,1,1);
+        const bx=new T.Box3().setFromObject(o),sz=bx.getSize(new V3());const q=Math.abs(Math.round(ry/(PI/2)))%2===1;
+        o.rotation.y=ry;o.scale.set((q?D:W)/sz.x,H/sz.y,(q?W:D)/sz.z);o.position.set(x,0,z);g.add(o);}
+      g.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;}});shadeAll(g);});}
   propLib('city').then(sc=>{if(!sc||CURM!==M)return;for(const [n,x,y,z,ry] of PUT){const src=sc.getObjectByName(n);if(!src)continue;const o=src.clone(true);o.position.set(x,y,z);o.rotation.y=ry;grp.add(o);}
     grp.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;}});shadeAll(grp);});
 }
