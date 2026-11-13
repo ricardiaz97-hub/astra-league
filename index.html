@@ -31,7 +31,10 @@
 #fCred .c{font:400 clamp(28px,5vw,64px) var(--display);display:flex;gap:.6em;align-items:center;justify-content:center;flex-wrap:wrap}
 #fCred .x{color:#e85d04;font-size:1.3em}
 #fCred small{display:block;margin-top:18px;font:600 12px var(--body);letter-spacing:.4em;color:#b8a89a}
-#fTitle{background:center/cover url(textures/ui/title.jpg)}
+#fTitle{background:#1a0f1e;overflow:hidden;isolation:isolate}
+#fTitle::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(20,10,24,.15) 40%,rgba(20,10,24,.75)),center 60%/cover url(textures/ui/opening.jpg);animation:openPan 26s ease-in-out infinite alternate;transform-origin:50% 70%}
+@keyframes openPan{from{transform:scale(1.02)}to{transform:scale(1.12) translateY(-1.5%)}}
+@media (prefers-reduced-motion:reduce){#fTitle::before{animation:none}}
 #fTitle::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,12,16,.0) 40%,rgba(18,12,16,.75))}
 #fTitle img{position:absolute;top:6%;left:50%;transform:translateX(-50%);width:min(56vw,620px);filter:drop-shadow(0 10px 30px rgba(0,0,0,.45));z-index:1}
 #fTitle .press{position:absolute;bottom:12%;left:0;right:0;text-align:center;z-index:1;font:400 clamp(18px,2.6vw,30px) var(--display);letter-spacing:.3em;text-shadow:0 2px 0 #1d1a22;animation:blink 1.4s ease-in-out infinite}
