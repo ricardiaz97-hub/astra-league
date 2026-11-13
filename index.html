@@ -1440,18 +1440,41 @@ function buildCity(){
   for(const [x,z,w,d] of STALLS)stallM.push(W(x-w/2,x+w/2,z-d/2,z+d/2,0,1.25,'city/metal.jpg',2)); // puestos: cobertura baja
   // supermercado: estantes en las paredes, refrigeradores al frente, cajas de fruta en los puestos
   const MKP=[];
-  for(const x of [-24.2,-21.6,-19,-16.4,-13.8,-11.2,-8.6,8.6,11.2,13.8,16.4,19,21.6,24.2])MKP.push(['Shelf',x,29.1,PI,2.1,2.5]);
-  for(const s of [-1,1])for(const z of [11.6,14.2,23.8,26.4])MKP.push(['Shelf',s*25.2,z,s>0?-PI/2:PI/2,2.1,2.5]);
+  for(const x of [-24.2,-21.6,-19,-16.4,-13.8,-11.2,-8.6,8.6,11.2,13.8,16.4,19,21.6,24.2])MKP.push(['Shelf',x,29.1,0,2.1,2.5]);
+  for(const s of [-1,1])for(const z of [11.6,14.2,23.8,26.4])MKP.push(['Shelf',s*25.2,z,s>0?PI/2:-PI/2,2.1,2.5]);
   solid(-25.5,-3.9,28.4,29.8,0,2.2);solid(3.9,25.5,28.4,29.8,0,2.2);for(const s of [-1,1]){solid(s>0?24.5:-25.8,s>0?25.8:-24.5,10.3,15.6,0,2.2);solid(s>0?24.5:-25.8,s>0?25.8:-24.5,22.4,27.8,0,2.2);}
   for(const x of [-6.6,-4.4,-2.2,2.2,4.4,6.6])MKP.push([x<0?'Fridge':'Fridge2',x,10.75,0,2.15,1.1]);solid(-7.6,7.6,10.2,11.3,0,2.2);
-  for(const [x,z,w,d] of STALLS)MKP.push(['fruit_case',x,z,w>d?0:PI/2,1.25,Math.max(w,d),Math.min(w,d)]);
   for(const [x,z] of [[-23.5,11.5],[23.5,11.5],[-2.5,28],[2.5,28.2],[-24,20.5],[24,17.5]])for(let i=0;i<3;i++)MKP.push(['CardboardBox',x+(i%2)*.7,z+(i>1?.6:0),rand(-.3,.3),.55,0,0,i>1?.55:0]);
   propLib('mk').then(sc=>{if(!sc||CURM!==M)return;const g=new T.Group();scene.add(g);
     for(const [n,x,z,ry,H,L,D,y] of MKP){const src=sc.getObjectByName('MK_'+n);if(!src)continue;const o=src.clone(true);o.position.set(0,0,0);o.rotation.set(0,0,0);o.scale.set(1,1,1);o.updateMatrixWorld(true);
       const b=new T.Box3().setFromObject(o),sz=b.getSize(new V3()),c=b.getCenter(new V3());const turn=sz.z>sz.x?PI/2:0;const lx=turn?sz.z:sz.x,lz=turn?sz.x:sz.z;
       const k=H/sz.y,kx=L?L/lx:k,kz=D?D/lz:k;const w=new T.Group(),inner=new T.Group();inner.add(o);o.position.set(-c.x,-b.min.y,-c.z);inner.rotation.y=turn;inner.scale.set(1,1,1);
       w.add(inner);w.scale.set(kx,k,kz);w.rotation.y=ry;w.position.set(x,y||0,z);g.add(w);}
-    for(const m of stallM)m.visible=false;g.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;}});shadeAll(g);});
+    for(const m of stallM)m.visible=false;
+    // relleno con instancias (pocas llamadas de dibujo): productos en cada repisa, cajas de fruta sobre mesas, fruta encima
+    const IN={};const add=(n,x,y,z,ry,s)=>{(IN[n]=IN[n]||[]).push(new T.Matrix4().compose(new V3(x,y,z),new T.Quaternion().setFromAxisAngle(new V3(0,1,0),ry),new V3(s||1,s||1,s||1)));};
+    const PRODS=[['Coke',.32,.13],['Fries',.3,.22],['ToiletPaper',.34,.32],['MilkCarton',.26,.12],['PowderDetergent',.36,.26],['CoffeePackage',.22,.15]];let pi=0;
+    for(const [n,x,z,ry] of MKP){if(n!=='Shelf')continue;const c=Math.cos(ry),sn=Math.sin(ry);
+      for(const y of [.21,.68,1.05,1.42]){const [pn,h,wd]=PRODS[pi++%PRODS.length],sp=Math.max(.17,wd*1.05);
+        for(let lx=-1.12+sp/2;lx<1.12;lx+=sp){const lz=rand(-.04,.04);add(pn,x+lx*c+lz*sn,y+.01,z-lx*sn+lz*c,ry+rand(-.15,.15));}}}
+    let si=0;for(const [x,z,w,d] of STALLS){const tb=new T.Mesh(new T.BoxGeometry(w,.8,d),toon(0x6e4a32));tb.position.set(x,.4,z);g.add(tb);ink(tb);
+      const along=w>=d,L=along?w:d,Dp=along?d:w,nc=Math.max(1,Math.floor(L/.82)),nr=Math.max(1,Math.floor(Dp/.52)),fr=si++%2?'Banana':'Apple';
+      for(let i=0;i<nc;i++)for(let j=0;j<nr;j++){const a=(i+.5)/nc*L-L/2,b=(j+.5)/nr*Dp-Dp/2,cx=x+(along?a:b),cz=z+(along?b:a);add('fruit_case',cx,.8,cz,along?0:PI/2);
+        for(let k=0;k<(fr==='Apple'?6:3);k++)add(fr,cx+rand(-.25,.25),1.2+rand(0,.06),cz+rand(-.14,.14),rand(0,6.3));}}
+    const SZ={Coke:.32,Fries:.3,ToiletPaper:.34,MilkCarton:.26,PowderDetergent:.36,CoffeePackage:.22,fruit_case:.45,Apple:.085,Banana:.2};
+    for(const n in IN){const src=sc.getObjectByName('MK_'+n);if(!src)continue;src.updateMatrixWorld(true);const inv=new T.Matrix4().copy(src.matrixWorld).invert(),bb=new T.Box3(),tb=new T.Box3(),_m=new T.Matrix4();
+      src.traverse(m=>{if(!m.isMesh)return;if(!m.geometry.boundingBox)m.geometry.computeBoundingBox();tb.copy(m.geometry.boundingBox).applyMatrix4(_m.multiplyMatrices(inv,m.matrixWorld));bb.union(tb);});
+      const sz=bb.getSize(new V3()),c=bb.getCenter(new V3()),k=SZ[n]/sz.y,norm=new T.Matrix4().makeScale(k,k,k).multiply(new T.Matrix4().makeTranslation(-c.x,-bb.min.y,-c.z));
+      src.traverse(m=>{if(!m.isMesh)return;const loc=new T.Matrix4().multiplyMatrices(inv,m.matrixWorld),L=IN[n],im=new T.InstancedMesh(m.geometry,m.material,L.length);
+        for(let i=0;i<L.length;i++)im.setMatrixAt(i,_m.multiplyMatrices(L[i],norm).multiply(loc));im.instanceMatrix.needsUpdate=true;im.frustumCulled=false;g.add(im);});}
+    g.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;}});shadeAll(g);});
+  // techo con lámparas y letreros de pasillo
+  for(let x=-21;x<=21;x+=7)for(const z of [14,20,26]){const l=new T.Mesh(new T.BoxGeometry(2.4,.08,.35),basic(0xfff3d6));l.position.set(x,H-.12,z);scene.add(l);}
+  for(const [t,x,z,ry] of [['FRUTAS',-18,20,0],['FRUTAS',18,20,0],['BEBIDAS',-16,28,0],['LIMPIEZA',16,28,0],['ABARROTES',-24,13,PI/2],['LÁCTEOS',24,13,-PI/2],['CAJAS',0,11.5,0]]){
+    const cv=document.createElement('canvas');cv.width=512;cv.height=128;const c=cv.getContext('2d');c.fillStyle='#ff7a1a';c.fillRect(0,0,512,128);c.fillStyle='#1d1a22';c.fillRect(8,8,496,112);
+    c.font='900 76px Anton, Impact, sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#ffd9a8';c.fillText(t,256,68);const tx=new T.CanvasTexture(cv);
+    for(const f of [0,PI]){const sg=new T.Mesh(new T.PlaneGeometry(3,.75),basic(0xffffff,{map:tx}));sg.position.set(x,4.3,z);sg.rotation.y=ry+f;scene.add(sg);}
+    for(const s of [-1,1]){const w=new T.Mesh(new T.CylinderGeometry(.01,.01,H-4.65,4),basic(0x1d1a22));w.position.set(x+Math.cos(ry)*s*1.3,4.65+(H-4.65)/2,z-Math.sin(ry)*s*1.3);scene.add(w);}}
   for(const [x,z] of [[-14,20],[14,20],[0,20]]){const l=new T.PointLight(0xffc890,.8,16,2);l.position.set(x,5,z);scene.add(l);}
   // monumento en el cruce: tapa la vista larga de la avenida
   addBox(0,0,5,1.1,5,0,0xd8ccd0,undefined,'city/trim.jpg',2);addBox(0,0,1.8,6,1.8,1.1,0xd8ccd0,undefined,'city/concrete.jpg',2);
