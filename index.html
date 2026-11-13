@@ -1454,7 +1454,7 @@ function faceTex(i){if(faceCache[i])return faceCache[i];const L=LOOKS[i],sk=hex(
     g.strokeStyle='#7a2f2a';g.lineWidth=3.5;g.beginPath();g.moveTo(cx-11,184);g.quadraticCurveTo(cx+2,192,cx+13,181);g.stroke();
   });}
 function buildChar(team,cls,look){
-  if(look>=10){if(VRMS[look]&&VRMS[look].scene)return buildVRM(team,cls,look);look=look===10?1:look===12?0:2;} // mientras carga el modelo 3D, se usa el de bloques
+  if(look>=10){if(VRMS[look]&&VRMS[look].scene)return buildVRM(team,cls,look);look=look===10||look===13||look===14||look===15?1:look===12?0:2;} // mientras carga el modelo 3D, se usa el de bloques
   const c=TEAM[team].color,L=LOOKS[look],g=new T.Group();g.rotation.order='YXZ';
   const tc=toon(c),glow=basic(c),hair=toon(L.hc);
   const add=(par,ge,ma,x,y,z,ol)=>{const m=new T.Mesh(ge,ma);m.position.set(x,y,z);par.add(m);if(ol)ink(m);return m;};
@@ -1491,7 +1491,7 @@ function buildChar(team,cls,look){
   rimAll(g);scene.add(g);return {g,head,armL,armR,legL,legR,gun,sword,sh,aura,stones};
 }
 /* ---------- personajes 3D de VRoid (VRM aligerado a .glb) ---------- */
-const VRMS={10:{url:'chars/milena.json'},11:{url:'chars/avatar-c.json'},12:{url:'chars/ricardo-tripo.json'}}; // el .glb va codificado en JSON para poder publicarse como página
+const VRMS={10:{url:'chars/milena.json'},11:{url:'chars/avatar-c.json'},12:{url:'chars/ricardo-tripo.json'},13:{url:'chars/connie.json',h:1.60},14:{url:'chars/tefa.json',h:1.45},15:{url:'chars/yesy.json',h:1.45},16:{url:'chars/andres.json',h:1.84},17:{url:'chars/isma.json',h:1.83}}; // el .glb va codificado en JSON para poder publicarse como página
 const OUTL=basic(INKC,{side:T.BackSide,skinning:true});OUTL.color=INKCOL;
 OUTL.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n  transformed+=normalize(normal)*.008;');};
 function loadVRM(k){const v=VRMS[k];if(v.p)return v.p;
@@ -1510,7 +1510,7 @@ function prepVRM(v,g){
   for(const o of add){const ol=new T.SkinnedMesh(o.geometry,OUTL);ol.name=o.name+'_tinta';ol.frustumCulled=false;ol.position.copy(o.position);ol.quaternion.copy(o.quaternion);ol.scale.copy(o.scale);
     o.parent.add(ol);ol.bind(o.skeleton,o.bindMatrix);}
   g.scene.updateMatrixWorld(true);const box=new T.Box3().setFromObject(g.scene);
-  v.scale=1.9/Math.max(.5,box.max.y-box.min.y);v.foot=box.min.y;v.scene=g.scene;
+  v.scale=1.9*((v.h||1.72)/1.72)/Math.max(.5,box.max.y-box.min.y);v.foot=box.min.y;v.scene=g.scene; // estatura real de cada uno
 }
 const _q=new T.Quaternion(),_eu=new T.Euler();
 // gira un hueso en ejes del modelo (de frente a +Z), sin importar cómo venga orientado en reposo
@@ -1839,9 +1839,9 @@ const game={map:2,menu:true,paused:false,free:false,photo:false,state:'playing',
 try{const v=localStorage.getItem('astra-load');if(v){const o=JSON.parse(v);Object.assign(game,{prim:o.p||'rifle',sec:o.s||'lance',team:o.t||4});}}catch(e){}
 function saveLoad(){try{localStorage.setItem('astra-load',JSON.stringify({p:game.prim,s:game.sec,t:game.team}));}catch(e){}}
 const player=new Fighter(0,'Tú',0,true,0,10);
-new Fighter(0,'Nova',1,false,1,11);new Fighter(0,'Lince',2,false,2,11);
-new Fighter(1,'Vex',0,false,0,11);new Fighter(1,'Brasa',1,false,1,11);new Fighter(1,'Orión',2,false,2,11);
-new Fighter(0,'Kai',3,false,3,11);new Fighter(0,'Rin',4,false,0,11);new Fighter(1,'Zed',3,false,3,11);new Fighter(1,'Mika',4,false,1,11); // equipos de 4 y 5
+new Fighter(0,'Andrés',1,false,1,16);new Fighter(0,'Connie',2,false,2,13);
+new Fighter(1,'Yesy',0,false,0,15);new Fighter(1,'Isma',1,false,1,17);new Fighter(1,'Tefa',2,false,2,14);
+new Fighter(0,'Ricardo',3,false,3,12);new Fighter(0,'Armando',4,false,0,11);new Fighter(1,'Cris',3,false,3,11);new Fighter(1,'Mau',4,false,1,11); // equipos de 4 y 5
 let SHOULDER=1;try{if(localStorage.getItem('astra-shoulder')==='-1')SHOULDER=-1;}catch(e){}
 let camYaw=-PI/2,camPitch=-.08,camRoll=0,shake=0,hitstop=0,flashV=0,lock=null,lockLost=0;
 function flash(v){flashV=Math.max(flashV,v);}
@@ -2972,7 +2972,7 @@ function updHUD(dt){
 function applyRoster(){
   player.setClass(game.cls,game.look);WPN[0]=GUNS[game.prim]||primFor(game.cls);WPN[2]=GUNS[game.sec]||LANCE0;player.ammo[0]=WPN[0].mag;player.ammo[2]=WPN[2].mag;applyGunModels(player,player.m);FPV.built='';
   const mates=[0,1,2].filter(c=>c!==game.cls).slice(game.cls===3?1:0,game.cls===3?3:2).reverse(); // dos clases distintas a la tuya
-  fighters[1].setClass(mates[0],11);fighters[2].setClass(mates[1],11);
+  fighters[1].setClass(mates[0],fighters[1].look);fighters[2].setClass(mates[1],fighters[2].look);
   buildTags();
 }
 function startMatch(free){game.free=free===true;initAudio();window.__MUS&&window.__MUS.play('match');window.__MUS&&window.__MUS.duck(1);buildMap(game.map);applyRoster();game.menu=false;game.paused=false;$('menu').hidden=true;$('end').hidden=true;$('pause').hidden=true;$('hud').hidden=false;
@@ -3122,8 +3122,8 @@ function endMatch(){
       get vol(){return vol;}};})();
 
   // personajes: los de Philly, cada uno con su retrato; mientras llegan sus modelos 3D usan uno parecido
-  const CH=[['milena','MILENA',10],['ricardo','RICARDO',12],['andres','ANDRÉS',11],['armando','ARMANDO',11],['connie','CONNIE',10],['cris','CRIS',11],['diego','DIEGO',11],['gaby','GABY',10],['isma','ISMA',11],
-    ['jenny','JENNY',10],['julio','JULIO',11],['mau','MAU',11],['rebecca','REBECCA',10],['speaker','SPEAKER',11],['tefa','TEFA',10],['yesy','YESY',10]];
+  const CH=[['milena','MILENA',10],['ricardo','RICARDO',12],['andres','ANDRÉS',16],['armando','ARMANDO',11],['connie','CONNIE',13],['cris','CRIS',11],['diego','DIEGO',11],['gaby','GABY',10],['isma','ISMA',17],
+    ['jenny','JENNY',10],['julio','JULIO',11],['mau','MAU',11],['rebecca','REBECCA',10],['speaker','SPEAKER',11],['tefa','TEFA',14],['yesy','YESY',15]];
   const art=s=>'textures/chars/'+s+'.webp',face=s=>'textures/chars/'+s+'-face.jpg';
   let cur='milena';try{const s=localStorage.getItem('sb-char');if(s&&CH.some(c=>c[0]===s))cur=s;}catch(_){}
   const look=$('lookSel');look.innerHTML='';
@@ -3239,7 +3239,7 @@ function loop(t){
   render();
 }
 buildTags();fullReset();
-for(const k of [10,11,12])loadVRM(k).then(v=>{if(v)refreshLook(k);});
+window.__VRMS=VRMS;for(const k of [10,11,12,13,14,15,16,17])loadVRM(k).then(v=>{if(v)refreshLook(k);});
 window.__loadGuns();loadProp('sword').then(v=>{if(v){for(const f of fighters)f.setClass(f.cls,f.look,true);buildTags();}});
 loadAnim('strafe','anims/sword-strafe.json');loadMoves('anims/moves.json');loadMoves('anims/sword.json');loadMoves('anims/cover.json');loadMoves('anims/ual.json');loadMoves('anims/melee.json');
 window.__fx={mFinal,mSoft,FX,SET,fxBoom,guardBreak,act,gunModel,GUNGLB};window.__game={camera,boxes,setCam:(y,p)=>{camYaw=y;camPitch=p;},PJ,SPR,fxWord,swordModel,PROPS,game,player,fighters,step,startMatch,photoOn,photoOff,photoShot,PH,useSkill,jump,keys,startUlt,toggleLock,clash,melee,heavy,KIF,SANCT,getLock:()=>lock};
