@@ -1573,12 +1573,16 @@ function applyVRM(m,f,dt){
     else if(f.hcharge>0&&A.charge)key='charge';
     else if(f.hcharge>0&&A.swHeavy)key='swHeavy';
     else if(f.wr>0){key='wallrun';mir=f.wrNx*cy-f.wrNz*sy<0;}
-    else if(!f.onGround)key=f.weapon===1&&A.swJump?'swJump':'jump';
+    else if(!f.onGround)key=f.weapon===1&&A.swJump?'swJump':A.jLoop?'jLoop':'jump';
     else if(f.weapon===1&&tg&&tg.alive&&Math.abs(lat)>2.5&&Math.abs(lat)>Math.abs(fwd)*.8){key='strafe';mir=lat<0;rate=Math.abs(lat)/((A.strafe&&A.strafe.speed)||3);} // rodear al rival fijado
+    else if(f.onGround&&f.weapon!==1&&A.r8F&&hs>.8){ // con rifle: 8 direcciones (caminar, correr y esprintar) sin dejar de apuntar
+      const ang=Math.atan2(lat,fwd),D=['F','FR','R','BR','B','BL','L','FL'][((Math.round(ang/(Math.PI/4))%8)+8)%8],set=f.sprint&&hs>8.5?'s8':hs>3?'r8':'w8';
+      key=set+D;rate=set==='s8'?clamp(hs/9,.8,1.5):set==='r8'?clamp(hs/5.2,.7,1.7):clamp(hs/1.7,.6,1.8);}
     else if(f.onGround&&f.sprint&&hs>8.5&&f.weapon!==1&&A.sprint){key='sprint';rate=clamp(hs/9.5,.8,1.5);} // corriendo a fondo
     else if(f.onGround&&hs>3&&f.weapon!==1&&A.runF){ // con arma de fuego: correr hacia adelante, de lado o de espaldas sin dejar de apuntar
       if(Math.abs(lat)>Math.abs(fwd)*1.1){key=lat>0?'runR':'runL';rate=clamp(hs/4.8,.7,1.8);}else{key='runF';rate=clamp(hs/4.8,.7,1.8)*(fwd<0?-1:1);}}
     else if(f.onGround&&hs>3){if(f.weapon===1&&A.swRun){key='swRun';rate=clamp(hs/5,.7,2);}else{key='run';rate=clamp(hs/5.5,.7,2.2);}}
+    else if(f.onGround&&f.weapon!==1&&A.aim8)key='aim8';
     else if(f.onGround&&f.weapon!==1&&A.aim)key='aim';
     else if(f.onGround&&f.weapon===1&&A.swIdle){if(hs>.8&&A.swWalk){key='swWalk';rate=clamp(hs/1.7,.6,2);}else key='swIdle';} // espada a dos manos
     if(key&&!A[key])key=null;}
@@ -1591,7 +1595,7 @@ function applyVRM(m,f,dt){
     else{f.animT=(f.animT||0)+dt*rate*a.rate;playAnim(m,a,f.animT,mir,k);if(a.drop){const n=a.frames-1,ft=((f.animT*a.fps)%n+n)%n;m.g.position.y+=a.drop[Math.round(ft)]*1.05;}}
     m.g.rotation.x=0;if(key==='wallrun')m.g.rotation.z=0;
     if(f.weapon!==1&&!f.act&&f.alive&&key!=='powerup'&&key!=='block'&&key!=='climb'&&key!=='wallrun'&&A.aim){ // con arma de fuego: los brazos sostienen el arma a dos manos aunque las piernas corran
-      if(key!=='aim'){const set=A.aim.bones;for(const n of ARMB){const b=m.bones[n];if(!b||!set[n])continue;_qa.fromArray(set[n],0);poseQ(b,_qa,k);}}
+      if(!/^(aim|aim8|[rsw]8|jLoop)/.test(key)){const set=A.aim.bones;for(const n of ARMB){const b=m.bones[n];if(!b||!set[n])continue;_qa.fromArray(set[n],0);poseQ(b,_qa,k);}}
       const b=m.bones.upperChest||m.bones.chest;if(b){_eu.set(-clamp(f.pitch,-1,1)*.5,0,0,'XYZ');_q.setFromEuler(_eu);_qt.copy(b.Ai).multiply(_q).multiply(b.A).multiply(b.o.quaternion);b.o.quaternion.copy(_qt);}} // el pecho sigue la mira arriba y abajo
     return;}
   const B=m.bones,lL=m.legL.rotation.x,lR=m.legR.rotation.x,air=!f.onGround&&f.wr<=0,ar=m.armR.rotation;
@@ -3241,7 +3245,7 @@ function loop(t){
 buildTags();fullReset();
 window.__VRMS=VRMS;for(const k of [10,11,12,13,14,15,16,17,18])loadVRM(k).then(v=>{if(v)refreshLook(k);});
 window.__loadGuns();loadProp('sword').then(v=>{if(v){for(const f of fighters)f.setClass(f.cls,f.look,true);buildTags();}});
-loadAnim('strafe','anims/sword-strafe.json');loadMoves('anims/moves.json');loadMoves('anims/sword.json');loadMoves('anims/cover.json');loadMoves('anims/ual.json');loadMoves('anims/melee.json');
+loadAnim('strafe','anims/sword-strafe.json');loadMoves('anims/moves.json');loadMoves('anims/sword.json');loadMoves('anims/cover.json');loadMoves('anims/ual.json');loadMoves('anims/melee.json');loadMoves('anims/rifle8.json');
 window.__fx={mFinal,mSoft,FX,SET,fxBoom,guardBreak,act,gunModel,GUNGLB};window.__game={camera,boxes,setCam:(y,p)=>{camYaw=y;camPitch=p;},PJ,SPR,fxWord,swordModel,PROPS,game,player,fighters,step,startMatch,photoOn,photoOff,photoShot,PH,useSkill,jump,keys,startUlt,toggleLock,clash,melee,heavy,KIF,SANCT,getLock:()=>lock};
 requestAnimationFrame(loop);
 })();
