@@ -478,6 +478,11 @@ body.story #top{visibility:hidden}
 #sEnd button:active{transform:scale(.97)}
 @keyframes eIn{from{transform:scale(1.3);opacity:0;letter-spacing:.2em}to{transform:none;opacity:1}}
 #menu.story .stepBar b[data-s=map]{display:none}
+#todSel{display:flex!important;align-items:center;gap:8px;position:absolute;right:0;top:-8px;z-index:3}
+.grp:has(#todSel){position:relative}
+#todSel span{font:700 11px var(--body);letter-spacing:.14em;color:var(--dim);margin-right:6px}
+#todSel button{font:400 15px var(--display);letter-spacing:.06em;padding:8px 16px;background:rgba(243,236,226,.07);color:#cfc4cf;border:0;clip-path:polygon(6% 0,100% 0,94% 100%,0 100%);cursor:pointer;width:auto;height:auto;aspect-ratio:auto;max-height:none;filter:none}
+#todSel button.sel{background:var(--alfa);color:#1d1a22}
 </style>
 </head>
 <body>
@@ -565,7 +570,7 @@ body.story #top{visibility:hidden}
       <div class="seg" id="lookSel"><button data-l="10" class="sel">MILENA</button><button data-l="11">AVATAR C</button><button data-l="0">RIZOS</button><button data-l="1">MELENA</button></div>
     </div>
     <div class="sets" style="--i:3">
-      <div class="grp"><div class="lbl">MAPA</div><div class="seg" id="mapSel"><button data-m="3">CENTRO</button><button data-m="2" class="sel">HOTEL</button><button data-m="1">ATARDECER</button><button data-m="0">AZOTEA</button></div></div>
+      <div class="grp"><div class="lbl">MAPA</div><div class="seg" id="mapSel"><button data-m="3">CENTRO</button><button data-m="2" class="sel">HOTEL</button><button data-m="1">ATARDECER</button><button data-m="0">AZOTEA</button></div><div class="seg" id="todSel"><span>HORA EN CENTRO</span><button data-t="dusk">ATARDECER</button><button data-t="day">DÍA · 2 PM</button></div></div>
       <div class="grp"><div class="lbl">ARMA PRINCIPAL</div><div class="seg" id="primSel"><button data-g="rifle">RIFLE</button><button data-g="smg">SUBFUSIL</button><button data-g="shotgun">ESCOPETA</button><button data-g="burst">RÁFAGA</button><button data-g="lance">LANZA</button></div></div>
       <div class="grp"><div class="lbl">ARMA SECUNDARIA</div><div class="seg" id="secSel"><button data-g="rifle">RIFLE</button><button data-g="smg">SUBFUSIL</button><button data-g="shotgun">ESCOPETA</button><button data-g="burst">RÁFAGA</button><button data-g="lance">LANZA</button></div></div>
       <div class="grp"><div class="lbl">EQUIPOS</div><div class="seg" id="teamSel"><button data-t="3">3 VS 3</button><button data-t="4">4 VS 4</button><button data-t="5">5 VS 5</button></div></div>
@@ -1423,8 +1428,11 @@ function buildCity(){
   const ORA=0xff7a1a,CY=0x3fe0ff,M=CURM;
   // cielo de atardecer pintado (el mismo panorama de ATARDECER)
   const skyT=tex(8,512,(g,w,h)=>{const l=g.createLinearGradient(0,0,0,h);[[0,'#170f30'],[.25,'#43266a'],[.42,'#a6497a'],[.5,'#ffb37a'],[.56,'#c46a6a'],[1,'#22142e']].forEach(([o,c])=>l.addColorStop(o,c));g.fillStyle=l;g.fillRect(0,0,w,h);});
-  const skyM=basic(0xffffff,{map:skyT,side:T.BackSide,fog:false,depthWrite:false});scene.add(new T.Mesh(new T.SphereGeometry(560,48,24),skyM));
-  TL.load('textures/sunset2/sky.jpg',t=>{t.wrapS=T.RepeatWrapping;t.repeat.set(1,1.668);t.offset.set(.25,-.668);t.anisotropy=4;skyM.map=t;skyM.needsUpdate=true;});
+  const DAY=isDay(M);
+  const skyD=DAY?tex(512,512,(g,w,h)=>{const l=g.createLinearGradient(0,0,0,h);[[0,'#1f5fc8'],[.28,'#3f86e0'],[.45,'#78b0ec'],[.5,'#a8cdf0'],[.56,'#a9b8c6'],[1,'#6f7a88']].forEach(([o,c])=>l.addColorStop(o,c));g.fillStyle=l;g.fillRect(0,0,w,h);
+    let sd=3;const rn=()=>(sd=(sd*9301+49297)%233280)/233280;for(let i=0;i<46;i++){const x=rn()*w,y=h*(.14+rn()*.3),r=14+rn()*40;for(let k=0;k<6;k++){const cx=x+(rn()-.5)*r*2.4,cy=y+(rn()-.5)*r*.5,c=g.createRadialGradient(cx,cy,0,cx,cy,r);c.addColorStop(0,'rgba(255,255,255,.5)');c.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=c;g.fillRect(cx-r,cy-r,r*2,r*2);}}}):null;
+  const skyM=basic(0xffffff,{map:skyD||skyT,side:T.BackSide,fog:false,depthWrite:false});scene.add(new T.Mesh(new T.SphereGeometry(560,48,24),skyM));
+  if(!DAY)TL.load('textures/sunset2/sky.jpg',t=>{t.wrapS=T.RepeatWrapping;t.repeat.set(1,1.668);t.offset.set(.25,-.668);t.anisotropy=4;skyM.map=t;skyM.needsUpdate=true;});
   // suelo base bajo todo
   const gr=new T.Mesh(new T.PlaneGeometry(460,420),toon(0x6a6070));gr.rotation.x=-PI/2;gr.position.y=-.03;scene.add(gr);useTex(gr.material,'city/asphalt.jpg');gr.geometry.attributes.uv.array.forEach((v,i,a)=>a[i]=v*105);gr.geometry.attributes.uv.needsUpdate=true;
   const solid=(x0,x1,z0,z1,y0,y1)=>boxes.push({x0,x1,y0,y1,z0,z1}); // choque invisible: lo que se ve es el modelo
@@ -1511,7 +1519,7 @@ function buildCity(){
   // bases: plazas abiertas con espacio detrás
   for(let t=0;t<2;t++){const m=new T.Mesh(new T.CircleGeometry(7,40),basic(0xffffff,{map:RUNE[t],transparent:true}));m.rotation.x=-PI/2;m.position.set(TEAM[t].baseX,.04,0);scene.add(m);TEAM[t].rune=m;}
   // farolas cálidas a lo largo de la avenida
-  for(let x=-48;x<=48;x+=24)for(const z of [-8,8]){const l=new T.PointLight(0xffb070,1.1,18,2);l.position.set(x+(z>0?12:0),5.5,z);scene.add(l);}
+  for(let x=-48;x<=48;x+=24)for(const z of [-8,8]){const l=new T.PointLight(0xffb070,DAY?.25:1.1,18,2);l.position.set(x+(z>0?12:0),5.5,z);scene.add(l);}
   // modelos del kit: llegan después y se suman a este mapa
   const grp=new T.Group();scene.add(grp);
   // edificios de Hong Kong: ocupan cada manzana del mapa y, por fuera, varias filas más hasta el horizonte (ya no se acaba la ciudad)
@@ -1539,13 +1547,14 @@ const MAPS=[
   {name:'ATARDECER',build:buildSunset,HX:76,HZ:58,base:62,edges:false,hemi:[0x8c74d8,0x1e1028,.36],sun:[0xffa868,1.2,-90,26,38],fog:[0x4e2c52,95,400],ink:0x2a1834,rim:[0xff9a5a,.42],lift:[.018,.004,.04],gain:[1.06,.98,.96],sat:.92,k:.38,ca:.009,con:.5,mist:.5,mistC:[.64,.48,.44]},
   {name:'HOTEL AURORA',build:buildHotel,HX:61,HZ:46,base:56,edges:false,hemi:[0x7062b8,0x201228,.33],sun:[0xff9a68,.66,-60,52,-34],fog:[0x2e1a38,80,330],ink:0x24142e,rim:[0xff9a5a,.38],lift:[.012,.003,.03],gain:[1.06,.98,.96],sat:.94,k:.4,ca:.009,con:.5,indK:.38,bake:true,mist:.5,mistC:[.62,.5,.44],
    spawns:[[[-55,0,-9],[-55,0,-15],[-56,0,-3]],[[56,2.4,-12],[56,2.4,-6],[58,2.4,2]]],nav:HOTEL_NAV},
-  {name:'CENTRO',build:buildCity,HX:63,HZ:42,base:56,edges:false,hemi:[0x8a78d0,0x2a1a30,.42],sun:[0xffa070,.85,-70,40,30],fog:[0x47294e,90,360],ink:0x24142e,rim:[0xff9a5a,.4],lift:[.014,.004,.035],gain:[1.06,.98,.96],sat:.95,k:.4,ca:.009,con:.5,indK:.4,mist:.45,mistC:[.62,.48,.46],
+  {name:'CENTRO',build:buildCity,HX:63,HZ:42,base:56,edges:false,day:{hemi:[0xbcd6ff,0x6a5e52,.62],sun:[0xfff0d6,1.15,-30,95,40],fog:[0x9ec0e6,160,520],ink:0x24202c,rim:[0xfff4e0,.22],lift:[0,0,.01],gain:[1,.99,1],sat:1.12,k:.42,ca:.006,con:.5,mist:.12,mistC:[.84,.9,.97]},hemi:[0x8a78d0,0x2a1a30,.42],sun:[0xffa070,.85,-70,40,30],fog:[0x47294e,90,360],ink:0x24142e,rim:[0xff9a5a,.4],lift:[.014,.004,.035],gain:[1.06,.98,.96],sat:.95,k:.4,ca:.009,con:.5,indK:.4,mist:.45,mistC:[.62,.48,.46],
    spawns:[[[-57,0,-5],[-57,0,5],[-59,0,0]],[[57,0,5],[57,0,-5],[59,0,0]]],nav:CITY_NAV,
    lanes:{north:[[-40,0,-31],[-20,0,-31],[0,0,-31],[20,0,-31],[40,0,-31]],south:[[-40,0,36],[-20,0,36],[0,0,36],[20,0,36],[40,0,36]],alley:[[-33.5,0,-6],[-33.5,0,-28],[0,0,-31],[32.3,0,-28],[32.3,0,-6]],upper:[[-29.4,0,7],[-29.4,0,19],[-11.5,0,20],[0,0,24],[11.5,0,20],[29.2,0,19],[29.2,0,7]]},
    items:[['hp',-20,0,-31],['ammo',20,0,-31],['ult',0,0,-31],['shield',-20,0,36],['hp',20,0,36],['elite',0,0,22],['str',-29.4,0,24],['agi',29.2,0,24],['ammo',-33.5,0,-17],['hp',32.3,0,-17],['shield',0,0,-17],['agi',-46,0,-26],['str',46,0,27]]}];
 let mapGroup=null,mapId=-1;
 const SET={words:false,mist:true};try{SET.words=localStorage.getItem('astra-words')==='1';SET.mist=localStorage.getItem('astra-mist')!=='0';}catch(e){}
 let CURM=null,NAV=null;
+function isDay(M){return !!(M&&M.day&&game.tod==='day'&&!game.story);}
 function aimMode(f){if(!f.alive||f.ultT>0||f.act||f.clash)return true;if(f.weapon===1)return !!(f.isPlayer?lock:f.target&&f.target.alive&&f.pos.distanceTo(f.target.pos)<6)||f.swingT>0||f.block||f.hcharge>0;
   if(f.isPlayer)return adsHeld||now-(f.shotT||-9)<1.1||!!lock||(typeof mouseDown!=='undefined'&&mouseDown);return !!(f.target&&f.target.alive)||now-(f.shotT||-9)<1.1;}
 function prepNav(d){if(d.ready)return d.ready;const ids=Object.keys(d.n),ix={};ids.forEach((k,i)=>ix[k]=i);
@@ -1560,11 +1569,12 @@ function buildMap(id){
   const g=new T.Group();for(const o of scene.children.slice(n0))g.add(o);scene.add(g);mapGroup=g;
   if(M.bake){const t0=performance.now(),tris=bakeMap(g);console.log('mapa horneado',Math.round(tris),'triángulos',Math.round(performance.now()-t0),'ms');}
   setIndoor(MAPFX.indoor||[],M.indK);shadeAll(g);
-  hemi.color.setHex(M.hemi[0]);hemi.groundColor.setHex(M.hemi[1]);hemi.intensity=M.hemi[2];
-  sun.color.setHex(M.sun[0]);sun.intensity=M.sun[1];sun.position.set(M.sun[2],M.sun[3],M.sun[4]).normalize().multiplyScalar(170);sun.target.position.set(0,0,0);
-  scene.fog.color.setHex(M.fog[0]);scene.fog.near=M.fog[1];scene.fog.far=M.fog[2];
-  INKCOL.setHex(M.ink);RIM.value.setHex(M.rim[0]).multiplyScalar(M.rim[1]);
-  const U=mFinal.uniforms;U.lift.value.fromArray(M.lift);U.gain.value.fromArray(M.gain);U.sat.value=M.sat;U.mist.value=SET.mist?(M.mist||0):0;if(M.mistC)U.mistC.value.fromArray(M.mistC);U.con.value=M.con||0;U.k.value=M.k;U.ca.value=M.ca;
+  const P=isDay(M)?Object.assign({},M,M.day):M; // de día (2-3 pm) o al atardecer
+  hemi.color.setHex(P.hemi[0]);hemi.groundColor.setHex(P.hemi[1]);hemi.intensity=P.hemi[2];
+  sun.color.setHex(P.sun[0]);sun.intensity=P.sun[1];sun.position.set(P.sun[2],P.sun[3],P.sun[4]).normalize().multiplyScalar(170);sun.target.position.set(0,0,0);
+  scene.fog.color.setHex(P.fog[0]);scene.fog.near=P.fog[1];scene.fog.far=P.fog[2];
+  INKCOL.setHex(P.ink);RIM.value.setHex(P.rim[0]).multiplyScalar(P.rim[1]);
+  const U=mFinal.uniforms;U.lift.value.fromArray(P.lift);U.gain.value.fromArray(P.gain);U.sat.value=P.sat;U.mist.value=SET.mist?(P.mist||0):0;if(P.mistC)U.mistC.value.fromArray(P.mistC);U.con.value=P.con||0;U.k.value=P.k;U.ca.value=P.ca;
 }
 buildMap(2);
 
@@ -2054,7 +2064,7 @@ function sndK(k,v){
 function volAt(p){return clamp(1-player.pos.distanceTo(p)/60,0,1)*.6;}
 
 /* ---------- juego ---------- */
-const game={map:2,menu:true,paused:false,free:false,photo:false,state:'playing',score:[0,0],time:MATCH,diff:1,cls:0,look:10,prim:'rifle',sec:'lance',team:4};
+const game={tod:(()=>{try{return localStorage.getItem('sb-tod')||'dusk';}catch(_){return 'dusk';}})(),map:2,menu:true,paused:false,free:false,photo:false,state:'playing',score:[0,0],time:MATCH,diff:1,cls:0,look:10,prim:'rifle',sec:'lance',team:4};
 try{const v=localStorage.getItem('astra-load');if(v){const o=JSON.parse(v);Object.assign(game,{prim:o.p||'rifle',sec:o.s||'lance',team:o.t||4});}}catch(e){}
 function saveLoad(){try{localStorage.setItem('astra-load',JSON.stringify({p:game.prim,s:game.sec,t:game.team}));}catch(e){}}
 const player=new Fighter(0,'Tú',0,true,0,10);
@@ -3631,6 +3641,8 @@ window.__storyPre=()=>{creatureModel('acechador');creatureModel('rastrero');for(
   document.addEventListener('click',e=>{const b=ok(e);if(!b)return;initAudio();const id=b.id,t=(b.textContent||'').trim();
     const k=b.classList.contains('soon')?'ui_deny':(id==='play'||id==='roam'||id==='sAgain'||id==='again')?'ui_start':/ATR|CERRAR|MENÚ|SALIR/i.test(t)||b.classList.contains('ghost')?'ui_back':b.classList.contains('go')?'ui_next':'ui_confirm';
     setTimeout(()=>playS(k,k==='ui_start'?.5:.35),0);},true);})();
+(function(){const T=$('todSel');if(!T)return;const upd=()=>{for(const b of T.querySelectorAll('button'))b.classList.toggle('sel',b.dataset.t===game.tod);};upd();
+  T.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;game.tod=b.dataset.t;try{localStorage.setItem('sb-tod',game.tod);}catch(_){}upd();});})();
 window.__startStory=function(){if(STORY.on)STORY.end();STORY.prevMap=game.map;game.map=3;game.story=true;STORY.starting=true;
   for(const k of [31,32,33,34])loadVRM(k).then(v=>{if(v)refreshLook(k);});
   try{startMatch(true);}finally{STORY.starting=false;}
