@@ -359,7 +359,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
 
 /* paso 3: mapa */
 .st-map{grid-template-rows:minmax(0,1fr) auto;gap:18px}
-#menu.v2 #mapSel{display:grid!important;grid-template-columns:1.4fr 1fr 1fr;gap:12px;min-height:0;height:100%}
+#menu.v2 #mapSel{display:grid!important;grid-template-columns:1.3fr 1.3fr 1fr 1fr;gap:12px;min-height:0;height:100%}
 #menu.v2 #mapSel button{position:relative;height:100%;max-height:58vh;aspect-ratio:auto;clip-path:polygon(4% 0,100% 0,96% 100%,0 100%);transition:transform .45s cubic-bezier(.16,1,.3,1),filter .3s;filter:saturate(.6) brightness(.7)}
 #menu.v2 #mapSel button span{position:absolute;left:8%;bottom:7%;font:400 clamp(28px,3.4vw,54px)/.9 var(--display);letter-spacing:.03em;color:var(--paper);text-shadow:0 3px 18px rgba(10,6,14,.8);transform:skewX(-7deg)}
 #menu.v2 #mapSel button:hover{filter:saturate(.9) brightness(.9)}
@@ -477,7 +477,7 @@ kbd{font:700 11px var(--body);padding:1px 6px;margin-left:4px;border:1px solid r
       <div class="seg" id="lookSel"><button data-l="10" class="sel">MILENA</button><button data-l="11">AVATAR C</button><button data-l="0">RIZOS</button><button data-l="1">MELENA</button></div>
     </div>
     <div class="sets" style="--i:3">
-      <div class="grp"><div class="lbl">MAPA</div><div class="seg" id="mapSel"><button data-m="2" class="sel">HOTEL</button><button data-m="1">ATARDECER</button><button data-m="0">AZOTEA</button></div></div>
+      <div class="grp"><div class="lbl">MAPA</div><div class="seg" id="mapSel"><button data-m="3">CENTRO</button><button data-m="2" class="sel">HOTEL</button><button data-m="1">ATARDECER</button><button data-m="0">AZOTEA</button></div></div>
       <div class="grp"><div class="lbl">ARMA PRINCIPAL</div><div class="seg" id="primSel"><button data-g="rifle">RIFLE</button><button data-g="smg">SUBFUSIL</button><button data-g="shotgun">ESCOPETA</button><button data-g="burst">RÁFAGA</button><button data-g="lance">LANZA</button></div></div>
       <div class="grp"><div class="lbl">ARMA SECUNDARIA</div><div class="seg" id="secSel"><button data-g="rifle">RIFLE</button><button data-g="smg">SUBFUSIL</button><button data-g="shotgun">ESCOPETA</button><button data-g="burst">RÁFAGA</button><button data-g="lance">LANZA</button></div></div>
       <div class="grp"><div class="lbl">EQUIPOS</div><div class="seg" id="teamSel"><button data-t="3">3 VS 3</button><button data-t="4">4 VS 4</button><button data-t="5">5 VS 5</button></div></div>
@@ -1330,11 +1330,84 @@ function bakeMap(group,opts){
     const mesh=new T.Mesh(g,m);mesh.userData.baked=1;group.add(mesh);}
   DECO.length=0;return tris;
 }
+/* ---------- mapa: CENTRO (Downtown City MegaKit de Quaternius) ---------- */
+function buildCity(){
+  const ORA=0xff7a1a,CY=0x3fe0ff,M=CURM;
+  // cielo de atardecer pintado (el mismo panorama de ATARDECER)
+  const skyT=tex(8,512,(g,w,h)=>{const l=g.createLinearGradient(0,0,0,h);[[0,'#170f30'],[.25,'#43266a'],[.42,'#a6497a'],[.5,'#ffb37a'],[.56,'#c46a6a'],[1,'#22142e']].forEach(([o,c])=>l.addColorStop(o,c));g.fillStyle=l;g.fillRect(0,0,w,h);});
+  const skyM=basic(0xffffff,{map:skyT,side:T.BackSide,fog:false,depthWrite:false});scene.add(new T.Mesh(new T.SphereGeometry(560,48,24),skyM));
+  TL.load('textures/sunset2/sky.jpg',t=>{t.wrapS=T.RepeatWrapping;t.repeat.set(1,1.668);t.offset.set(.25,-.668);t.anisotropy=4;skyM.map=t;skyM.needsUpdate=true;});
+  // suelo base bajo todo
+  const gr=new T.Mesh(new T.PlaneGeometry(260,200),toon(0x6a6070));gr.rotation.x=-PI/2;gr.position.y=-.03;scene.add(gr);useTex(gr.material,'city/asphalt.jpg');gr.geometry.attributes.uv.array.forEach((v,i,a)=>a[i]=v*60);gr.geometry.attributes.uv.needsUpdate=true;
+  const solid=(x0,x1,z0,z1,y0,y1)=>boxes.push({x0,x1,y0,y1,z0,z1}); // choque invisible: lo que se ve es el modelo
+  const PUT=[];const put=(n,x,z,ry,y)=>PUT.push([n,x,y||0,z,ry||0]);
+  // edificios del kit: huella (frente hacia +z con giro 0) y altura
+  const BLD={L:['Building_Large_2',-9.32,11.32,-16.32,.32,28],M:['Building_Medium_2_001',-7.53,7.53,-12.49,.57,25],S:['Building_Small_1',-7.23,5.23,-12.23,2.31,17]};
+  const bld=(k,x,z,ry)=>{const b=BLD[k];put(b[0],x,z,ry);const c=Math.cos(ry),s=Math.sin(ry);let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
+    for(const [px,pz] of [[b[1],b[3]],[b[2],b[3]],[b[1],b[4]],[b[2],b[4]]]){const wx=x+px*c+pz*s,wz=z-px*s+pz*c;x0=Math.min(x0,wx);x1=Math.max(x1,wx);z0=Math.min(z0,wz);z1=Math.max(z1,wz);}
+    solid(x0,x1,z0,z1,0,b[5]);};
+  // calles: avenida de 4 carriles (z=0), calle norte (z=-31) y sur (z=36) de 2 carriles, transversal (x=0)
+  for(let x=-63;x<=63;x+=6){if(Math.abs(x)<12)continue;put('Street_4Lane',x,0,0);}
+  put('Street_4WayIntersection',0,0,0);
+  for(const zc of [-31,36])for(let x=-63;x<=63;x+=6){if(Math.abs(x)<6)continue;put('Street_2Lane',x,zc,0);}
+  for(const zc of [-31,36]){put('Street_Asphalt_9x9',4.5,zc+4.5,0);put('Street_Asphalt_9x9',-4.5,zc+4.5,PI/2);put('Street_Asphalt_9x9',4.5,zc-4.5,-PI/2);put('Street_Asphalt_9x9',-4.5,zc-4.5,PI);}
+  for(let z=-25;z<=-15;z+=6)put('Street_2Lane',0,z,PI/2);for(let z=15;z<=27;z+=6)put('Street_2Lane',0,z,PI/2);
+  put('Decal_Crosswalk',-14,0,PI/2);put('Decal_Crosswalk',14,0,PI/2);
+  // manzana norte (frente a la avenida): mediano, callejón, grande | grande, callejón, pequeño, callejón
+  bld('M',-44,-9,0);bld('L',-20,-9,0);bld('L',18,-9,0);bld('S',42,-9.5,0);
+  // manzana sur: pequeño y mediano mirando a la avenida, el mercado en medio
+  bld('S',-40,9.5,PI);bld('M',40,9,PI);
+  // fondo: ciudad alrededor (también hace de muro)
+  for(const [k,x] of [['L',-46],['M',-22],['S',-2],['L',22],['M',46]])bld(k,x,-37.5,0);
+  for(const [k,x] of [['M',-46],['L',-20],['S',4],['M',24],['L',48]])bld(k,x,42.5,PI);
+  for(const [k,z] of [['L',-20],['M',14]]){bld(k,-66,z,PI/2);bld(k,66,z,-PI/2);}
+  solid(-75,-64,-40,44,0,30);solid(64,75,-40,44,0,30);solid(-75,75,-46,-37.5,0,30);solid(-75,75,42.5,52,0,30);
+  // MERCADO: nave con techo, puertas por los cuatro lados y puestos adentro (la ruta indirecta)
+  const W=(x0,x1,z0,z1,y0,y1,tx,tile)=>addBox((x0+x1)/2,(z0+z1)/2,x1-x0,y1-y0,z1-z0,y0,0xd8ccd0,undefined,tx||'city/brick.jpg',tile||2.5);
+  const MX=26,Z0=10,Z1=30,H=6;
+  for(const [a,b] of [[-MX,-15],[-8,8],[15,MX]])W(a,b,Z0-.25,Z0+.25,0,H);W(-15,-8,Z0-.25,Z0+.25,3.6,H);W(8,15,Z0-.25,Z0+.25,3.6,H); // frente: dos portones
+  for(const [a,b] of [[-MX,-4],[4,MX]])W(a,b,Z1-.25,Z1+.25,0,H);W(-4,4,Z1-.25,Z1+.25,3.6,H); // atrás: un portón
+  for(const s of [-1,1]){const x=s*MX;W(x-.25,x+.25,Z0,16,0,H);W(x-.25,x+.25,22,Z1,0,H);W(x-.25,x+.25,16,22,3.6,H);} // costados
+  W(-MX-.3,MX+.3,Z0-.3,Z1+.3,H,H+.5,'city/concrete.jpg',3);
+  {const f=new T.Mesh(new T.PlaneGeometry(2*MX,Z1-Z0),toon(0xd8ccd0));f.rotation.x=-PI/2;f.position.set(0,.02,(Z0+Z1)/2);useTex(f.material,'city/marble.jpg');f.geometry.attributes.uv.array.forEach((v,i,a)=>a[i]=v*(i%2?(Z1-Z0)/4:MX/2));scene.add(f);}
+  const MV=MAPFX.indoor;MV.push({x0:-MX,x1:MX,y0:0,y1:H,z0:Z0,z1:Z1});
+  for(const [x,z,w,d] of [[-18,15,4,1.6],[-18,25,4,1.6],[-6,18,1.6,4],[6,22,1.6,4],[18,15,4,1.6],[18,25,4,1.6],[0,14,3,1.2],[-10,26,2.4,1.2],[10,26,2.4,1.2]])
+    W(x-w/2,x+w/2,z-d/2,z+d/2,0,1.25,'city/metal.jpg',2); // puestos: cobertura baja
+  for(const [x,z] of [[-14,20],[14,20],[0,20]]){const l=new T.PointLight(0xffc890,.8,16,2);l.position.set(x,5,z);scene.add(l);}
+  // monumento en el cruce: tapa la vista larga de la avenida
+  addBox(0,0,5,1.1,5,0,0xd8ccd0,undefined,'city/trim.jpg',2);addBox(0,0,1.8,6,1.8,1.1,0xd8ccd0,undefined,'city/concrete.jpg',2);
+  const orb=new T.Mesh(new T.OctahedronGeometry(.9,0),basic(ORA));orb.material.color.multiplyScalar(1.6);orb.position.set(0,8,0);scene.add(orb);
+  // cobertura en la avenida y las calles: barreras, maceteros y aires acondicionados
+  for(const [x,z,w,d] of [[-40,-3,3.4,.7],[-26,4,.7,3],[-14,-5,3,.7],[26,-4,.7,3],[14,5,3,.7],[40,3,3.4,.7],[-48,4.5,.7,2.4],[48,-4.5,.7,2.4]])W(x-w/2,x+w/2,z-d/2,z+d/2,0,1.15,'city/concrete.jpg',2);
+  for(const [x,z] of [[-30,-31],[-12,-29],[12,-33],[30,-31],[-28,36],[-10,38],[12,34],[30,36],[-52,-20],[52,22]]){put('Prop_Planter_Single',x,z,0);solid(x-1,x+1,z-1,z+1,0,.6);}
+  for(const [x,z] of [[-36,-7],[-24,7],[24,-7],[36,7],[-8,-7.5],[8,7.5]]){put('Sidewalk_Planter',x,z,0);solid(x-1,x+1,z-.9,z+.9,0,.5);}
+  for(const [x,z] of [[-20,-33],[20,-29],[-18,34],[18,38]]){put('Prop_ACUnit',x,z,0);W(x-.6,x+.6,z-.5,z+.5,0,1.05,'city/metal.jpg',2);}
+  for(let x=-50;x<=50;x+=10){put('Prop_Bollard',x,8.6,0);put('Prop_Bollard',x+5,-8.6,0);}
+  // bases: plazas abiertas con espacio detrás
+  for(let t=0;t<2;t++){const m=new T.Mesh(new T.CircleGeometry(7,40),basic(0xffffff,{map:RUNE[t],transparent:true}));m.rotation.x=-PI/2;m.position.set(TEAM[t].baseX,.04,0);scene.add(m);TEAM[t].rune=m;}
+  // farolas cálidas a lo largo de la avenida
+  for(let x=-48;x<=48;x+=24)for(const z of [-8,8]){const l=new T.PointLight(0xffb070,1.1,18,2);l.position.set(x+(z>0?12:0),5.5,z);scene.add(l);}
+  // modelos del kit: llegan después y se suman a este mapa
+  const grp=new T.Group();scene.add(grp);
+  propLib('city').then(sc=>{if(!sc||CURM!==M)return;for(const [n,x,y,z,ry] of PUT){const src=sc.getObjectByName(n);if(!src)continue;const o=src.clone(true);o.position.set(x,y,z);o.rotation.y=ry;grp.add(o);}
+    grp.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;}});shadeAll(grp);});
+}
+const CITY_NAV={n:{W0:[-56,0,0],WN:[-56,0,-31],WS:[-56,0,36],V1:[-40,0,0],V2:[-22,0,0],C1:[-8,0,-3],C2:[8,0,3],C3:[-3,0,-8],C4:[3,0,8],V3:[22,0,0],V4:[40,0,0],E0:[56,0,0],EN:[56,0,-31],ES:[56,0,36],
+  N1:[-40,0,-31],N2:[-20,0,-31],N3:[0,0,-31],N4:[20,0,-31],N5:[40,0,-31],X1:[0,0,-17],AW:[-33.5,0,-17],AWs:[-33.5,0,-6],AWn:[-33.5,0,-28],AE:[32.3,0,-17],AEs:[32.3,0,-6],AEn:[32.3,0,-28],
+  S1:[-40,0,36],S2:[-20,0,36],S3:[0,0,36],S4:[20,0,36],S5:[40,0,36],MN1:[-11.5,0,7],MN2:[11.5,0,7],MI1:[-11.5,0,20],MI2:[11.5,0,20],MI0:[0,0,24],MS:[0,0,32.5],MW:[-29.4,0,19],ME:[29.2,0,19],MWo:[-29.4,0,7],MEo:[29.2,0,7],MWs:[-29.4,0,32],MEs:[29.2,0,32]},
+  e:`W0-WN W0-WS W0-V1 WN-N1 WS-S1 V1-V2 V1-AWs V2-AWs V2-C1 V2-C3 V2-MN1 C1-C3 C1-C4 C3-X1 C3-C2 C2-C4 C2-V3 C4-V3 C4-MN2 C1-MN1 V3-AEs V3-MN2 V3-V4 V4-AEs V4-E0 E0-EN E0-ES EN-N5 ES-S5
+     N1-N2 N2-N3 N3-N4 N4-N5 N3-X1 AW-AWs AW-AWn AWn-N1 AWn-N2 AE-AEs AE-AEn AEn-N4 AEn-N5 S1-S2 S2-S3 S3-S4 S4-S5 S3-MS MS-MI0 MI0-MI1 MI0-MI2 MI1-MN1 MI2-MN2 MI1-MW MI2-ME
+     MW-MWo MW-MWs MWo-V2 MWo-V1 MWs-S1 MWs-S2 ME-MEo ME-MEs MEo-V3 MEo-V4 MEs-S4 MEs-S5`};
+
 const MAPS=[
   {name:'AZOTEA',build:buildRooftop,HX:80,HZ:46,base:68,edges:true,hemi:[0xffffff,0xb9a8c8,.64],sun:[0xfff1dc,.5,-20,40,18],fog:[0xd6e9ff,150,420],ink:0x1d1a22,rim:[0,0],lift:[0,0,0],gain:[1,1,1],sat:1,k:.45,ca:.012,con:.25},
   {name:'ATARDECER',build:buildSunset,HX:76,HZ:58,base:62,edges:false,hemi:[0x8c74d8,0x1e1028,.36],sun:[0xffa868,1.2,-90,26,38],fog:[0x4e2c52,95,400],ink:0x2a1834,rim:[0xff9a5a,.42],lift:[.018,.004,.04],gain:[1.06,.98,.96],sat:.92,k:.38,ca:.009,con:.5,mist:.5,mistC:[.64,.48,.44]},
   {name:'HOTEL AURORA',build:buildHotel,HX:61,HZ:46,base:56,edges:false,hemi:[0x7062b8,0x201228,.33],sun:[0xff9a68,.66,-60,52,-34],fog:[0x2e1a38,80,330],ink:0x24142e,rim:[0xff9a5a,.38],lift:[.012,.003,.03],gain:[1.06,.98,.96],sat:.94,k:.4,ca:.009,con:.5,indK:.38,bake:true,mist:.5,mistC:[.62,.5,.44],
-   spawns:[[[-55,0,-9],[-55,0,-15],[-56,0,-3]],[[56,2.4,-12],[56,2.4,-6],[58,2.4,2]]],nav:HOTEL_NAV}];
+   spawns:[[[-55,0,-9],[-55,0,-15],[-56,0,-3]],[[56,2.4,-12],[56,2.4,-6],[58,2.4,2]]],nav:HOTEL_NAV},
+  {name:'CENTRO',build:buildCity,HX:63,HZ:42,base:56,edges:false,hemi:[0x8a78d0,0x2a1a30,.42],sun:[0xffa070,.85,-70,40,30],fog:[0x47294e,90,360],ink:0x24142e,rim:[0xff9a5a,.4],lift:[.014,.004,.035],gain:[1.06,.98,.96],sat:.95,k:.4,ca:.009,con:.5,indK:.4,mist:.45,mistC:[.62,.48,.46],
+   spawns:[[[-57,0,-5],[-57,0,5],[-59,0,0]],[[57,0,5],[57,0,-5],[59,0,0]]],nav:CITY_NAV,
+   lanes:{north:[[-40,0,-31],[-20,0,-31],[0,0,-31],[20,0,-31],[40,0,-31]],south:[[-40,0,36],[-20,0,36],[0,0,36],[20,0,36],[40,0,36]],alley:[[-33.5,0,-6],[-33.5,0,-28],[0,0,-31],[32.3,0,-28],[32.3,0,-6]],upper:[[-29.4,0,7],[-29.4,0,19],[-11.5,0,20],[0,0,24],[11.5,0,20],[29.2,0,19],[29.2,0,7]]},
+   items:[['hp',-20,0,-31],['ammo',20,0,-31],['ult',0,0,-31],['shield',-20,0,36],['hp',20,0,36],['elite',0,0,22],['str',-29.4,0,24],['agi',29.2,0,24],['ammo',-33.5,0,-17],['hp',32.3,0,-17],['shield',0,0,-17],['agi',-46,0,-26],['str',46,0,27]]}];
 let mapGroup=null,mapId=-1;
 const SET={words:false,mist:true};try{SET.words=localStorage.getItem('astra-words')==='1';SET.mist=localStorage.getItem('astra-mist')!=='0';}catch(e){}
 let CURM=null,NAV=null;
@@ -2195,7 +2268,7 @@ function itemMesh(k){const T0=ITEMT[k],g=new T.Group();
     o.position.copy(c).multiplyScalar(-k2);o.scale.setScalar(k2);const h=new T.Group();h.add(o);g.add(h);g.userData.spin=h;core.visible=false;});}
   return g;}
 function buildItems(){for(const it of ITEMS)scene.remove(it.g);ITEMS.length=0;
-  const L=CURM&&CURM.build===buildHotel?ITEMPTS.hotel:null;if(!L)return;
+  const L=CURM&&(CURM.items||(CURM.build===buildHotel?ITEMPTS.hotel:null));if(!L)return;
   for(const [k,x,y,z] of L){const g=itemMesh(k);g.position.set(x,y+1,z);scene.add(g);ITEMS.push({k,x,y,z,g,t:0});}}
 function giveItem(f,it){const k=it.k,mine=f===player;
   if(k==='hp'){if(f.hp>=f.maxHp)return false;f.hp=Math.min(f.maxHp,f.hp+55);}
@@ -2740,9 +2813,9 @@ function angLerp(a,b,k){let d=b-a;while(d>PI)d-=6.2832;while(d<-PI)d+=6.2832;ret
 /* ---------- rutas de los bots: en cada vida eligen un camino (pasillo norte, centro, corredor sur, callejón o el piso de arriba) para flanquear ---------- */
 var LANES={north:[[-30,0,36.7],[0,0,38],[31.5,0,34]],south:[[-50.5,0,-19],[-50.5,0,-32],[-33,0,-44],[10,0,-44],[37.5,0,-44],[40,0,-34]],
   alley:[[-33,0,-30],[-12.5,0,-44],[22,0,-34.5]],upper:[[-50,5.5,12],[-30,5.5,26],[12,5.5,25],[45.7,5.5,25]]};
-function pickLane(b){if(!LANES||!CURM||CURM.build!==buildHotel){b.laneP=null;return;}
+function pickLane(b){const LN=CURM&&(CURM.lanes||(CURM.build===buildHotel?LANES:null));if(!LN){b.laneP=null;return;}
   const r=Math.random(),k=r<.28?null:r<.48?'north':r<.66?'south':r<.82?'alley':'upper';
-  if(!k){b.laneP=null;return;}const pts=LANES[k].slice();if(b.team===1)pts.reverse();b.laneP=pts;b.laneI=0;b.laneK=k;}
+  if(!k||!LN[k]){b.laneP=null;return;}const pts=LN[k].slice();if(b.team===1)pts.reverse();b.laneP=pts;b.laneI=0;b.laneK=k;}
 function laneGoal(b){ // devuelve el punto de la ruta que toca, o null si ya la terminó
   const P=b.laneP;if(!P)return null;
   while(b.laneI<P.length){const q=P[b.laneI];if(Math.hypot(q[0]-b.pos.x,q[2]-b.pos.z)<4&&Math.abs(q[1]-b.pos.y)<1.5)b.laneI++;else return q;}
@@ -3051,7 +3124,7 @@ function endMatch(){
   for(const id of ['mapSel','teamSel','diff']){const g=grpOf(id);g.dataset.st='map';L.insertBefore(g,sets);}
   sets.dataset.st='settings';sets.classList.add('setsBox');
   $('mapSel').classList.add('mapCards');
-  for(const b of $('mapSel').querySelectorAll('button')){const img={2:'textures/ui/map-hotel.jpg'}[b.dataset.m];b.innerHTML='<span>'+b.textContent+'</span>';
+  for(const b of $('mapSel').querySelectorAll('button')){const img={2:'textures/ui/map-hotel.jpg',3:'textures/ui/map-city.jpg'}[b.dataset.m];b.innerHTML='<span>'+b.textContent+'</span>';
     if(img)b.style.backgroundImage='url('+img+')';else b.style.background=b.dataset.m==='1'?'linear-gradient(160deg,#ff9a5a,#5a2a50)':'linear-gradient(160deg,#9fd8ff,#3a3a6a)';}
   const por=document.createElement('img');por.className='portrait';por.alt='';hero.insertBefore(por,hero.firstChild);
   const updPor=()=>{const src={10:'textures/ui/milena.jpg'}[game.look];por.classList.toggle('none',!src);if(src)por.src=src;};
