@@ -3012,7 +3012,7 @@ function updCamera(dt){if(window.__camOverride)return;if(game.photo){updPhoto(dt
   }
   const cp=Math.cos(camPitch),fx=-Math.sin(camYaw)*cp,fy=Math.sin(camPitch),fz=-Math.cos(camYaw)*cp,rx=Math.cos(camYaw),rz=-Math.sin(camYaw);
   const wn=p.alive&&p.wr>0?p.wrNx*rx+p.wrNz*rz:0; // al correr por un muro, la cámara se aparta del muro
-  camSide+=((ulting?3.2:wn?Math.sign(wn)*1.3:-SHOULDER*(1.25-.2*ads))-camSide)*Math.min(1,dt*(ulting?3:7));
+  camSide+=((ulting?3.2:wn?Math.sign(wn)*1.3:SHOULDER*(1.25-.2*ads))-camSide)*Math.min(1,dt*(ulting?3:7));
   const back=ulting?8.5:2.5-.75*ads;
   _d.set(-fx*back+rx*camSide,-fy*back+.1-.08*ads+(ulting?1.2:0),-fz*back+rz*camSide);let L=_d.length();_d.multiplyScalar(1/L);
   let t=rayWorld(camT,_d,L+.3);
