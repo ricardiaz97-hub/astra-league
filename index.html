@@ -1727,13 +1727,13 @@ function prepVRM(v,g){
   if(humanoid){const hb=humanoid.humanBones;for(const k in hb)v.names[k]=T.PropertyBinding.sanitizeNodeName(nodes[hb[k].node].name||'');}
   else{
     // Tripo GLB uses a Mixamo skeleton rather than VRM humanoid metadata.
-    const rig={hips:'Hips',spine:'Spine',chest:'Spine2',upperChest:'Spine2',neck:'Neck',head:'Head',
+    const rig={hips:'Hips',spine:'Spine',chest:'Spine1',upperChest:'Spine2',neck:'Neck',head:'Head',
       leftShoulder:'LeftShoulder',leftUpperArm:'LeftArm',leftLowerArm:'LeftForeArm',leftHand:'LeftHand',
       rightShoulder:'RightShoulder',rightUpperArm:'RightArm',rightLowerArm:'RightForeArm',rightHand:'RightHand',
       leftUpperLeg:'LeftUpLeg',leftLowerLeg:'LeftLeg',leftFoot:'LeftFoot',leftToes:'LeftToeBase',
       rightUpperLeg:'RightUpLeg',rightLowerLeg:'RightLeg',rightFoot:'RightFoot',rightToes:'RightToeBase'};
-    const names=new Set(nodes.map(n=>n.name||''));
-    for(const k in rig){const name='mixamorig:'+rig[k];if(names.has(name))v.names[k]=name;}
+    const names=new Set(nodes.map(n=>T.PropertyBinding.sanitizeNodeName(n.name||'')));
+    for(const k in rig){const name=T.PropertyBinding.sanitizeNodeName('mixamorig:'+rig[k]);if(names.has(name))v.names[k]=name;}
   }
   const add=[];
   g.scene.traverse(o=>{if(!o.isMesh)return;const om=o.material,map=om.map;if(map){map.encoding=T.LinearEncoding;map.needsUpdate=true;}
