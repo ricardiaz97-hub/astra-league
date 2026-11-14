@@ -31,7 +31,7 @@ WASD moverte · ratón apuntar · clic atacar · Espacio salto, doble salto y ma
 
 Las texturas de `textures/` se generaron con Gemini a partir de la dirección de arte de Ricardo.
 
-`chars/avatar-c.glb` viene de AvatarSample_C de pixiv VRoid Project (permite modificar y redistribuir). `chars/milena.glb` es un personaje de Ricardo Vega. La animación de rodeo con espada viene de Mixamo.
+`chars/avatar-c.glb` viene de AvatarSample_C de pixiv VRoid Project (permite modificar y redistribuir). `chars/milena.glb` es el nuevo modelo de Milena suministrado por el usuario (Tripo, rig Mixamo). La animación de rodeo con espada viene de Mixamo.
 
 
 ## Créditos de recursos

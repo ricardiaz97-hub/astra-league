@@ -1712,17 +1712,29 @@ function buildChar(team,cls,look){
   rimAll(g);scene.add(g);return {g,head,armL,armR,legL,legR,gun,sword,sh,aura,stones};
 }
 /* ---------- personajes 3D de VRoid (VRM aligerado a .glb) ---------- */
-const VRMS={10:{url:'chars/milena.json',h:1.69},11:{url:'chars/avatar-c.json'},12:{url:'chars/ricardo-tripo.json',h:1.84},13:{url:'chars/connie.json',h:1.60},14:{url:'chars/tefa.json',h:1.45},15:{url:'chars/yesy.json',h:1.45},16:{url:'chars/andres.json',h:1.84},17:{url:'chars/isma.json',h:1.83},18:{url:'chars/rebecca.json',h:1.60},19:{url:'chars/armando.json',h:1.75},20:{url:'chars/diego.json',h:1.75},21:{url:'chars/mau.json',h:1.75}}; // el .glb va codificado en JSON para poder publicarse como página
+const VRMS={10:{url:'chars/milena.glb',h:1.69},11:{url:'chars/avatar-c.json'},12:{url:'chars/ricardo-tripo.json',h:1.84},13:{url:'chars/connie.json',h:1.60},14:{url:'chars/tefa.json',h:1.45},15:{url:'chars/yesy.json',h:1.45},16:{url:'chars/andres.json',h:1.84},17:{url:'chars/isma.json',h:1.83},18:{url:'chars/rebecca.json',h:1.60},19:{url:'chars/armando.json',h:1.75},20:{url:'chars/diego.json',h:1.75},21:{url:'chars/mau.json',h:1.75}}; // el .glb va codificado en JSON para poder publicarse como página
 const OUTL=basic(INKC,{side:T.BackSide,skinning:true});OUTL.color=INKCOL;
 OUTL.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n  transformed+=normalize(normal)*.0042;');};
 function loadVRM(k){const v=VRMS[k];if(v.p)return v.p;
   v.p=new Promise(res=>{if(!T.GLTFLoader||!T.SkeletonUtils){res(null);return;}
-    fetch(v.url).then(r=>r.json()).then(o=>{const bin=atob(o.data),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
-      new T.GLTFLoader().parse(u.buffer,'',g=>{try{prepVRM(v,g);res(v);}catch(e){console.warn(e);res(null);}},()=>res(null));}).catch(()=>res(null));});
+    const decode=o=>{const bin=atob(o.data),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u.buffer;};
+    fetch(v.url).then(r=>v.url.endsWith('.json')?r.json().then(decode):r.arrayBuffer()).then(buf=>{
+      new T.GLTFLoader().parse(buf,'',g=>{try{prepVRM(v,g);res(v);}catch(e){console.warn(e);res(null);}},()=>res(null));}).catch(()=>res(null));});
   return v.p;}
 function prepVRM(v,g){
-  const hb=g.parser.json.extensions.VRMC_vrm.humanoid.humanBones,nodes=g.parser.json.nodes;v.names={};
-  for(const k in hb)v.names[k]=T.PropertyBinding.sanitizeNodeName(nodes[hb[k].node].name||'');
+  const nodes=g.parser.json.nodes;v.names={};
+  const humanoid=g.parser.json.extensions&&g.parser.json.extensions.VRMC_vrm&&g.parser.json.extensions.VRMC_vrm.humanoid;
+  if(humanoid){const hb=humanoid.humanBones;for(const k in hb)v.names[k]=T.PropertyBinding.sanitizeNodeName(nodes[hb[k].node].name||'');}
+  else{
+    // Tripo GLB uses a Mixamo skeleton rather than VRM humanoid metadata.
+    const rig={hips:'Hips',spine:'Spine',chest:'Spine2',upperChest:'Spine2',neck:'Neck',head:'Head',
+      leftShoulder:'LeftShoulder',leftUpperArm:'LeftArm',leftLowerArm:'LeftForeArm',leftHand:'LeftHand',
+      rightShoulder:'RightShoulder',rightUpperArm:'RightArm',rightLowerArm:'RightForeArm',rightHand:'RightHand',
+      leftUpperLeg:'LeftUpLeg',leftLowerLeg:'LeftLeg',leftFoot:'LeftFoot',leftToes:'LeftToeBase',
+      rightUpperLeg:'RightUpLeg',rightLowerLeg:'RightLeg',rightFoot:'RightFoot',rightToes:'RightToeBase'};
+    const names=new Set(nodes.map(n=>n.name||''));
+    for(const k in rig){const name='mixamorig:'+rig[k];if(names.has(name))v.names[k]=name;}
+  }
   const add=[];
   g.scene.traverse(o=>{if(!o.isMesh)return;const om=o.material,map=om.map;if(map){map.encoding=T.LinearEncoding;map.needsUpdate=true;}
     const m=new T.MeshToonMaterial({map,gradientMap:grad,skinning:!!o.isSkinnedMesh,transparent:om.transparent,alphaTest:om.alphaTest,side:om.side,depthWrite:om.depthWrite,color:om.color});
