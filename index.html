@@ -570,7 +570,7 @@ body.story #top{visibility:hidden}
       <div class="seg" id="lookSel"><button data-l="10" class="sel">MILENA</button><button data-l="11">AVATAR C</button><button data-l="0">RIZOS</button><button data-l="1">MELENA</button></div>
     </div>
     <div class="sets" style="--i:3">
-      <div class="grp"><div class="lbl">MAPA</div><div class="seg" id="mapSel"><button data-m="3">CENTRO</button><button data-m="2" class="sel">HOTEL</button><button data-m="1">ATARDECER</button><button data-m="0">AZOTEA</button></div><div class="seg" id="todSel"><span>HORA EN CENTRO</span><button data-t="dusk">ATARDECER</button><button data-t="day">DÍA · 2 PM</button></div></div>
+      <div class="grp"><div class="lbl">MAPA</div><div class="seg" id="mapSel"><button data-m="4">MERCADO</button><button data-m="3">CENTRO</button><button data-m="2" class="sel">HOTEL</button><button data-m="1">ATARDECER</button><button data-m="0">AZOTEA</button></div><div class="seg" id="todSel"><span>HORA EN CENTRO</span><button data-t="dusk">ATARDECER</button><button data-t="day">DÍA · 2 PM</button></div></div>
       <div class="grp"><div class="lbl">ARMA PRINCIPAL</div><div class="seg" id="primSel"><button data-g="rifle">RIFLE</button><button data-g="smg">SUBFUSIL</button><button data-g="shotgun">ESCOPETA</button><button data-g="burst">RÁFAGA</button><button data-g="lance">LANZA</button></div></div>
       <div class="grp"><div class="lbl">ARMA SECUNDARIA</div><div class="seg" id="secSel"><button data-g="rifle">RIFLE</button><button data-g="smg">SUBFUSIL</button><button data-g="shotgun">ESCOPETA</button><button data-g="burst">RÁFAGA</button><button data-g="lance">LANZA</button></div></div>
       <div class="grp"><div class="lbl">EQUIPOS</div><div class="seg" id="teamSel"><button data-t="3">3 VS 3</button><button data-t="4">4 VS 4</button><button data-t="5">5 VS 5</button></div></div>
@@ -1080,6 +1080,12 @@ function loadCity(n,x,z,ry,sc){const want=CURM;const put=src=>{if(CURM!==want||!
       new T.GLTFLoader().parse(u.buffer,'',g=>{g.scene.traverse(m=>{if(!m.isMesh)return;const om=m.material,map=om.map;if(map)map.encoding=T.LinearEncoding;
         const cut=om.transparent||om.alphaTest>0||(om.name||'').toLowerCase().includes('lea');m.material=toon(0xffffff,{map,alphaTest:cut?.5:0,side:cut?T.DoubleSide:T.FrontSide});if(!map)m.material.color.copy(om.color);});res(g.scene);},()=>res(null));})).catch(()=>null)};}
   c.p.then(src=>{if(src)put(src);});}
+const LOWPOLY={};
+function lowpolySource(url){if(!LOWPOLY[url])LOWPOLY[url]=new Promise(resolve=>new T.GLTFLoader().load(url,g=>{g.scene.traverse(m=>{if(!m.isMesh)return;const old=m.material,map=old&&old.map;if(map)map.encoding=T.LinearEncoding;
+    m.material=toon(0xffffff,{map,alphaTest:old&&old.alphaTest>0 ? .5 : 0,side:T.DoubleSide});if(old&&!map&&old.color)m.material.color.copy(old.color);m.castShadow=true;m.receiveShadow=true;});g.scene.updateMatrixWorld(true);resolve(g.scene);},undefined,()=>resolve(null)));return LOWPOLY[url];}
+function placeLowpoly(url,x,y,z,ry,size){const want=CURM;lowpolySource(url).then(src=>{if(!src||CURM!==want||!mapGroup)return;const o=T.SkeletonUtils?T.SkeletonUtils.clone(src):src.clone(true);o.position.set(0,0,0);o.rotation.set(0,0,0);o.scale.set(1,1,1);
+    const b=new T.Box3().setFromObject(o),s=b.getSize(new V3()),c=b.getCenter(new V3()),k=size?size/Math.max(s.x,s.y,s.z):1,sy=url.includes('market-model/') ? .65 : 1;o.scale.set(k,k*sy,k);o.position.set(-c.x*k,-b.min.y*k*sy,-c.z*k);
+    const h=new T.Group();h.add(o);h.position.set(x,y,z);h.rotation.y=ry||0;h.traverse(m=>{if(m.isMesh){m.userData.noShadow=1;m.castShadow=m.receiveShadow=false;}});mapGroup.add(h);});}
 function buildHotel(){
   BAKE=true;DECO.length=0;
   const Q='sunset2/',C='concrete/conc',ORA=0xff7a1a,CY=0x3fe0ff,RED=0xff3040;let cI=0;const cv=()=>C+(1+(cI++*5)%18);
@@ -1542,6 +1548,57 @@ const CITY_NAV={n:{W0:[-56,0,0],WN:[-56,0,-31],WS:[-56,0,36],V1:[-40,0,0],V2:[-2
      N1-N2 N2-N3 N3-N4 N4-N5 N3-X1 AW-AWs AW-AWn AWn-N1 AWn-N2 AE-AEs AE-AEn AEn-N4 AEn-N5 S1-S2 S2-S3 S3-S4 S4-S5 S3-MS MS-MI0 MI0-MI1 MI0-MI2 MI1-MN1 MI2-MN2 MI1-MW MI2-ME
      MW-MWo MW-MWs MWo-V2 MWo-V1 MWs-S1 MWs-S2 ME-MEo ME-MEs MEo-V3 MEo-V4 MEs-S4 MEs-S5`};
 
+/* ---------- NIVEL 1: mercado de Olocuilta y evacuación en la feria ----------
+   Sur: plaza/catedral. Interior: dos plantas, atrio y pasillo central despejado.
+   Norte: recorrido abierto hasta la línea de defensa y la rueda de la feria. */
+function buildMarket(){
+  BAKE=false;DECO.length=0;MAPFX.indoor=[];MAPFX.lamps=[];
+  const BLUE=0x245a91,ROOF=0x164d87,ORANGE=0xe88136;
+  const B=(x,z,w,h,d,y,c)=>addBox(x,z,w,h,d,y,c);
+  B(0,-55,158,1,360,-1,0x756c62);B(0,85,138,.24,72,-.03,0x9b8875);B(0,-105,138,.24,240,-.03,0x8b8278);
+  B(0,-96,14,.08,214,.1,0x55585a);B(-14,-96,1,.08,214,.12,0xd5c9a7);B(14,-96,1,.08,214,.12,0xd5c9a7);
+  // Two-story market: broad, open central aisle, covered stalls and surrounding loops.
+  B(0,34,66,.7,58,0,0xb8a58c);B(-31,34,2,15,58,.35,0xe7d1a1);B(31,34,2,15,58,.35,0xe7d1a1);
+  B(-18,5,28,15,2,.35,0xe7d1a1);B(18,5,28,15,2,.35,0xe7d1a1);
+  B(-19,63,25,2.4,2,14,0xe7d1a1);B(19,63,25,2.4,2,14,0xe7d1a1);B(0,63,14,2.4,2,14,0xe7d1a1);
+  B(0,62.3,16,.6,2.5,16.4,BLUE);for(let x=-27;x<=27;x+=9){B(x,66,1.15,15,1.15,.35,0xd3b58d);B(x,66,1.55,.55,1.55,14.8,0xe6cca1);}
+  // Blue corrugated market roof profile, clerestory, and yellow-green louver bays.
+  B(0,32,68,1.2,60,17,ROOF);B(0,34,29,4,8,17.5,0x286aa5);
+  for(const x of [-32.2,32.2])for(const z of [18,26,34,42,50]){B(x,z,.35,3.2,5.8,10.4,0x92994a);B(x,z-2.5,.45,.28,.25,13.4,0xc2b176);B(x,z+2.5,.45,.28,.25,13.4,0xc2b176);}
+  // Upper galleries leave an atrium open; east side has the intact ramp route.
+  B(-23,34,14,.8,52,7.4,0xb7a388);B(23,34,14,.8,52,7.4,0xb7a388);
+  B(-6,60,20,.8,7,7.4,0xb7a388);B(7,60,19,.8,7,7.4,0xb7a388);B(-10,8,13,.8,7,7.4,0xb7a388);B(10,8,13,.8,7,7.4,0xb7a388);
+  for(let i=0;i<12;i++){const z=58-i*1.35;B(23,z,7,.68,1.6,i*.62,0x937c65);}for(let z=51;z>=19;z-=5)B(23,z,1.2,.35,1,8.3,ORANGE);
+  // Rear broken crossing, wall-run face and landing are well beyond the ramp.
+  B(-14,8,4,.7,12,7.4,0x887665);B(14,8,4,.7,12,7.4,0x887665);B(0,10,1,8,7,7.5,ORANGE);
+  B(-2.2,1.5,9,.8,7,7.4,0xb7a388);B(0,-3,10,.7,5,7.4,0xb7a388);B(0,-6,8,.7,4,7.4,0xc2ae91);
+  for(let z=13;z<=56;z+=10)for(const x of [-27,-17,17,27])B(x,z,.65,16,.65,.4,0x6c594a);for(let z=14;z<=54;z+=10)B(0,z,62,.45,.55,16.4,0x765d4c);
+  const stall=(x,z,w=9)=>{B(x,z,w,1.15,3,0,0x815c43);B(x,z+1.25,w,.25,.35,1.15,ORANGE);B(x-w*.42,z-.1,.55,1.4,2.8,0,0x665344);B(x+w*.42,z-.1,.55,1.4,2.8,0,0x665344);};
+  for(const z of [18,29,40,51])for(const x of [-23,23])stall(x,z,9);
+  B(-8,38,5,.7,1.5,.08,0x795b43);B(10,24,4,.65,1.4,.08,0x795b43);B(-10,51,4,.65,1.4,.08,0x795b43);
+  for(const x of [-26,-20,20,26])for(const z of [20,31,42,53])B(x,z,1,.2,1,8.2,0x4d6c57);
+  // Southern forecourt, steps, planters and benches.
+  for(let i=0;i<4;i++)B(0,67+i*1.5,28+i*3,.35,1.5,-.15+i*.12,0xb6a48f);
+  for(const x of [-54,54]){B(x,86,14,1,9,0,0x71675d);B(x,86,12,1,7,1,0x597254);}for(const x of [-38,38]){B(x,76,7,.7,2,0,0x75614f);B(x,76,7,.3,.25,.7,0xc3ad8d);}
+  // Long fairground approach with sparse cover, 200 m from rear exit to defense line.
+  for(const z of [-28,-60,-92,-124,-156,-181])for(const x of [-35,35]){B(x,z,8,.35,7,0,0x887866);B(x,z,6,.35,5,.35,0x5c7555);}
+  for(const z of [-28,-60,-92,-124,-156,-181]){B(-9,z,2.4,1.35,1.1,0,0x78674f);B(9,z,2.4,1.35,1.1,0,0x78674f);}
+  for(const x of [-46,-34,-22,22,34,46])B(x,-194,10,1.8,2,0,0x71614f);for(const x of [-51,-17,17,51])B(x,-194,1.1,2.1,2.4,0,ORANGE);
+  B(0,-194,13,.16,1.2,2,0xefe0bb);B(0,-217,48,.18,34,.05,0x817768);
+  const wheel=new T.Group(),ring=new T.Mesh(new T.TorusGeometry(13,.55,6,18),toon(0x4b5960));ring.position.y=20;wheel.add(ring);
+  for(let i=0;i<10;i++){const a=i*Math.PI/5,sp=new T.Mesh(new T.CylinderGeometry(.18,.18,26,5),toon(0x637178));sp.position.set(Math.cos(a)*6.5,20+Math.sin(a)*6.5,0);sp.rotation.z=-a;wheel.add(sp);const pod=new T.Mesh(new T.BoxGeometry(2,2,1.8),toon([0xd7aa55,0x668aa3,0xa7725d,0x8f9b68][i%4]));pod.position.set(Math.cos(a)*13,20+Math.sin(a)*13,0);wheel.add(pod);}
+  wheel.position.set(35,0,-220);scene.add(wheel);B(31,-206,2,13,2,0,0x62594f);B(39,-206,2,13,2,0,0x62594f);
+  B(-42,-220,14,4,8,0,0x82745f);B(-42,-220,14,.5,8,4,ORANGE);B(50,-221,14,4,8,0,0x82745f);
+  for(const z of [1,33,65,97]){placeLowpoly('assets-lowpoly/kaykit-city/building_A.gltf',-65,0,z,0,18);placeLowpoly('assets-lowpoly/kaykit-city/building_A.gltf',65,0,z,Math.PI,18);}
+  for(const z of [-32,-66,-100,-132,-164]){placeLowpoly('assets-lowpoly/kaykit-city/building_A.gltf',-66,0,z,0,15);placeLowpoly('assets-lowpoly/kaykit-city/building_A.gltf',66,0,z,Math.PI,15);}
+  for(const x of [-53,-35,35,53]){placeLowpoly('assets-lowpoly/kaykit-city/bench.gltf',x,.05,82,0,5);placeLowpoly('assets-lowpoly/kaykit-city/streetlight.gltf',x,-.05,-45,0,8);}
+  for(const [file,x,z] of [['crate_tomatoes',-23,18],['crate_carrots',23,18],['crate_lettuce',-23,29],['crate_tomatoes',23,29],['crate_carrots',-23,40],['crate_lettuce',23,40],['crate_tomatoes',-23,51],['crate_carrots',23,51]])placeLowpoly('assets-lowpoly/kaykit-restaurant/'+file+'.gltf',x,1.2,z,0,3.2);
+  placeLowpoly('assets-lowpoly/market-model/olocuilta-market.glb',0,0,34,0,62);
+  B(-80,-55,2,20,360,0,0x665c50);B(80,-55,2,20,360,0,0x665c50);
+  // Cathedral silhouette at the southern edge of the plaza.
+  B(0,113,35,15,2,0,0xd3c3a5);for(const x of [-13,13]){B(x,113,7,23,8,0,0xc6b18d);B(x,113,3,13,8,23,0x85725d);}
+  B(0,113,12,19,8,0,0xd8c8a9);B(0,111,2,4,1,24,0x8c755d);B(0,111,6,.7,1,24.5,0x8c755d);
+}
 const MAPS=[
   {name:'AZOTEA',build:buildRooftop,HX:80,HZ:46,base:68,edges:true,hemi:[0xffffff,0xb9a8c8,.64],sun:[0xfff1dc,.5,-20,40,18],fog:[0xd6e9ff,150,420],ink:0x1d1a22,rim:[0,0],lift:[0,0,0],gain:[1,1,1],sat:1,k:.45,ca:.012,con:.25},
   {name:'ATARDECER',build:buildSunset,HX:76,HZ:58,base:62,edges:false,hemi:[0x8c74d8,0x1e1028,.36],sun:[0xffa868,1.2,-90,26,38],fog:[0x4e2c52,95,400],ink:0x2a1834,rim:[0xff9a5a,.42],lift:[.018,.004,.04],gain:[1.06,.98,.96],sat:.92,k:.38,ca:.009,con:.5,mist:.5,mistC:[.64,.48,.44]},
@@ -1550,7 +1607,9 @@ const MAPS=[
   {name:'CENTRO',build:buildCity,HX:63,HZ:42,base:56,edges:false,day:{hemi:[0xbcd6ff,0x6a5e52,.62],sun:[0xfff0d6,1.15,-30,95,40],fog:[0x9ec0e6,160,520],ink:0x24202c,rim:[0xfff4e0,.22],lift:[0,0,.01],gain:[1,.99,1],sat:1.12,k:.42,ca:.006,con:.5,mist:.12,mistC:[.84,.9,.97]},hemi:[0x8a78d0,0x2a1a30,.42],sun:[0xffa070,.85,-70,40,30],fog:[0x47294e,90,360],ink:0x24142e,rim:[0xff9a5a,.4],lift:[.014,.004,.035],gain:[1.06,.98,.96],sat:.95,k:.4,ca:.009,con:.5,indK:.4,mist:.45,mistC:[.62,.48,.46],
    spawns:[[[-57,0,-5],[-57,0,5],[-59,0,0]],[[57,0,5],[57,0,-5],[59,0,0]]],nav:CITY_NAV,
    lanes:{north:[[-40,0,-31],[-20,0,-31],[0,0,-31],[20,0,-31],[40,0,-31]],south:[[-40,0,36],[-20,0,36],[0,0,36],[20,0,36],[40,0,36]],alley:[[-33.5,0,-6],[-33.5,0,-28],[0,0,-31],[32.3,0,-28],[32.3,0,-6]],upper:[[-29.4,0,7],[-29.4,0,19],[-11.5,0,20],[0,0,24],[11.5,0,20],[29.2,0,19],[29.2,0,7]]},
-   items:[['hp',-20,0,-31],['ammo',20,0,-31],['ult',0,0,-31],['shield',-20,0,36],['hp',20,0,36],['elite',0,0,22],['str',-29.4,0,24],['agi',29.2,0,24],['ammo',-33.5,0,-17],['hp',32.3,0,-17],['shield',0,0,-17],['agi',-46,0,-26],['str',46,0,27]]}];
+   items:[['hp',-20,0,-31],['ammo',20,0,-31],['ult',0,0,-31],['shield',-20,0,36],['hp',20,0,36],['elite',0,0,22],['str',-29.4,0,24],['agi',29.2,0,24],['ammo',-33.5,0,-17],['hp',32.3,0,-17],['shield',0,0,-17],['agi',-46,0,-26],['str',46,0,27]]},
+  {name:'MERCADO OLOCUILTA',build:buildMarket,HX:79,HZ:232,base:24,edges:false,hemi:[0xffe5be,0x77634d,.76],sun:[0xffd18b,.86,-42,50,75],fog:[0xb9a995,210,620],ink:0x382d26,rim:[0xffb35e,.16],lift:[.02,.012,.004],gain:[1.02,1,.96],sat:.9,k:.29,ca:.003,con:.16,
+   spawns:[[[-23,0,35],[-23,0,29],[-23,0,41]],[[23,0,35],[23,0,29],[23,0,41]]],nav:{n:{A:[-23,0,35],B:[0,0,35],C:[23,0,35],D:[-23,0,18],E:[0,0,18],F:[23,0,18],G:[-23,0,52],H:[0,0,52],I:[23,0,52],J:[0,0,64],K:[0,0,82],L:[0,0,20],M:[0,0,4],N:[0,0,-12],O:[0,0,-42],P:[0,0,-72],Q:[0,0,-104],R:[0,0,-138],S:[0,0,-151],T:[0,0,-174],U:[-35,0,-80],V:[35,0,-80]},e:'A-B B-C A-D D-E E-F F-C A-G G-H H-I I-C G-H H-J J-K J-L L-M M-N N-O O-P P-Q Q-R R-S S-T O-U U-Q O-V V-Q'}}];
 let mapGroup=null,mapId=-1;
 const SET={words:false,mist:true};try{SET.words=localStorage.getItem('astra-words')==='1';SET.mist=localStorage.getItem('astra-mist')!=='0';}catch(e){}
 let CURM=null,NAV=null;
