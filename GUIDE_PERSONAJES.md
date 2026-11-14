@@ -47,9 +47,9 @@ Cris, Gaby, Jenny, Julio y Speaker todavía **no tienen modelo propio**: en la l
 
 1. **Modelo:** GLB en `chars/<nombre>.glb` (o `.json` base64 si lo necesitas para publicar).
 2. **Slot nuevo en `VRMS`:** usa un número libre (23, 24…; el 22 ya es Fiorella y los 31–34 son del modo historia). Ejemplo:
-   `22:{url:'chars/nuevo.glb',h:1.70}`
+   `23:{url:'chars/nuevo.glb',h:1.70}`
 3. **Precarga:** en la línea que dice `for(const k of [10,11,12,...,21,22])loadVRM(k)...` (cerca de `window.__VRMS=VRMS`, línea ~3806) **agrega el número nuevo**. Si no, el modelo solo carga cuando se elige y tarda en aparecer.
-4. **Lista de selección `CH`** (línea ~3688): agrega `['slug','NOMBRE',22]`. El primer valor es el nombre de archivo de sus retratos; el último es el slot. Si el personaje ya estaba en la lista usando otro slot, solo cambia ese número.
+4. **Lista de selección `CH`** (línea ~3688): agrega `['slug','NOMBRE',23]`. El primer valor es el nombre de archivo de sus retratos; el último es el slot. Si el personaje ya estaba en la lista usando otro slot, solo cambia ese número.
 5. **Retratos** (el menú los pide por nombre, sin ellos sale un cuadro vacío):
    - `textures/chars/<slug>.webp` o `.png`: arte grande de la ficha. La zona `.cArt .frame` tiene aspecto 2:5; la figura debe llenar la altura sin cortar cabeza ni zapatos. Si un PNG tiene espacio transparente ancho a los lados, usa una clase CSS específica como `fitTall` con `object-fit: cover` solo después de comprobar que conserva manos y zapatos.
    - `textures/chars/<slug>-face.jpg` o un PNG transparente alternativo: retrato cercano para la tarjeta del roster (aspecto 4:5), con la cara y los hombros ocupando la tarjeta. No pongas el cuerpo entero en esta tarjeta: queda diminuto, como pasó con Fiorella.
