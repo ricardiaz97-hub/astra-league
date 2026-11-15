@@ -1448,11 +1448,11 @@ function buildCity(){
   const HKP=[];let hkI=0;const bld=(k,x,z,ry)=>{const b=BLD[k];const c=Math.cos(ry),s=Math.sin(ry);let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
     for(const [px,pz] of [[b[1],b[3]],[b[2],b[3]],[b[1],b[4]],[b[2],b[4]]]){const wx=x+px*c+pz*s,wz=z-px*s+pz*c;x0=Math.min(x0,wx);x1=Math.max(x1,wx);z0=Math.min(z0,wz);z1=Math.max(z1,wz);}
     solid(x0,x1,z0,z1,0,b[5]);HKP.push([(x0+x1)/2,(z0+z1)/2,x1-x0,z1-z0,b[5],ry,hkI++]);};
-  // calles: avenida de 4 carriles (z=0), calle norte (z=-31) y sur (z=36) de 2 carriles, transversal (x=0)
+  // calles: avenida de 4 carriles (z=0), calle norte (z=-31) y sur (z=78) de 2 carriles, transversal (x=0)
   for(let x=-63;x<=63;x+=6){if(Math.abs(x)<12)continue;put('Street_4Lane',x,0,0);}
   put('Street_4WayIntersection',0,0,0);
-  for(const zc of [-31,36])for(let x=-63;x<=63;x+=6){if(Math.abs(x)<6)continue;put('Street_2Lane',x,zc,0);}
-  for(const zc of [-31,36]){put('Street_Asphalt_9x9',4.5,zc+4.5,0);put('Street_Asphalt_9x9',-4.5,zc+4.5,PI/2);put('Street_Asphalt_9x9',4.5,zc-4.5,-PI/2);put('Street_Asphalt_9x9',-4.5,zc-4.5,PI);}
+  for(const zc of [-31,78])for(let x=-63;x<=63;x+=6){if(Math.abs(x)<6)continue;put('Street_2Lane',x,zc,0);}
+  for(const zc of [-31,78]){put('Street_Asphalt_9x9',4.5,zc+4.5,0);put('Street_Asphalt_9x9',-4.5,zc+4.5,PI/2);put('Street_Asphalt_9x9',4.5,zc-4.5,-PI/2);put('Street_Asphalt_9x9',-4.5,zc-4.5,PI);}
   for(let z=-25;z<=-15;z+=6)put('Street_2Lane',0,z,PI/2);for(let z=15;z<=27;z+=6)put('Street_2Lane',0,z,PI/2);
   put('Decal_Crosswalk',-14,0,PI/2);put('Decal_Crosswalk',14,0,PI/2);
   // manzana norte (frente a la avenida): mediano, callejón, grande | grande, callejón, pequeño, callejón
@@ -1461,27 +1461,36 @@ function buildCity(){
   bld('S',-40,9.5,PI);bld('M',40,9,PI);
   // fondo: ciudad alrededor (también hace de muro)
   for(const [k,x] of [['L',-46],['M',-22],['S',-2],['L',22],['M',46]])bld(k,x,-37.5,0);
-  for(const [k,x] of [['M',-46],['L',-20],['S',4],['M',24],['L',48]])bld(k,x,42.5,PI);
+  for(const [k,x] of [['M',-46],['L',-20],['S',4],['M',24],['L',48]])bld(k,x,87.5,PI);
   for(const [k,z] of [['L',-20],['M',14]]){bld(k,-66,z,PI/2);bld(k,66,z,-PI/2);}
-  solid(-75,-64,-40,44,0,30);solid(64,75,-40,44,0,30);solid(-75,75,-46,-37.5,0,30);solid(-75,75,42.5,52,0,30);
-  // MERCADO: nave con techo, puertas por los cuatro lados y puestos adentro (la ruta indirecta)
+  solid(-75,-64,-40,97,0,30);solid(64,75,-40,97,0,30);solid(-75,75,-46,-37.5,0,30);solid(-75,75,87.5,97,0,30);
+  // MERCADO DE OLOCUILTA: modelo Tripo a escala de edificio, con acceso frontal amplio.
   const W=(x0,x1,z0,z1,y0,y1,tx,tile)=>addBox((x0+x1)/2,(z0+z1)/2,x1-x0,y1-y0,z1-z0,y0,0xd8ccd0,undefined,tx||'city/brick.jpg',tile||2.5);
-  const MX=26,Z0=10,Z1=30,H=6;
-  for(const [a,b] of [[-MX,-15],[-8,8],[15,MX]])W(a,b,Z0-.25,Z0+.25,0,H);W(-15,-8,Z0-.25,Z0+.25,3.6,H);W(8,15,Z0-.25,Z0+.25,3.6,H); // frente: dos portones
-  for(const [a,b] of [[-MX,-4],[4,MX]])W(a,b,Z1-.25,Z1+.25,0,H);W(-4,4,Z1-.25,Z1+.25,3.6,H); // atrás: un portón
-  for(const s of [-1,1]){const x=s*MX;W(x-.25,x+.25,Z0,16,0,H);W(x-.25,x+.25,22,Z1,0,H);W(x-.25,x+.25,16,22,3.6,H);} // costados
-  W(-MX-.3,MX+.3,Z0-.3,Z1+.3,H,H+.5,'city/concrete.jpg',3);
-  {const f=new T.Mesh(new T.PlaneGeometry(2*MX,Z1-Z0),toon(0xd8ccd0));f.rotation.x=-PI/2;f.position.set(0,.02,(Z0+Z1)/2);useTex(f.material,'city/marble.jpg');f.geometry.attributes.uv.array.forEach((v,i,a)=>a[i]=v*(i%2?(Z1-Z0)/4:MX/2));scene.add(f);}
-  const MV=MAPFX.indoor;MV.push({x0:-MX,x1:MX,y0:0,y1:H,z0:Z0,z1:Z1});
-  const STALLS=[[-18,15,4,1.6],[-18,25,4,1.6],[-6,18,1.6,4],[6,22,1.6,4],[18,15,4,1.6],[18,25,4,1.6],[0,14,3,1.2],[-10,26,2.4,1.2],[10,26,2.4,1.2]],stallM=[];
-  for(const [x,z,w,d] of STALLS)stallM.push(W(x-w/2,x+w/2,z-d/2,z+d/2,0,1.25,'city/metal.jpg',2)); // puestos: cobertura baja
-  // supermercado: estantes en las paredes, refrigeradores al frente, cajas de fruta en los puestos
+  const MARKET_WIDTH=60,MARKET_DEPTH=58.4,MARKET_HEIGHT=28.4,MARKET_FRONT=10,MARKET_BACK=MARKET_FRONT+MARKET_DEPTH,MARKET_CENTER=(MARKET_FRONT+MARKET_BACK)/2,H=MARKET_HEIGHT;
+  const PROP_X=MARKET_WIDTH/52,PROP_Z=MARKET_DEPTH/20;
+  const marketX=x=>x*PROP_X,marketZ=z=>MARKET_FRONT+(z-10)*PROP_Z;
+  const marketSolid=(x0,x1,z0,z1,y0,y1)=>solid(marketX(x0),marketX(x1),marketZ(z0),marketZ(z1),y0,y1);
+  // Block out the new shell while leaving the broad front, rear, and side entrances walkable.
+  const MH=MARKET_WIDTH/2,DOOR=8.5,SIDE0=marketZ(16),SIDE1=marketZ(22),WT=.7;
+  for(const [a,b] of [[-MH,-DOOR],[DOOR,MH]]){solid(a,b,MARKET_FRONT-WT,MARKET_FRONT+WT,0,MARKET_HEIGHT);solid(a,b,MARKET_BACK-WT,MARKET_BACK+WT,0,MARKET_HEIGHT);}
+  for(const [a,b] of [[MARKET_FRONT,SIDE0],[SIDE1,MARKET_BACK]]){solid(-MH-WT,-MH+WT,a,b,0,MARKET_HEIGHT);solid(MH-WT,MH+WT,a,b,0,MARKET_HEIGHT);}
+  const MV=MAPFX.indoor;MV.push({x0:-MARKET_WIDTH/2,x1:MARKET_WIDTH/2,y0:0,y1:MARKET_HEIGHT,z0:MARKET_FRONT,z1:MARKET_BACK});
+  fetch('props/olocuilta-market.glb').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.arrayBuffer();}).then(buf=>new Promise((resolve,reject)=>new T.GLTFLoader().parse(buf,'',resolve,reject))).then(gltf=>{
+    if(CURM!==M||!mapGroup)return;const model=gltf.scene,bb=new T.Box3().setFromObject(model),sz=bb.getSize(new V3()),c=bb.getCenter(new V3()),k=MARKET_WIDTH/sz.x;
+    model.scale.setScalar(k);model.position.set(-c.x*k,-bb.min.y*k,-c.z*k);
+    const holder=new T.Group();holder.rotation.y=PI;holder.position.set(0,0,MARKET_CENTER);holder.add(model);
+    holder.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;}});mapGroup.add(holder);shadeAll(holder);
+  }).catch(e=>console.warn('No se pudo cargar el mercado de Olocuilta:',e));
+  const STALLS=[[-23,12,5,2],[-23,15,5,2],[-12,17,2,5],[12,17,2,5],[23,12,5,2],[23,15,5,2],[-23,23,5,2],[-12,25,2,5],[12,25,2,5],[23,23,5,2],[-12,28,5,2],[12,28,5,2]].map(([x,z,w,d])=>[marketX(x),marketZ(z),w,d]),stallM=[];
+  for(const [x,z,w,d] of STALLS)stallM.push(W(x-w/2,x+w/2,z-d/2,z+d/2,0,1.25,'city/metal.jpg',2)); // puestos y bloqueos de paso
+  // blockout de estantes perimetrales y cajas de fruta en los puestos
   const MKP=[];
   for(const x of [-24.2,-21.6,-19,-16.4,-13.8,-11.2,-8.6,8.6,11.2,13.8,16.4,19,21.6,24.2])MKP.push(['Shelf',x,29.1,0,2.1,2.5]);
   for(const s of [-1,1])for(const z of [11.6,14.2,23.8,26.4])MKP.push(['Shelf',s*25.2,z,s>0?PI/2:-PI/2,2.1,2.5]);
-  solid(-25.5,-3.9,28.4,29.8,0,2.2);solid(3.9,25.5,28.4,29.8,0,2.2);for(const s of [-1,1]){solid(s>0?24.5:-25.8,s>0?25.8:-24.5,10.3,15.6,0,2.2);solid(s>0?24.5:-25.8,s>0?25.8:-24.5,22.4,27.8,0,2.2);}
-  for(const x of [-6.6,-4.4,-2.2,2.2,4.4,6.6])MKP.push([x<0?'Fridge':'Fridge2',x,10.75,0,2.15,1.1]);solid(-7.6,7.6,10.2,11.3,0,2.2);
+  marketSolid(-25.5,-3.9,28.4,29.8,0,2.2);marketSolid(3.9,25.5,28.4,29.8,0,2.2);for(const s of [-1,1]){marketSolid(s>0?24.5:-25.8,s>0?25.8:-24.5,10.3,15.6,0,2.2);marketSolid(s>0?24.5:-25.8,s>0?25.8:-24.5,22.4,27.8,0,2.2);}
+  // Keep the center of the enlarged entrance clear for the playable characters.
   for(const [x,z] of [[-23.5,11.5],[23.5,11.5],[-2.5,28],[2.5,28.2],[-24,20.5],[24,17.5]])for(let i=0;i<3;i++)MKP.push(['CardboardBox',x+(i%2)*.7,z+(i>1?.6:0),rand(-.3,.3),.55,0,0,i>1?.55:0]);
+  for(const p of MKP){p[1]=marketX(p[1]);p[2]=marketZ(p[2]);}
   propLib('mk').then(sc=>{if(!sc||CURM!==M)return;const g=new T.Group();(mapGroup||scene).add(g);
     for(const [n,x,z,ry,H,L,D,y] of MKP){const src=sc.getObjectByName('MK_'+n);if(!src)continue;const o=src.clone(true);o.position.set(0,0,0);o.rotation.set(0,0,0);o.scale.set(1,1,1);o.updateMatrixWorld(true);
       const b=new T.Box3().setFromObject(o),sz=b.getSize(new V3()),c=b.getCenter(new V3());const turn=sz.z>sz.x?PI/2:0;const lx=turn?sz.z:sz.x,lz=turn?sz.x:sz.z;
@@ -1505,22 +1514,22 @@ function buildCity(){
       src.traverse(m=>{if(!m.isMesh)return;const loc=new T.Matrix4().multiplyMatrices(inv,m.matrixWorld),L=IN[n],im=new T.InstancedMesh(m.geometry,m.material,L.length);
         for(let i=0;i<L.length;i++)im.setMatrixAt(i,_m.multiplyMatrices(L[i],norm).multiply(loc));im.instanceMatrix.needsUpdate=true;im.frustumCulled=false;g.add(im);});}
     g.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;}});shadeAll(g);});
-  // techo con lámparas y letreros de pasillo
-  for(let x=-21;x<=21;x+=7)for(const z of [14,20,26]){const l=new T.Mesh(new T.BoxGeometry(2.4,.08,.35),basic(0xfff3d6));l.position.set(x,H-.12,z);scene.add(l);}
-  for(const [t,x,z,ry] of [['FRUTAS',-18,20,0],['FRUTAS',18,20,0],['BEBIDAS',-16,28,0],['LIMPIEZA',16,28,0],['ABARROTES',-24,13,PI/2],['LÁCTEOS',24,13,-PI/2],['CAJAS',0,11.5,0]]){
+  // iluminación y letreros distribuidos por la nave grande, dejando pasillos abiertos.
+  for(let x=-24;x<=24;x+=12)for(const z of [18,35,52,65]){const l=new T.Mesh(new T.BoxGeometry(3.2,.1,.45),basic(0xfff3d6));l.position.set(marketX(x),H-.18,marketZ(z));scene.add(l);}
+  for(const [t,x,z,ry] of [['FRUTAS',-20,24,0],['FRUTAS',20,24,0],['BEBIDAS',-18,45,0],['LIMPIEZA',18,45,0],['ABARROTES',-26,17,PI/2],['LÁCTEOS',26,17,-PI/2],['CAJAS',0,12,0],['CAJAS',0,65,0]]){
     const cv=document.createElement('canvas');cv.width=512;cv.height=128;const c=cv.getContext('2d');c.fillStyle='#ff7a1a';c.fillRect(0,0,512,128);c.fillStyle='#1d1a22';c.fillRect(8,8,496,112);
     c.font='900 76px Anton, Impact, sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillStyle='#ffd9a8';c.fillText(t,256,68);const tx=new T.CanvasTexture(cv);
-    for(const f of [0,PI]){const sg=new T.Mesh(new T.PlaneGeometry(3,.75),basic(0xffffff,{map:tx}));sg.position.set(x,4.3,z);sg.rotation.y=ry+f;scene.add(sg);}
-    for(const s of [-1,1]){const w=new T.Mesh(new T.CylinderGeometry(.01,.01,H-4.65,4),basic(0x1d1a22));w.position.set(x+Math.cos(ry)*s*1.3,4.65+(H-4.65)/2,z-Math.sin(ry)*s*1.3);scene.add(w);}}
-  for(const [x,z] of [[-14,20],[14,20],[0,20]]){const l=new T.PointLight(0xffc890,.8,16,2);l.position.set(x,5,z);scene.add(l);}
+    const px=marketX(x),pz=marketZ(z);for(const f of [0,PI]){const sg=new T.Mesh(new T.PlaneGeometry(3.5,.9),basic(0xffffff,{map:tx}));sg.position.set(px,5.4,pz);sg.rotation.y=ry+f;scene.add(sg);}
+    for(const s of [-1,1]){const w=new T.Mesh(new T.CylinderGeometry(.015,.015,H-5.85,4),basic(0x1d1a22));w.position.set(px+Math.cos(ry)*s*1.5,5.85+(H-5.85)/2,pz-Math.sin(ry)*s*1.5);scene.add(w);}}
+  for(const [x,z] of [[-20,25],[20,25],[0,39],[0,54]]){const l=new T.PointLight(0xffc890,1.2,26,2);l.position.set(marketX(x),21,marketZ(z));scene.add(l);}
   // monumento en el cruce: tapa la vista larga de la avenida
   addBox(0,0,5,1.1,5,0,0xd8ccd0,undefined,'city/trim.jpg',2);addBox(0,0,1.8,6,1.8,1.1,0xd8ccd0,undefined,'city/concrete.jpg',2);
   const orb=new T.Mesh(new T.OctahedronGeometry(.9,0),basic(ORA));orb.material.color.multiplyScalar(1.6);orb.position.set(0,8,0);scene.add(orb);
   // cobertura en la avenida y las calles: barreras, maceteros y aires acondicionados
   for(const [x,z,w,d] of [[-40,-3,3.4,.7],[-26,4,.7,3],[-14,-5,3,.7],[26,-4,.7,3],[14,5,3,.7],[40,3,3.4,.7],[-48,4.5,.7,2.4],[48,-4.5,.7,2.4]])W(x-w/2,x+w/2,z-d/2,z+d/2,0,1.15,'city/concrete.jpg',2);
-  for(const [x,z] of [[-30,-31],[-12,-29],[12,-33],[30,-31],[-28,36],[-10,38],[12,34],[30,36],[-52,-20],[52,22]]){put('Prop_Planter_Single',x,z,0);solid(x-1,x+1,z-1,z+1,0,.6);}
+  for(const [x,z] of [[-30,-31],[-12,-29],[12,-33],[30,-31],[-28,78],[-10,80],[12,76],[30,78],[-52,-20],[52,22]]){put('Prop_Planter_Single',x,z,0);solid(x-1,x+1,z-1,z+1,0,.6);}
   for(const [x,z] of [[-36,-7],[-24,7],[24,-7],[36,7],[-8,-7.5],[8,7.5]]){put('Sidewalk_Planter',x,z,0);solid(x-1,x+1,z-.9,z+.9,0,.5);}
-  for(const [x,z] of [[-20,-33],[20,-29],[-18,34],[18,38]]){put('Prop_ACUnit',x,z,0);W(x-.6,x+.6,z-.5,z+.5,0,1.05,'city/metal.jpg',2);}
+  for(const [x,z] of [[-20,-33],[20,-29],[-18,76],[18,80]]){put('Prop_ACUnit',x,z,0);W(x-.6,x+.6,z-.5,z+.5,0,1.05,'city/metal.jpg',2);}
   for(let x=-50;x<=50;x+=10){put('Prop_Bollard',x,8.6,0);put('Prop_Bollard',x+5,-8.6,0);}
   // bases: plazas abiertas con espacio detrás
   for(let t=0;t<2;t++){const m=new T.Mesh(new T.CircleGeometry(7,40),basic(0xffffff,{map:RUNE[t],transparent:true}));m.rotation.x=-PI/2;m.position.set(TEAM[t].baseX,.04,0);scene.add(m);TEAM[t].rune=m;}
@@ -1530,9 +1539,9 @@ function buildCity(){
   const grp=new T.Group();scene.add(grp);
   // edificios de Hong Kong: ocupan cada manzana del mapa y, por fuera, varias filas más hasta el horizonte (ya no se acaba la ciudad)
   {let sd=7;const rnd=()=>(sd=(sd*9301+49297)%233280)/233280;
-    for(const [ox,oz,w,d] of [[-100,0,24,110],[100,0,24,110],[0,-62,170,22],[0,68,170,22],[-100,-62,24,22],[100,-62,24,22],[-100,68,24,22],[100,68,24,22]])
+    for(const [ox,oz,w,d] of [[-100,0,24,110],[100,0,24,110],[0,-62,170,22],[0,110,170,22],[-100,-62,24,22],[100,-62,24,22],[-100,110,24,22],[100,110,24,22]])
       for(let x=ox-w/2+8;x<=ox+w/2-8;x+=17)for(let z=oz-d/2+8;z<=oz+d/2-8;z+=17)HKP.push([x+rnd()*3,z+rnd()*3,15+rnd()*4,15+rnd()*4,26+rnd()*26,(rnd()*4|0)*PI/2,(rnd()*5|0),1]);
-    for(const [x,z] of [[-82,-30],[-82,30],[82,-30],[82,30],[-40,-50],[0,-50],[40,-50],[-40,55],[0,55],[40,55]])HKP.push([x,z,16,16,30+rnd()*20,(rnd()*4|0)*PI/2,(rnd()*5|0),1]);
+    for(const [x,z] of [[-82,-30],[-82,30],[82,-30],[82,30],[-40,-50],[0,-50],[40,-50],[-40,95],[0,95],[40,95]])HKP.push([x,z,16,16,30+rnd()*20,(rnd()*4|0)*PI/2,(rnd()*5|0),1]);
     propLib('hk').then(sc=>{if(!sc||CURM!==M)return;const g=new T.Group();(mapGroup||scene).add(g);
       for(const [x,z,W,D,H,ry,i] of HKP){const src=sc.getObjectByName('HK_'+(i%5));if(!src)continue;const o=src.clone(true);o.position.set(0,0,0);o.rotation.set(0,0,0);o.scale.set(1,1,1);
         const bx=new T.Box3().setFromObject(o),sz=bx.getSize(new V3());const q=Math.abs(Math.round(ry/(PI/2)))%2===1;
@@ -1541,9 +1550,9 @@ function buildCity(){
   propLib('city').then(sc=>{if(!sc||CURM!==M)return;for(const [n,x,y,z,ry] of PUT){const src=sc.getObjectByName(n);if(!src)continue;const o=src.clone(true);o.position.set(x,y,z);o.rotation.y=ry;grp.add(o);}
     grp.traverse(o=>{if(o.isMesh){o.castShadow=o.receiveShadow=true;}});shadeAll(grp);});
 }
-const CITY_NAV={n:{W0:[-56,0,0],WN:[-56,0,-31],WS:[-56,0,36],V1:[-40,0,0],V2:[-22,0,0],C1:[-8,0,-3],C2:[8,0,3],C3:[-3,0,-8],C4:[3,0,8],V3:[22,0,0],V4:[40,0,0],E0:[56,0,0],EN:[56,0,-31],ES:[56,0,36],
+const CITY_NAV={n:{W0:[-56,0,0],WN:[-56,0,-31],WS:[-56,0,78],V1:[-40,0,0],V2:[-22,0,0],C1:[-8,0,-3],C2:[8,0,3],C3:[-3,0,-8],C4:[3,0,8],V3:[22,0,0],V4:[40,0,0],E0:[56,0,0],EN:[56,0,-31],ES:[56,0,78],
   N1:[-40,0,-31],N2:[-20,0,-31],N3:[0,0,-31],N4:[20,0,-31],N5:[40,0,-31],X1:[0,0,-17],AW:[-33.5,0,-17],AWs:[-33.5,0,-6],AWn:[-33.5,0,-28],AE:[32.3,0,-17],AEs:[32.3,0,-6],AEn:[32.3,0,-28],
-  S1:[-40,0,36],S2:[-20,0,36],S3:[0,0,36],S4:[20,0,36],S5:[40,0,36],MN1:[-11.5,0,7],MN2:[11.5,0,7],MI1:[-11.5,0,20],MI2:[11.5,0,20],MI0:[0,0,24],MS:[0,0,32.5],MW:[-29.4,0,19],ME:[29.2,0,19],MWo:[-29.4,0,7],MEo:[29.2,0,7],MWs:[-29.4,0,32],MEs:[29.2,0,32]},
+  S1:[-40,0,78],S2:[-20,0,78],S3:[0,0,78],S4:[20,0,78],S5:[40,0,78],MN1:[-5,0,7],MN2:[5,0,7],MI1:[-13.3,0,39.2],MI2:[13.3,0,39.2],MI0:[0,0,50.9],MS:[0,0,75.8],MW:[-31.5,0,36.3],ME:[31.5,0,36.3],MWo:[-31.5,0,7],MEo:[31.5,0,7],MWs:[-31.5,0,74.4],MEs:[31.5,0,74.4]},
   e:`W0-WN W0-WS W0-V1 WN-N1 WS-S1 V1-V2 V1-AWs V2-AWs V2-C1 V2-C3 V2-MN1 C1-C3 C1-C4 C3-X1 C3-C2 C2-C4 C2-V3 C4-V3 C4-MN2 C1-MN1 V3-AEs V3-MN2 V3-V4 V4-AEs V4-E0 E0-EN E0-ES EN-N5 ES-S5
      N1-N2 N2-N3 N3-N4 N4-N5 N3-X1 AW-AWs AW-AWn AWn-N1 AWn-N2 AE-AEs AE-AEn AEn-N4 AEn-N5 S1-S2 S2-S3 S3-S4 S4-S5 S3-MS MS-MI0 MI0-MI1 MI0-MI2 MI1-MN1 MI2-MN2 MI1-MW MI2-ME
      MW-MWo MW-MWs MWo-V2 MWo-V1 MWs-S1 MWs-S2 ME-MEo ME-MEs MEo-V3 MEo-V4 MEs-S4 MEs-S5`};
@@ -1604,10 +1613,10 @@ const MAPS=[
   {name:'ATARDECER',build:buildSunset,HX:76,HZ:58,base:62,edges:false,hemi:[0x8c74d8,0x1e1028,.36],sun:[0xffa868,1.2,-90,26,38],fog:[0x4e2c52,95,400],ink:0x2a1834,rim:[0xff9a5a,.42],lift:[.018,.004,.04],gain:[1.06,.98,.96],sat:.92,k:.38,ca:.009,con:.5,mist:.5,mistC:[.64,.48,.44]},
   {name:'HOTEL AURORA',build:buildHotel,HX:61,HZ:46,base:56,edges:false,hemi:[0x7062b8,0x201228,.33],sun:[0xff9a68,.66,-60,52,-34],fog:[0x2e1a38,80,330],ink:0x24142e,rim:[0xff9a5a,.38],lift:[.012,.003,.03],gain:[1.06,.98,.96],sat:.94,k:.4,ca:.009,con:.5,indK:.38,bake:true,mist:.5,mistC:[.62,.5,.44],
    spawns:[[[-55,0,-9],[-55,0,-15],[-56,0,-3]],[[56,2.4,-12],[56,2.4,-6],[58,2.4,2]]],nav:HOTEL_NAV},
-  {name:'CENTRO',build:buildCity,HX:63,HZ:42,base:56,edges:false,day:{hemi:[0xbcd6ff,0x6a5e52,.62],sun:[0xfff0d6,1.15,-30,95,40],fog:[0x9ec0e6,160,520],ink:0x24202c,rim:[0xfff4e0,.22],lift:[0,0,.01],gain:[1,.99,1],sat:1.12,k:.42,ca:.006,con:.5,mist:.12,mistC:[.84,.9,.97]},hemi:[0x8a78d0,0x2a1a30,.42],sun:[0xffa070,.85,-70,40,30],fog:[0x47294e,90,360],ink:0x24142e,rim:[0xff9a5a,.4],lift:[.014,.004,.035],gain:[1.06,.98,.96],sat:.95,k:.4,ca:.009,con:.5,indK:.4,mist:.45,mistC:[.62,.48,.46],
+  {name:'CENTRO',build:buildCity,HX:63,HZ:100,base:56,edges:false,day:{hemi:[0xbcd6ff,0x6a5e52,.62],sun:[0xfff0d6,1.15,-30,95,40],fog:[0x9ec0e6,160,520],ink:0x24202c,rim:[0xfff4e0,.22],lift:[0,0,.01],gain:[1,.99,1],sat:1.12,k:.42,ca:.006,con:.5,mist:.12,mistC:[.84,.9,.97]},hemi:[0x8a78d0,0x2a1a30,.42],sun:[0xffa070,.85,-70,40,30],fog:[0x47294e,90,360],ink:0x24142e,rim:[0xff9a5a,.4],lift:[.014,.004,.035],gain:[1.06,.98,.96],sat:.95,k:.4,ca:.009,con:.5,indK:.4,mist:.45,mistC:[.62,.48,.46],
    spawns:[[[-57,0,-5],[-57,0,5],[-59,0,0]],[[57,0,5],[57,0,-5],[59,0,0]]],nav:CITY_NAV,
-   lanes:{north:[[-40,0,-31],[-20,0,-31],[0,0,-31],[20,0,-31],[40,0,-31]],south:[[-40,0,36],[-20,0,36],[0,0,36],[20,0,36],[40,0,36]],alley:[[-33.5,0,-6],[-33.5,0,-28],[0,0,-31],[32.3,0,-28],[32.3,0,-6]],upper:[[-29.4,0,7],[-29.4,0,19],[-11.5,0,20],[0,0,24],[11.5,0,20],[29.2,0,19],[29.2,0,7]]},
-   items:[['hp',-20,0,-31],['ammo',20,0,-31],['ult',0,0,-31],['shield',-20,0,36],['hp',20,0,36],['elite',0,0,22],['str',-29.4,0,24],['agi',29.2,0,24],['ammo',-33.5,0,-17],['hp',32.3,0,-17],['shield',0,0,-17],['agi',-46,0,-26],['str',46,0,27]]},
+   lanes:{north:[[-40,0,-31],[-20,0,-31],[0,0,-31],[20,0,-31],[40,0,-31]],south:[[-40,0,78],[-20,0,78],[0,0,78],[20,0,78],[40,0,78]],alley:[[-33.5,0,-6],[-33.5,0,-28],[0,0,-31],[32.3,0,-28],[32.3,0,-6]],upper:[[-31.5,0,7],[-31.5,0,36.3],[-13.3,0,39.2],[0,0,50.9],[13.3,0,39.2],[31.5,0,36.3],[31.5,0,7]]},
+   items:[['hp',-20,0,-31],['ammo',20,0,-31],['ult',0,0,-31],['shield',-20,0,78],['hp',20,0,78],['elite',0,0,50.9],['str',-29.4,0,50.9],['agi',29.2,0,50.9],['ammo',-33.5,0,-17],['hp',32.3,0,-17],['shield',0,0,-17],['agi',-46,0,-26],['str',46,0,27]]},
   {name:'MERCADO OLOCUILTA',build:buildMarket,HX:79,HZ:232,base:24,edges:false,hemi:[0xffe5be,0x77634d,.76],sun:[0xffd18b,.86,-42,50,75],fog:[0xb9a995,210,620],ink:0x382d26,rim:[0xffb35e,.16],lift:[.02,.012,.004],gain:[1.02,1,.96],sat:.9,k:.29,ca:.003,con:.16,
    spawns:[[[-23,0,35],[-23,0,29],[-23,0,41]],[[23,0,35],[23,0,29],[23,0,41]]],nav:{n:{A:[-23,0,35],B:[0,0,35],C:[23,0,35],D:[-23,0,18],E:[0,0,18],F:[23,0,18],G:[-23,0,52],H:[0,0,52],I:[23,0,52],J:[0,0,64],K:[0,0,82],L:[0,0,20],M:[0,0,4],N:[0,0,-12],O:[0,0,-42],P:[0,0,-72],Q:[0,0,-104],R:[0,0,-138],S:[0,0,-151],T:[0,0,-174],U:[-35,0,-80],V:[35,0,-80]},e:'A-B B-C A-D D-E E-F F-C A-G G-H H-I I-C G-H H-J J-K J-L L-M M-N N-O O-P P-Q Q-R R-S S-T O-U U-Q O-V V-Q'}}];
 let mapGroup=null,mapId=-1;
