@@ -12,6 +12,8 @@
 
 Regla: si un asset no cumple estos cuatro puntos, no entra al juego. **Un solo estilo por todo el juego**, sin mezclar low poly con realista.
 
+**Excepción aprobada por Ricardo:** el mapa MERCADO OLOCUILTA usa el modelo Tripo `props/olocuilta-market.glb`. En `buildMarket()` se carga a 86 unidades de ancho; el piso, galerías, puestos y escalones se escalan junto al modelo para conservar entradas transitables y un gran pasillo central despejado. Mantén el bloqueo jugable sincronizado con el modelo.
+
 ### Estado de la migración
 - Lo que todavía es realista y hay que pasar a low poly: CENTRO (edificios de Hong Kong `props/hk.json`, supermercado `props/mk.json`, kit Downtown `props/city.json`), HOTEL, ATARDECER, AZOTEA y las armas (Sci-Fi Essentials, M338, `gun_smg`, `gun_shotgun`).
 - Orden acordado: (1) mapas de campaña en low poly desde cero, (2) armas low poly cuando Ricardo encuentre un pack, (3) mapas multijugador uno por ronda, conservando trazado y colisiones.
