@@ -1771,7 +1771,7 @@ function buildChar(team,cls,look){
   rimAll(g);scene.add(g);return {g,head,armL,armR,legL,legR,gun,sword,sh,aura,stones};
 }
 /* ---------- personajes 3D de VRoid (VRM aligerado a .glb) ---------- */
-const VRMS={10:{url:'chars/milena.glb',h:1.69},11:{url:'chars/avatar-c.json'},12:{url:'chars/ricardo-tripo.json',h:1.84},13:{url:'chars/connie.json',h:1.60},14:{url:'chars/tefa.json',h:1.45},15:{url:'chars/yesy.json',h:1.45},16:{url:'chars/andres.json',h:1.84},17:{url:'chars/isma.json',h:1.83},18:{url:'chars/rebecca.json',h:1.60},19:{url:'chars/armando.json',h:1.75},20:{url:'chars/diego.json',h:1.75},21:{url:'chars/mau.json',h:1.75},22:{url:'chars/fiorella.glb',h:1.70}}; // el .glb va codificado en JSON para poder publicarse como página
+const VRMS={10:{url:'chars/milena.glb',h:1.69},11:{url:'chars/avatar-c.json'},12:{url:'chars/ricardo-base.glb',h:1.84},13:{url:'chars/connie.json',h:1.60},14:{url:'chars/tefa.json',h:1.45},15:{url:'chars/yesy.json',h:1.45},16:{url:'chars/andres.json',h:1.84},17:{url:'chars/isma.json',h:1.83},18:{url:'chars/rebecca.json',h:1.60},19:{url:'chars/armando.json',h:1.75},20:{url:'chars/diego.json',h:1.75},21:{url:'chars/mau.json',h:1.75},22:{url:'chars/fiorella.glb',h:1.70},23:{url:'chars/ricardo-berserk.glb',h:2.00}}; // Ricardo: modelo normal y forma berserk, ambos rigged
 const OUTL=basic(INKC,{side:T.BackSide,skinning:true});OUTL.color=INKCOL;
 OUTL.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\n  transformed+=normalize(normal)*.0042;');};
 function loadVRM(k){const v=VRMS[k];if(v.p)return v.p;
@@ -3862,7 +3862,7 @@ function loop(t){
   render();
 }
 buildTags();fullReset();
-window.__VRMS=VRMS;for(const k of [10,11,12,13,14,15,16,17,18,19,20,21,22])loadVRM(k).then(v=>{if(v)refreshLook(k);});
+window.__VRMS=VRMS;for(const k of [10,11,12,13,14,15,16,17,18,19,20,21,22,23])loadVRM(k).then(v=>{if(v)refreshLook(k);});
 window.__loadGuns();loadProp('sword').then(v=>{if(v){for(const f of fighters)f.setClass(f.cls,f.look,true);buildTags();}});
 loadAnim('strafe','anims/sword-strafe.json');loadMoves('anims/moves.json');loadMoves('anims/sword.json');loadMoves('anims/cover.json');loadMoves('anims/ual.json');loadMoves('anims/melee.json');loadMoves('anims/rifle8.json');loadMoves('anims/hbm.json');
 window.__fx={mFinal,mSoft,FX,SET,fxBoom,guardBreak,act,gunModel,GUNGLB};window.__game={camera,boxes,setCam:(y,p)=>{camYaw=y;camPitch=p;},PJ,SPR,fxWord,swordModel,PROPS,game,player,fighters,step,startMatch,photoOn,photoOff,photoShot,PH,useSkill,jump,keys,startUlt,toggleLock,clash,melee,heavy,KIF,SANCT,getLock:()=>lock};
