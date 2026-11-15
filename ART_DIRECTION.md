@@ -12,7 +12,7 @@
 
 Regla: si un asset no cumple estos cuatro puntos, no entra al juego. **Un solo estilo por todo el juego**, sin mezclar low poly con realista.
 
-**Excepción aprobada por Ricardo:** el mapa MERCADO OLOCUILTA usa el GLB de Tripo `props/olocuilta-market.glb` a 86 unidades de ancho, conservando sus proporciones y aberturas. El modelo define la geometría interior; no agregues paredes, puestos, pisos ni escaleras duplicados que tapen sus entradas.
+**Excepción aprobada por Ricardo:** el mapa MERCADO OLOCUILTA usa el GLB de Tripo `props/olocuilta-market.glb` a 86 unidades de ancho, conservando sus proporciones y aberturas. La cara +X del modelo (entrada con estructuras metálicas verdes) debe mirar hacia la iglesia, en +Z del mapa. El modelo define la geometría interior; no agregues paredes, puestos, pisos ni escaleras duplicados que tapen sus entradas.
 
 ### Estado de la migración
 - Lo que todavía es realista y hay que pasar a low poly: CENTRO (edificios de Hong Kong `props/hk.json`, supermercado `props/mk.json`, kit Downtown `props/city.json`), HOTEL, ATARDECER, AZOTEA y las armas (Sci-Fi Essentials, M338, `gun_smg`, `gun_shotgun`).
