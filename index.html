@@ -1572,7 +1572,8 @@ function buildMarket(){
   for(const z of [1,33,65,97]){placeLowpoly('assets-lowpoly/kaykit-city/building_A.gltf',-65,0,z,0,18);placeLowpoly('assets-lowpoly/kaykit-city/building_A.gltf',65,0,z,Math.PI,18);}
   for(const z of [-32,-66,-100,-132,-164]){placeLowpoly('assets-lowpoly/kaykit-city/building_A.gltf',-66,0,z,0,15);placeLowpoly('assets-lowpoly/kaykit-city/building_A.gltf',66,0,z,Math.PI,15);}
   for(const x of [-53,-35,35,53]){placeLowpoly('assets-lowpoly/kaykit-city/bench.gltf',x,.05,82,0,5);placeLowpoly('assets-lowpoly/kaykit-city/streetlight.gltf',x,-.05,-45,0,8);}
-  placeLowpoly('props/olocuilta-market.glb',0,0,34,0,86);
+  // The model's +X face (green-metal entrance) points toward the church at world +Z.
+  placeLowpoly('props/olocuilta-market.glb',0,0,34,-Math.PI/2,86);
   B(-80,-55,2,20,360,0,0x665c50);B(80,-55,2,20,360,0,0x665c50);
   // Cathedral silhouette at the southern edge of the plaza.
   B(0,113,35,15,2,0,0xd3c3a5);for(const x of [-13,13]){B(x,113,7,23,8,0,0xc6b18d);B(x,113,3,13,8,23,0x85725d);}
