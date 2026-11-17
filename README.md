@@ -11,6 +11,7 @@ Shooter de arena anime 3 contra 3 que corre en el navegador. Duelo por equipos: 
 ## Personajes y animaciones
 
 - `chars/`: personajes hechos en VRoid Studio, aligerados para el navegador (sin gestos faciales y con texturas reducidas). Los anima el código moviendo los huesos humanoides del VRM.
+- `chars/tefa.glb`: modelo de Tefa con esqueleto Mixamo, cargado como reemplazo de su modelo anterior y animado con el sistema humanoide existente.
 - `anims/`: animaciones de Mixamo convertidas a JSON (rotación de cada hueso respecto a la pose de reposo). `sword-strafe.json` se usa al rodear a un rival fijado con la hoja.
 
 ## Cómo probarlo en tu computadora

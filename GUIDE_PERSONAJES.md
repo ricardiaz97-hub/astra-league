@@ -6,7 +6,7 @@
 
 - Cada personaje 3D tiene un **slot numérico** en la tabla **`VRMS`** (línea ~1715 de `index.html`): `{slot:{url:'chars/archivo.glb', h:alturaEnMetros}}`.
 - **`loadVRM(slot)`** descarga el archivo. Acepta **`.glb` directo** o **`.json`** (un GLB en base64 dentro de `{"data":"..."}`). Se elige por la extensión de la URL.
-- **`prepVRM`** detecta los huesos: si el GLB trae metadatos VRM (`VRMC_vrm`, modelos de VRoid) los usa; si no, busca huesos de **Mixamo** con el nombre `mixamorig:Hips`, `mixamorig:Spine`, `mixamorig:LeftArm`, etc., normalizando los nombres con `T.PropertyBinding.sanitizeNodeName` antes de compararlos. Los modelos de Tripo con rig de Mixamo funcionan así. Cualquier otro nombre de huesos **no se mapea** y el personaje no se anima.
+- **`prepVRM`** detecta los huesos: si el GLB trae metadatos VRM (`VRMC_vrm`, modelos de VRoid) los usa; si no, busca huesos de **Mixamo** con el nombre `mixamorig:Hips`, `mixamorig:Spine`, `mixamorig:LeftArm`, etc., comparándolos por nombre exacto tal como aparecen en los nodos GLB (incluido el prefijo `mixamorig:`). Los modelos de Tripo con rig de Mixamo funcionan así. Cualquier otro nombre de huesos **no se mapea** y el personaje no se anima.
 - Las animaciones (`anims/*.json`) rotan esos huesos, así que el modelo tiene que venir con esqueleto humanoide estándar.
 - El material se reemplaza por cel shading con contorno (`MeshToonMaterial` + `OUTL`); solo se conserva la textura (`map`).
 - Mientras el modelo 3D carga, el juego usa un muñeco de bloques de respaldo (línea ~1678, `buildChar`).
@@ -18,7 +18,7 @@
 | 11 | `chars/avatar-c.json` | Avatar C (VRoid) |
 | 12 | `chars/ricardo-tripo.json` | Ricardo |
 | 13 | `chars/connie.json` | Connie |
-| 14 | `chars/tefa.json` | Tefa |
+| 14 | `chars/tefa.glb` | Tefa |
 | 15 | `chars/yesy.json` | Yesy |
 | 16 | `chars/andres.json` | Andrés |
 | 17 | `chars/isma.json` | Isma |
