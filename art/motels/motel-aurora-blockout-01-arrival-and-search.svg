@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100" viewBox="0 0 1600 1100">
+<defs>
+ <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0L12 6L0 12Z" fill="#e85d04"/></marker>
+ <pattern id="tile" width="42" height="32" patternUnits="userSpaceOnUse"><rect width="42" height="32" fill="#d6c9b6"/><path d="M0 16H42M21 0V16M8 16V32" stroke="#b4a797" stroke-width="1" opacity=".5"/></pattern>
+ <style>text{font-family:Arial,Helvetica,sans-serif;fill:#1d1a22}.title{font-size:38px;font-weight:900;letter-spacing:2px}.sub{font-size:18px;fill:#5c5651}.label{font-size:19px;font-weight:800}.small{font-size:15px;fill:#504a45}.tiny{font-size:13px;fill:#504a45}.num{font-size:18px;font-weight:900;fill:#fff}</style>
+</defs>
+<rect width="1600" height="1100" fill="#f3ece2"/><path d="M0 0H1600V18H0Z" fill="#e85d04"/>
+<text x="70" y="78" class="title">MOTEL AURORA — BLOCKOUT 01</text>
+<text x="72" y="111" class="sub">ARRIVAL THROUGH OPEN PARKING COURT · CLEAR GROUND-FLOOR ROOMS · FIND P'S STASH</text>
+
+<!-- PLAN -->
+<rect x="65" y="145" width="1030" height="650" rx="18" fill="#eee4d6" stroke="#1d1a22" stroke-width="4"/>
+<text x="92" y="184" class="label">GROUND-FLOOR TOP-DOWN</text><text x="800" y="184" class="small">NORTH / REAR WING ↑</text>
+<!-- street frontage -->
+<rect x="95" y="700" width="970" height="62" fill="#77716b" stroke="#514b49" stroke-width="3"/><path d="M120 730H1040" stroke="#eee4d6" stroke-width="3" stroke-dasharray="24 20"/>
+<text x="124" y="748" class="small" fill="#f3ece2">UPHILL STREET FROM SEWER OUTLET</text>
+<!-- u-shaped 2-storey motel footprint, ground floor walls and room partitions -->
+<path d="M150 245H1008V674H750V360H410V674H150Z" fill="#bcb1a3" stroke="#1d1a22" stroke-width="5"/>
+<!-- upper/back service strip / rooms -->
+<rect x="166" y="261" width="826" height="105" fill="#d6c9b6" stroke="#514b49" stroke-width="3"/>
+<path d="M267 261V366M367 261V366M467 261V366M567 261V366M667 261V366M767 261V366M867 261V366" stroke="#514b49" stroke-width="3"/>
+<text x="185" y="291" class="small">ROOM 101</text><text x="285" y="291" class="small">ROOM 102</text><text x="385" y="291" class="small">ROOM 103</text><text x="485" y="291" class="small">LOBBY / RECEPTION</text><text x="685" y="291" class="small">ROOM 104</text><text x="785" y="291" class="small">ROOM 105</text><text x="885" y="291" class="small">SERVICE</text>
+<text x="450" y="340" class="tiny">CHECK-IN DESK · INTERIOR DOORS FACE COURTYARD</text>
+<!-- side wing room modules -->
+<rect x="166" y="382" width="118" height="276" fill="#d6c9b6" stroke="#514b49" stroke-width="3"/>
+<path d="M166 451H284M166 520H284M166 589H284" stroke="#514b49" stroke-width="3"/>
+<rect x="284" y="382" width="110" height="276" fill="#c7bbaa" stroke="#514b49" stroke-width="3"/>
+<text x="175" y="425" class="small">ROOM 106</text><text x="175" y="494" class="small">ROOM 107</text><text x="175" y="563" class="small">ROOM 108</text><text x="175" y="632" class="small">ROOM 109</text>
+<text x="292" y="515" class="tiny" transform="rotate(-90 292 515)">COVERED HALL</text>
+<rect x="766" y="382" width="58" height="276" fill="#c7bbaa" stroke="#514b49" stroke-width="3"/>
+<rect x="824" y="382" width="168" height="276" fill="#d6c9b6" stroke="#514b49" stroke-width="3"/>
+<path d="M824 451H992M824 520H992M824 589H992" stroke="#514b49" stroke-width="3"/>
+<text x="837" y="425" class="small">ROOM 110</text><text x="837" y="494" class="small">ROOM 111</text><text x="837" y="563" class="small">ROOM 112</text><text x="837" y="632" class="small">ROOM 113</text>
+<!-- inner courtyard walkway -->
+<path d="M410 368H750V674H410Z" fill="url(#tile)" stroke="#766b60" stroke-width="3"/>
+<text x="468" y="392" class="tiny">COVERED COURTYARD WALKWAY</text>
+<!-- windows / doors -->
+<g stroke="#514b49" stroke-width="3"><path d="M267 366v18m100-18v18m100-18v18m100-18v18m100-18v18m100-18v18m100-18v18"/><path d="M394 416h16m-16 69h16m-16 69h16m-16 69h16M750 416h16m-16 69h16m-16 69h16m-16 69h16"/><path d="M267 658v16m100-16v16m100-16v16m100-16v16m100-16v16m100-16v16m100-16v16"/></g>
+<!-- open lot with stalled cars and debris -->
+<rect x="418" y="412" width="324" height="250" rx="10" fill="#c9b99f" stroke="#766b60" stroke-width="3"/>
+<text x="491" y="642" class="small">OPEN PARKING COURT</text>
+<g stroke="#1d1a22" stroke-width="3">
+ <rect x="438" y="445" width="111" height="48" rx="11" fill="#9c978e"/><rect x="454" y="452" width="35" height="29" rx="4" fill="#d7d2c9"/><rect x="496" y="452" width="35" height="29" rx="4" fill="#d7d2c9"/>
+ <rect x="575" y="438" width="109" height="46" rx="11" fill="#867f77" transform="rotate(8 629 461)"/><rect x="590" y="444" width="34" height="27" rx="4" fill="#d7d2c9" transform="rotate(8 607 458)"/><rect x="632" y="449" width="34" height="27" rx="4" fill="#d7d2c9" transform="rotate(8 649 462)"/>
+ <rect x="510" y="515" width="110" height="45" rx="10" fill="#a6a098"/><path d="M524 515v-10h83v10" fill="#a6a098"/><rect x="525" y="522" width="36" height="26" rx="4" fill="#d7d2c9"/><rect x="568" y="522" width="36" height="26" rx="4" fill="#d7d2c9"/>
+ <path d="M457 565l22-16 15 22-19 13zM671 514l18-21 15 8-9 23zM647 588l22-11 12 18-27 12z" fill="#756a61"/><path d="M474 607l15-16 17 10-11 17zM698 600l17-14 14 13-15 16z" fill="#756a61"/>
+</g>
+<rect x="570" y="464" width="94" height="25" rx="6" fill="#fffaf3" stroke="#1d1a22" stroke-width="2"/><text x="580" y="482" class="tiny">WRECKED CAR STACK</text>
+<text x="436" y="598" class="tiny">CLEAR COVER LANE THROUGH WRECKAGE</text>
+<!-- entrance gap -->
+<path d="M462 674v24m220-24v24" stroke="#1d1a22" stroke-width="5"/><text x="495" y="692" class="tiny">OPEN DRIVEWAY / ENTRY</text>
+<!-- stairs to second floor -->
+<rect x="314" y="384" width="58" height="58" fill="#a79a88" stroke="#1d1a22" stroke-width="3"/><path d="M320 390h46m-46 10h46m-46 10h46m-46 10h46m-46 10h46" stroke="#f3ece2" stroke-width="2"/><text x="322" y="377" class="tiny">UP</text>
+<rect x="766" y="384" width="52" height="58" fill="#a79a88" stroke="#1d1a22" stroke-width="3"/><path d="M772 390h40m-40 10h40m-40 10h40m-40 10h40m-40 10h40" stroke="#f3ece2" stroke-width="2"/><text x="778" y="377" class="tiny">UP</text>
+<!-- alien holdouts in rooms -->
+<g fill="#1d1a22" stroke="#e85d04" stroke-width="2"><path d="M214 469l10 6 10-3 9 7-6 7-8-2-6 7-7-5 2-8-7-3z"/><path d="M829 595l10 6 10-3 9 7-6 7-8-2-6 7-7-5 2-8-7-3z"/></g>
+<text x="233" y="506" class="tiny">ROOM CLEAR</text><text x="843" y="631" class="tiny">ROOM CLEAR</text>
+<!-- P stash room -->
+<rect x="166" y="520" width="118" height="69" fill="#ecd9bd" stroke="#e85d04" stroke-width="5"/>
+<rect x="170" y="535" width="108" height="34" rx="5" fill="#fffaf3" stroke="#1d1a22" stroke-width="2"/><text x="178" y="557" class="tiny">P'S STASH / FILE</text>
+<text x="167" y="613" class="tiny">ROOM 108 · “GOBIERNAS” · ENCRYPTED</text>
+<!-- route from road through parking, lobby and stash -->
+<path d="M570 681L570 615L546 565L545 505L526 455L526 354L410 354L339 354L339 545L284 545" fill="none" stroke="#e85d04" stroke-width="8" stroke-linecap="round" stroke-dasharray="2 1" marker-end="url(#arrow)"/>
+<g><circle cx="570" cy="660" r="18" fill="#e85d04"/><text x="564" y="667" class="num">1</text><circle cx="550" cy="556" r="18" fill="#e85d04"/><text x="544" y="563" class="num">2</text><circle cx="528" cy="350" r="18" fill="#e85d04"/><text x="522" y="357" class="num">3</text><circle cx="276" cy="550" r="18" fill="#e85d04"/><text x="270" y="557" class="num">4</text></g>
+
+<!-- STORY / LEGEND PANEL -->
+<rect x="1120" y="145" width="415" height="650" rx="18" fill="#fffaf3" stroke="#1d1a22" stroke-width="4"/>
+<text x="1150" y="188" class="label">PLAY FLOW</text>
+<g><circle cx="1168" cy="239" r="18" fill="#e85d04"/><text x="1162" y="246" class="num">1</text><text x="1200" y="237" class="small">Enter the open lot from</text><text x="1200" y="258" class="small">the uphill street.</text>
+<circle cx="1168" cy="302" r="18" fill="#e85d04"/><text x="1162" y="309" class="num">2</text><text x="1200" y="300" class="small">Cross between wrecked cars</text><text x="1200" y="321" class="small">and debris for cover.</text>
+<circle cx="1168" cy="366" r="18" fill="#e85d04"/><text x="1162" y="373" class="num">3</text><text x="1200" y="364" class="small">Clear the reception and a</text><text x="1200" y="385" class="small">few ground-floor rooms.</text>
+<circle cx="1168" cy="430" r="18" fill="#e85d04"/><text x="1162" y="437" class="num">4</text><text x="1200" y="428" class="small">Find P's stash in Room 108:</text><text x="1200" y="449" class="small">the “Gobiernas” file is encrypted.</text></g>
+<path d="M1150 486H1505" stroke="#c7bbaa" stroke-width="2"/>
+<text x="1150" y="522" class="label">BLOCKOUT NOTES</text>
+<text x="1150" y="555" class="small">• Two-storey courtyard motel.</text>
+<text x="1150" y="584" class="small">• Motel rooms open onto the lot.</text>
+<text x="1150" y="613" class="small">• Keep one obvious lane through</text><text x="1167" y="634" class="small">the car wreckage.</text>
+<text x="1150" y="663" class="small">• Exterior stairs connect to the</text><text x="1167" y="684" class="small">upper walkway and roof route.</text>
+<text x="1150" y="724" class="tiny">Next sheet begins at the trap trigger:</text><text x="1150" y="746" class="tiny">horde defense → stairs → rooftop ship.</text>
+<rect x="1150" y="763" width="355" height="20" rx="8" fill="#eee4d6"/><text x="1160" y="778" class="tiny">ASSUMED FOOTPRINT; EASY TO ADJUST TOGETHER</text>
+
+<!-- ELEVATION -->
+<rect x="65" y="815" width="1470" height="230" rx="18" fill="#fffaf3" stroke="#1d1a22" stroke-width="4"/>
+<text x="92" y="852" class="label">COURTYARD ELEVATION — ROOM WINDOWS FACE THE PARKING LOT</text>
+<path d="M100 1010H1495" stroke="#1d1a22" stroke-width="5"/>
+<!-- motel side facade -->
+<rect x="166" y="887" width="850" height="123" fill="#c7bbaa" stroke="#1d1a22" stroke-width="4"/>
+<path d="M166 887H1016M166 947H1016" stroke="#514b49" stroke-width="3"/>
+<g fill="#9c978e" stroke="#1d1a22" stroke-width="3"><rect x="210" y="903" width="94" height="32"/><rect x="355" y="903" width="94" height="32"/><rect x="500" y="903" width="94" height="32"/><rect x="645" y="903" width="94" height="32"/><rect x="790" y="903" width="94" height="32"/><rect x="210" y="960" width="94" height="34"/><rect x="355" y="960" width="94" height="34"/><rect x="500" y="960" width="94" height="34"/><rect x="645" y="960" width="94" height="34"/><rect x="790" y="960" width="94" height="34"/></g>
+<path d="M180 947H1002" stroke="#766b60" stroke-width="9"/>
+<!-- outside stair and lot wrecks -->
+<path d="M940 1008v-44l46-30v-42" fill="none" stroke="#514b49" stroke-width="10"/><path d="M952 996h48m-48-12h48m-32-15h33m-20-15h20" stroke="#e85d04" stroke-width="3"/>
+<g fill="#918b82" stroke="#1d1a22" stroke-width="3"><rect x="1080" y="980" width="142" height="30" rx="8"/><rect x="1138" y="947" width="122" height="29" rx="8" transform="rotate(-8 1199 961)"/><path d="M1280 1008l32-42 45 42z"/></g>
+<text x="1085" y="920" class="small">OPEN LOT · STACKED WRECKS</text><text x="1085" y="942" class="tiny">Clear path to lobby door</text>
+<text x="170" y="1030" class="tiny">Ground-floor search leads to Room 108 and the encrypted file; the upper walkway remains visible as the next route.</text>
+</svg>

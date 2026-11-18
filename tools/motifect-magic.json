@@ -1,0 +1,4 @@
+{"_skip":["archery_aim_moving","archery_dodge_roll","archery_nock_and_draw","archery_rapid_fire","archery_release_fire","mount_horse_get_off","mount_horse_get_on","mount_horse_idle"],
+ "float_idle":{"trim":false,"mode":"loop"},
+ "glide_forward":{"trim":false,"mode":"loop"},
+ "power_charge_buildup":{"trim":false,"mode":"loop"}}
