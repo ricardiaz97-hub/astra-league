@@ -817,7 +817,7 @@ const mBright=shader(`uniform sampler2D t;varying vec2 vUv;void main(){vec3 c=te
 const mBlur=shader(`uniform sampler2D t;uniform vec2 d;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb*.227;
   c+=(texture2D(t,vUv+d*1.385).rgb+texture2D(t,vUv-d*1.385).rgb)*.316;c+=(texture2D(t,vUv+d*3.231).rgb+texture2D(t,vUv-d*3.231).rgb)*.0703;gl_FragColor=vec4(c,1.);}`,{t:{value:null},d:{value:new T.Vector2}});
 const mSoft=shader(`uniform sampler2D t;varying vec2 vUv;void main(){vec3 c=texture2D(t,vUv).rgb;float l=dot(c,vec3(.299,.587,.114));gl_FragColor=vec4(c*smoothstep(.1,.8,l),1.);}`,{t:{value:null}});
-const mFinal=shader(`uniform sampler2D t,b,m;uniform float ca,k,sat,con,mist;uniform vec3 lift,gain,mistC;varying vec2 vUv;
+const mFinal=shader(`uniform sampler2D t,b,m,L;uniform float ca,k,sat,con,mist,lutK,grain,gt;uniform vec3 lift,gain,mistC;varying vec2 vUv;
   vec3 spec(float x){return clamp(vec3(1.5-abs(4.*x-1.),1.5-abs(4.*x-2.),1.5-abs(4.*x-3.)),0.,1.);}
   void main(){vec2 p=vUv-.5;float r2=dot(p,p);vec2 o=p*r2*ca;
     vec3 c=vec3(texture2D(t,vUv-o).r,texture2D(t,vUv).g,texture2D(t,vUv+o).b);
@@ -826,7 +826,10 @@ const mFinal=shader(`uniform sampler2D t,b,m;uniform float ca,k,sat,con,mist;uni
     vec3 gh=texture2D(b,.5-p*.6).rgb*spec(fract(r*1.7+.15))*.45+texture2D(b,.5-p*1.4).rgb*spec(fract(r*2.6+.55))*.3;
     c+=bl*k+gh*k*smoothstep(.02,.2,r2);float lu=dot(c,vec3(.299,.587,.114));c=mix(vec3(lu),c,sat);c=c*gain+lift*(1.-clamp(c,0.,1.));vec3 cc=clamp(c,0.,1.);c=mix(c,cc*cc*(3.-2.*cc),con);
     if(mist>0.){vec3 h=(texture2D(m,vUv).rgb*1.5+texture2D(b,vUv).rgb)*mistC*2.4;c=1.-(1.-c)*(1.-clamp(h*mist,0.,1.));float l2=dot(c,vec3(.299,.587,.114));c=mix(c,vec3(l2),-.04*mist);c=mix(c,c*.92+.04,mist*.35*smoothstep(.55,1.,l2));}
-    c*=1.-r2*.38;gl_FragColor=vec4(c,1.);}`,{t:{value:null},b:{value:null},m:{value:null},mist:{value:0},mistC:{value:new T.Vector3(.5,.4,.55)},ca:{value:.013},k:{value:.6},sat:{value:1},con:{value:0},lift:{value:new T.Vector3()},gain:{value:new T.Vector3(1,1,1)}});
+    if(lutK>0.){vec3 q=clamp(c,0.,1.);float bz=q.b*31.,b0=floor(bz),b1=min(b0+1.,31.);vec2 uv=vec2((q.r*31.+.5)/1024.,(q.g*31.+.5)/32.); // LUT 32³ en tira de 1024×32
+      c=mix(c,mix(texture2D(L,uv+vec2(b0/32.,0.)).rgb,texture2D(L,uv+vec2(b1/32.,0.)).rgb,bz-b0),lutK);}
+    if(grain>0.){float n=fract(sin(dot(vUv*vec2(1271.,917.)+gt,vec2(12.9898,78.233)))*43758.5453);c+=(n-.5)*grain*(1.-.6*dot(c,vec3(.33)));} // grano de película, menos en las luces
+    c*=1.-r2*.38;gl_FragColor=vec4(c,1.);}`,{t:{value:null},b:{value:null},m:{value:null},L:{value:null},lutK:{value:0},grain:{value:0},gt:{value:0},mist:{value:0},mistC:{value:new T.Vector3(.5,.4,.55)},ca:{value:.013},k:{value:.6},sat:{value:1},con:{value:0},lift:{value:new T.Vector3()},gain:{value:new T.Vector3(1,1,1)}});
 function fxResize(){
   for(const n of ['rt','a','b'])if(FX[n]){FX[n].dispose();FX[n]=null;}
   if(!FX.on)return;
@@ -913,7 +916,7 @@ const RUNE=[runeTex(TEAM[0].css),runeTex(TEAM[1].css),runeTex('#b58cff')],BANN=[
 const TL=new T.TextureLoader(),texJobs={};
 const LOADQ={n:0,t:0,add(p){this.n++;this.t++;Promise.resolve(p).finally(()=>this.n--);return p;}}; // lo que falta por cargar (pantalla de carga)
 function useTex(mat,name){let j=texJobs[name];
-  if(!j){j=texJobs[name]={t:null,mats:[]};LOADQ.n++;LOADQ.t++;let dn=false;const fin=()=>{if(!dn){dn=true;LOADQ.n--;}};TL.load('textures/'+name+(name.includes('.')?'':'.jpg'),t=>{fin();t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=4;j.t=t;for(const m of j.mats)setTex(m,t);},undefined,fin);}
+  if(!j){j=texJobs[name]={t:null,mats:[]};LOADQ.n++;LOADQ.t++;let dn=false;const fin=()=>{if(!dn){dn=true;LOADQ.n--;}};TL.load((name.startsWith('assets-source/')?'':'textures/')+name+(name.includes('.')?'':'.jpg'),t=>{fin();t.wrapS=t.wrapT=T.RepeatWrapping;t.anisotropy=4;j.t=t;for(const m of j.mats)setTex(m,t);},undefined,fin);}
   if(j.t)setTex(mat,j.t);else j.mats.push(mat);}
 function setTex(m,t){m.map=t;m.color.setHex(0xffffff);if(m.userData.decal)m.opacity=1;m.needsUpdate=true;}
 function boxUV(g,sx,sy,sz,tile){const uv=g.attributes.uv;for(let i=0;i<24;i++){const f=i>>2,a=f<2?sz:sx,b=f<2?sy:f<4?sz:sy;uv.setXY(i,uv.getX(i)*a/tile,uv.getY(i)*b/tile);}uv.needsUpdate=true;}
@@ -2253,12 +2256,14 @@ const _n=new V3;
 function dmgNum(t,amt,big){_n.set(t.pos.x,t.pos.y+2.1,t.pos.z).project(camera);if(_n.z>1)return;const d=document.createElement('div');d.className='dmg'+(big?' big':'');d.textContent=Math.round(amt);
   d.style.transform=`translate(${((_n.x*.5+.5)*window.innerWidth+rand(-18,18))|0}px,${((-_n.y*.5+.5)*window.innerHeight)|0}px)`;$('nums').appendChild(d);setTimeout(()=>d.remove(),600);}
 
-function damage(t,amt,by,big){if(by&&by.story&&(by.kind==='mob'||by.kind==='sniper'))amt*=by.brute?.5:.4;if(t&&t.story&&t.kind==='ally')return; // el escuadrón no cae
+function damage(t,amt,by,big){if(by&&by.story&&(by.kind==='mob'||by.kind==='sniper'))amt*=by.brute?.28:.15;if(t&&t.story&&t.kind==='ally'){ // el escuadrón solo cae durante la defensa, y se le puede levantar
+    if(STORY.ph==='hold'&&!t.downT&&by&&by.story&&STORY.units.filter(u=>u.downT).length<2){t.ahp=(t.ahp===undefined?600:t.ahp)-amt;/* aguantan mucho: caen uno o dos, nunca más de dos a la vez */if(t.ahp<=0){t.downT=now;t.revT=0;fxWord('¡'+(t.name||'ALIADO').toUpperCase()+' CAYÓ!',t.pos.x,t.pos.y+2.4,t.pos.z,'#ff5a3c');hint('Acércate a tu compañero caído para levantarlo',3);}}return;}
+  if(t&&t.story&&t.kind==='mob'&&t.alive&&by&&(by.isPlayer||by.kind==='ally')&&by.weapon===1)stun(t,(big?.7:.32)*(t.brute?.5:1)); // golpe o pesado cuerpo a cuerpo: el invasor trastabilla
   if(by&&by.story&&by.kind==='ally')amt*=.3; // el escuadrón ayuda pero no limpia la oleada solo // invasores de la historia: pegan menos
 
   if(!t.alive||game.state!=='playing'||now<t.protT)return;
   if(t.iframeT>now&&amt<900)return; // esquiva: el dash atraviesa el ataque
-  if(!t._mel&&(t.heavyT>0||t.hcharge>.1||t.swingT>.12)&&by&&by!==t){t.heavyT=0;t.hcharge=0;t.act=null;stun(t,.22);if(t===player||by===player)fxWord('¡INTERRUMPIDO!',t.pos.x,t.pos.y+2.4,t.pos.z,'#ffd23f');} // un disparo corta el golpe cuerpo a cuerpo
+  if(!t._mel&&(t.heavyT>0||t.hcharge>.1||t.swingT>.12)&&by&&by!==t&&!(by.story&&by.kind!=='ally')){/* los invasores no cortan nuestros golpes */t.heavyT=0;t.hcharge=0;t.act=null;stun(t,.22);if(t===player||by===player)fxWord('¡INTERRUMPIDO!',t.pos.x,t.pos.y+2.4,t.pos.z,'#ffd23f');} // un disparo corta el golpe cuerpo a cuerpo
   if(by&&by.strT>now)amt*=1.3;if(by&&by.bersT>0)amt*=BERSERK.dmg;
   if(t.shield>0){const a=Math.min(t.shield,amt);t.shield-=a;amt-=a;if(t===player)fxWord('ESCUDO',t.pos.x,t.pos.y+2.2,t.pos.z,'#b58cff');if(amt<=0)return;}
   if(t.block&&!t._mel&&facing(t,by)){amt*=.7;t.sp=Math.max(0,t.sp-amt*.6);}
@@ -2269,7 +2274,7 @@ function damage(t,amt,by,big){if(by&&by.story&&(by.kind==='mob'||by.kind==='snip
   t.hp-=amt;t.lastHit=now;t.lastBy=by;by.ult=Math.min(100,by.ult+raw*.3);t.ult=Math.min(100,t.ult+raw*.15);
   if(t===player){$('hurt').style.opacity=clamp(.35+amt/60,0,1);snd('hurt');shake=Math.min(.3,shake+raw/180);}
   if(!t._mel&&by&&by!==t&&by.weapon!==1){t.flinchT=now+(big?.45:.2);if(!t.act&&t.weapon!==1&&t.ultT<=0&&t.onGround&&Math.hypot(t.vel.x,t.vel.z)<4.5)act(t,big?'hitH':'hitC');if(t===player){camPitch+=rand(.004,.009)*(big?2:1);camYaw+=rand(-.006,.006);}}
-  if(by===player){const h=$('hitm');h.classList.add('on');setTimeout(()=>h.classList.remove('on'),70);if(!t._mel&&big)snd('head');else snd('hit');dmgNum(t,Math.round(amt),big||raw>=45);
+  if(by===player){const h=$('hitm');h.classList.add('on');setTimeout(()=>h.classList.remove('on'),70);if(!t._mel&&big)snd('head');else snd('hit');if(!game.story)dmgNum(t,Math.round(amt),big||raw>=45);
     if(t.hp<=0){h.classList.add('kill');setTimeout(()=>h.classList.remove('kill'),420);}}
   if(t.hp<=0){
     t.alive=false;t.respawnT=t.story?1e9:3;t.deaths++;by.kills++;t.deadT=0;t.dieKey=t.weapon===1?'die2':(Math.random()<.5&&ANIMS.die3?'die3':'die');t.act=null;
@@ -2317,7 +2322,7 @@ function meleeHit(f,kind){
       e.sp-=14;e.vel.x+=fx*3;e.vel.z+=fz*3;burst(e.pos.x,e.pos.y+1.2,e.pos.z,0xffffff,6,4);snd('parry',(e===player||f===player)?.5:volAt(e.pos)*.5);
       if(e.sp<=0){e.sp=0;guardBreak(e);}else{e._mel=1;damage(e,(f.isPlayer?WPN[1].dmg:34)*.15,f,false);e._mel=0;}
       if(f===player||e===player){hitstop=.04;shake=.08;}break;}
-    const bp=!e.isPlayer&&e.stunT<=0&&e.ultT<=0&&Math.random()<PARRY[e.team===player.team?1:game.diff]*(f.isPlayer?1:.5);
+    const bp=!e.isPlayer&&!(e.story&&e.kind!=='ally')&&e.stunT<=0&&e.ultT<=0&&Math.random()<PARRY[e.team===player.team?1:game.diff]*(f.isPlayer?1:.5);
     if(e.parryT>0||bp){
       if(heavyHit){stun(e,.7);e.parryT=0;fxWord('¡ROTO!',e.pos.x,e.pos.y+2.6,e.pos.z,'#ffd23f');} // el pesado rompe la guardia
       else{parried(e,f);return;}}
@@ -2331,7 +2336,8 @@ function meleeHit(f,kind){
     else if(air){kb=3;vy=Math.max(e.vel.y,3);}
     else if(fin){kb=13;vy=5;dmg*=1.3;e.launchT=.5;}
     else{kb=5;vy=3.5;}
-    e.vel.x+=fx*kb;e.vel.z+=fz*kb;e.vel.y=vy;e.onGround=false;
+    if(f.story&&f.kind==='mob'&&!f.brute){kb=0;vy=Math.min(vy,0);} /* los invasores comunes no te empujan ni te levantan al golpear */
+    if(kb||vy>0){e.vel.x+=fx*kb;e.vel.z+=fz*kb;e.vel.y=vy;e.onGround=false;}
     const big=fin||heavyHit||move==='sweep';fxStars(e.pos.x,e.pos.y+1.2,e.pos.z,TEAM[f.team].color,big?7:3);if(big){fxSmoke(e.pos.x,e.pos.y,e.pos.z,2,1);}if(big)fxBurst(e.pos.x,e.pos.y+1.1,e.pos.z,TEAM[f.team].color,heavyHit?3.4:2.6);if(move==='launch'||lvl===2)fxBolt(e.pos.x,e.pos.y,e.pos.z,lvl===2?5:4);
     burst(e.pos.x,e.pos.y+1.1,e.pos.z,0xffffff,big?16:8,big?9:5);if(big)ring(e.pos.x,e.pos.y+.9,e.pos.z,0xffffff,5,.3);
     if(f===player||e===player){stopQ(big?.13:.06,.05);shake=big?.3:.11;if(heavyHit)flash(.35);} // la pausa cae en el cuadro del golpe, no en el clic
@@ -3654,7 +3660,7 @@ function fpvUpdate(dt){
 
 /* ---------- HUD ---------- */
 let tags=[];
-function buildTags(){$('tags').innerHTML='';tags=[];for(const f of fighters){if(f.isPlayer)continue;const d=document.createElement('div');d.className='tag';d.style.color=TEAM[f.team].css;
+function buildTags(){$('tags').innerHTML='';tags=[];for(const f of fighters){if(f.isPlayer||(f.story&&f.kind!=='ally'))continue;/* en la historia, sin barras de vida sobre los invasores */const d=document.createElement('div');d.className='tag';d.style.color=TEAM[f.team].css;
   d.innerHTML=f.team===player.team?f.name:'<u><b></b></u>';$('tags').appendChild(d);tags.push({f,d,bar:d.querySelector('u b'),vis:true});}}
 const _v=new V3,cache={};
 function setTxt(id,v){if(cache[id]!==v){cache[id]=v;$(id).textContent=v;}}
@@ -3896,12 +3902,16 @@ const CRE={};
 function creatureModel(n){if(CRE[n])return CRE[n];
   CRE[n]=fetch('props/'+n+'.json').then(r=>r.json()).then(o=>new Promise(res=>{const bin=atob(o.data),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
     new T.GLTFLoader().parse(u.buffer,'',g=>{g.scene.traverse(m=>{if(!m.isMesh)return;const om=m.material,map=om.map;if(map){map.encoding=T.LinearEncoding;map.needsUpdate=true;}
-      m.material=new T.MeshToonMaterial({map,gradientMap:grad,skinning:!!m.isSkinnedMesh,color:om.color});m.frustumCulled=false;});res(g.scene);},e=>{console.warn('criatura',n,e);res(null);});})).catch(e=>{console.warn('criatura',n,e);return null;});
+      m.material=new T.MeshToonMaterial({map,gradientMap:grad,skinning:!!m.isSkinnedMesh,color:om.color});m.frustumCulled=false;
+      m.material.onBeforeCompile=sh=>{const rim='float rimK=pow(1.-abs(dot(normal,normalize(vViewPosition))),2.2);outgoingLight+=vec3(.7,.3,1.)*rimK*.85;\n'; // borde morado: se distinguen del fondo de lejos
+        sh.fragmentShader=sh.fragmentShader.includes('#include <output_fragment>')?sh.fragmentShader.replace('#include <output_fragment>',rim+'#include <output_fragment>'):sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight',rim+'gl_FragColor = vec4( outgoingLight');};});res(g.scene);},e=>{console.warn('criatura',n,e);res(null);});})).catch(e=>{console.warn('criatura',n,e);return null;});
   return CRE[n];}
 const _cq=new T.Quaternion(),_cx=new V3(1,0,0),_cz=new V3(0,0,1),_cy=new V3(0,1,0);
 function attachCreature(f,n,height){for(const c of f.m.g.children)c.visible=false;f.cre={n,ph:0,atk:0};
   creatureModel(n).then(sc=>{if(!sc||(!f.alive&&f.deadT>2))return;const o=T.SkeletonUtils.clone(sc);o.updateMatrixWorld(true);const bb=new T.Box3().setFromObject(o);
     const s=height/Math.max(.2,bb.max.y-bb.min.y)/(f.m.g.scale.y||1);o.scale.setScalar(s);o.position.y=-bb.min.y*s;const h=new T.Group();h.add(o);h.rotation.y=PI;f.m.g.add(h);f.cre.h=h;
+    if(!CRE.eye)CRE.eye=new T.SpriteMaterial({map:tex(32,32,(g,w)=>{const l=g.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);l.addColorStop(0,'#fff');l.addColorStop(.3,'rgba(190,255,60,.9)');l.addColorStop(1,'rgba(190,255,60,0)');g.fillStyle=l;g.fillRect(0,0,w,w);}),transparent:true,depthWrite:false,blending:T.AdditiveBlending,fog:false});
+    for(const x of [-1,1]){const e=new T.Sprite(CRE.eye);e.position.set(x*height*.09,height*.72,bb.max.z*s*.95);e.scale.setScalar(height*.16);h.add(e);} // ojos que brillan en la oscuridad
     // cada hueso guarda su reposo y el giro de su padre (en ejes del modelo), para girarlo como bisagra sobre los ejes del cuerpo
     const B=f.cre.b={};o.traverse(b=>{if(!b.isBone)return;const P=new T.Quaternion();let p=b.parent;const ch=[];while(p&&p!==o){ch.unshift(p);p=p.parent;}for(const q of ch)P.multiply(q.quaternion);
       B[b.name.replace(/^tripo/,'')]={b,rest:b.quaternion.clone(),P,Pi:P.clone().invert()};});}).catch(e=>console.warn('criatura',e));}
@@ -3930,7 +3940,7 @@ function steer(f,gx,gz,dt,stop){let wx=gx-f.pos.x,wz=gz-f.pos.z;const L=Math.hyp
   f.wish.x=wx;f.wish.z=wz;f.yaw=angLerp(f.yaw,Math.atan2(-wx,-wz),Math.min(1,dt*10));if(f.blocked&&f.onGround)jump(f);return false;}
 // objetivo más cercano de los invasores: el jugador o el escuadrón (los civiles no se atacan)
 function sTarget(f){let best=player.alive?player:null,bd=best?f.pos.distanceTo(player.pos):1e9;
-  for(const u of STORY.units)if(u.kind==='ally'&&u.alive){const d=f.pos.distanceTo(u.pos);if(d<bd){bd=d;best=u;}}return best;}
+  for(const u of STORY.units)if(u.kind==='ally'&&u.alive&&!u.downT){const d=f.pos.distanceTo(u.pos);if(d<bd){bd=d;best=u;}}return best;}
 function sMobs(){let n=0;for(const u of STORY.units)if(u.alive&&(u.kind==='mob'||u.kind==='sniper'))n++;return n;}
 function allyShoot(f,tg){f.shotT=now;f.target=tg;_a.set(f.pos.x,f.pos.y+1.35,f.pos.z);_b.set(tg.pos.x+rand(-.3,.3),tg.pos.y+1.1,tg.pos.z+rand(-.3,.3));tracer(_a,_b,TEAM[f.team].color,.08,.08);muzzleFlash(_a,TEAM[f.team].color,.7);
   if(Math.random()<.62){damage(tg,7,f);burst(_b.x,_b.y,_b.z,0xffe0b0,3,3);}snd('rifle',volAt(f.pos)*.35,f.pos);}
@@ -3947,6 +3957,9 @@ STORY.ai=function(f,dt){
       return;}
     f.wish.x=f.wish.z=0;f.sprint=false;f.crouch=false;f.yaw=angLerp(f.yaw,Math.atan2(-(player.pos.x-f.pos.x),-(player.pos.z-f.pos.z)),dt*3);return;}
   if(f.kind==='ally'){ // el escuadrón sostiene la línea y dispara a lo que se acerque
+    if(f.downT){f.wish.x=f.wish.z=0;f.crouch=true;f.target=null;const near=player.alive&&player.pos.distanceTo(f.pos)<2.6;f.revT=near?f.revT+dt:Math.max(0,f.revT-dt*.5); // caído: el jugador cerca lo levanta en 2 s
+      if(f.revT>=2){f.downT=0;f.ahp=300;f.crouch=false;fxWord('¡DE PIE!',f.pos.x,f.pos.y+2.4,f.pos.z,'#7dff8a');}
+      else if((f.dwT=(f.dwT||0)-dt)<=0){f.dwT=near?.6:2.5;fxWord(near?'LEVANTANDO '+Math.round(f.revT*50)+'%':'¡AYUDA!',f.pos.x,f.pos.y+2,f.pos.z,near?'#7dff8a':'#ff5a3c');}return;}
     if(f.st==='run'){const w=f.wp&&f.wp[0];if(w&&!steer(f,w[0],w[1],dt,.8))return;if(w)f.wp.shift();if(!f.wp||!f.wp.length)f.st='hold';return;}
     // se comportan como jugadores: la IA de los bots (moverse, disparar su arma, cubrirse, saltar, esquivar, espada y habilidad),
     // pero con nuestro objetivo (el invasor más cercano) y su puesto en la línea como meta
@@ -3963,10 +3976,11 @@ STORY.ai=function(f,dt){
     const dx=tg.pos.x-f.pos.x,dz=tg.pos.z-f.pos.z,d=Math.hypot(dx,dz)||1;
     if(f.rail){ // rastrero del techo: se arrastra por la viga y escupe desde arriba
       if(f.pos.x>f.rail[1])f.dir=-1;else if(f.pos.x<f.rail[0])f.dir=1;f.wish.x=(f.dir||1)*.32;f.wish.z=0;}
-    else if(d>38){steer(f,tg.pos.x,tg.pos.z,dt,.5);f.wish.x*=.55;f.wish.z*=.55;} // rastrero de la feria: avanza hasta tener tiro
+    else if(d>38&&!f.perch){steer(f,tg.pos.x,tg.pos.z,dt,.5);f.wish.x*=.55;f.wish.z*=.55;} // rastrero de la feria: avanza hasta tener tiro
     else f.wish.x=f.wish.z=0;
     f.yaw=angLerp(f.yaw,Math.atan2(-dx,-dz),Math.min(1,dt*4));f.pitch=clamp(Math.atan2(tg.pos.y-f.pos.y,d),-1,1);
-    if(d<62&&los(f,tg)){f.seeT+=dt;
+    const up=f.rail||f.perch,sl=up?(()=>{const k=1.6/d,ox=f.pos.x,oz=f.pos.z;f.pos.x+=dx*k;f.pos.z+=dz*k;const r=los(f,tg);f.pos.x=ox;f.pos.z=oz;return r;})():los(f,tg); // desde la viga o la azotea se mira desde el borde: si no, su propio apoyo tapa el tiro
+    if(d<(f.perch?100:62)&&sl){f.seeT+=dt;
       if(f.seeT>.7&&!f.warned){f.warned=true;burst(f.pos.x,f.pos.y+1,f.pos.z,0xc08cff,10,4);ring(f.pos.x,f.pos.y+.2,f.pos.z,0x9a4dff,2.2,.4);playS('ui_obj',.18,1.6);} // aviso antes de escupir
       if(f.cd<=0&&f.seeT>1.2){botShoot(f,tg);f.spit=.3;if(--f.burst<=0){f.burst=3;f.cd=rand(1.8,2.6);f.warned=false;f.seeT=.3;}else f.cd=.3;}}
     else{f.seeT=0;f.warned=false;}return;}
@@ -3976,9 +3990,9 @@ STORY.ai=function(f,dt){
     else{if(f.look0!==undefined)f.yaw=angLerp(f.yaw,f.look0,dt*2);return;}}
   if(!tg){f.wish.x=f.wish.z=0;f.sprint=false;return;}
   const dx=tg.pos.x-f.pos.x,dz=tg.pos.z-f.pos.z,d=Math.hypot(dx,dz)||1;
-  if(d>1.8){steer(f,tg.pos.x-dz/d*f.side*.8,tg.pos.z+dx/d*f.side*.8,dt,.2);const k=f.brute?.38:.5;f.wish.x*=k;f.wish.z*=k;}else f.wish.x=f.wish.z=0;
-  f.sprint=false; // más lentos que el jugador: se pueden esquivar y rodearif(d<9)f.yaw=angLerp(f.yaw,Math.atan2(-dx,-dz),Math.min(1,dt*10));
-  if(d<(f.brute?3.4:2.6)&&Math.abs(tg.pos.y-f.pos.y)<2&&f.cd<=0&&f.stunT<=0&&!(f.heavyT>0)){if(Math.random()<(f.brute?.5:.16)){heavy(f);f.cd=rand(1,1.4);if(f.brute&&f.pos.distanceTo(player.pos)<14)shake=Math.max(shake,.3);}else{melee(f);f.cd=rand(.55,.95);}}
+  if(d>(f.brute?2.9:2.1)){steer(f,tg.pos.x-dz/d*f.side*.8,tg.pos.z+dx/d*f.side*.8,dt,.2);const k=f.brute?.38:.5;f.wish.x*=k;f.wish.z*=k;}else f.wish.x=f.wish.z=0; // al alcanzarte se plantan: ya no te empujan
+  f.sprint=false;/* más lentos que el jugador: se pueden esquivar y rodear */if(d<9)f.yaw=angLerp(f.yaw,Math.atan2(-dx,-dz),Math.min(1,dt*10));
+  if(d<(f.brute?3.4:2.6)&&Math.abs(tg.pos.y-f.pos.y)<2&&f.cd<=0&&f.stunT<=0&&!(f.heavyT>0)){if(Math.random()<(f.brute?.4:.07)){heavy(f);f.cd=rand(1.8,2.4);if(f.brute&&f.pos.distanceTo(player.pos)<14)shake=Math.max(shake,.3);}else{melee(f);f.cd=rand(1.2,1.8);}} // golpean lento: hay tiempo de pegarles
 };
 /* --- el guion del nivel: mercado de Olocuilta (sur = catedral, norte = rueda de la feria) ---
    Interior del modelo: x de -39 a 39, z de -5.5 (puertas traseras) a 71.5 (arco de entrada). */
@@ -3987,6 +4001,20 @@ const MK={lift:LIFT,x0:-39,x1:39,zR:-5.5,zF:71.5,gal:5.5,ledge:4,shut:5,gapZ0:5,
 const inMk=(x,z)=>x>-39.6&&x<39.6&&z>-5.6&&z<69.2; // dentro del mercado (sube con el piso)
 function sB(cx,cz,w,h,d,y0,col,tx,tile){if(!STORY.noLift&&inMk(cx,cz))y0=(y0||0)+LIFT;const m=addBox(cx,cz,w,h,d,y0,col,undefined,tx,tile||2);STORY.objs.push(m);const b=boxes[boxes.length-1];STORY.boxes.push(b);m.userData.box=b;return m;}
 function sCol(x0,x1,z0,z1,y0,y1){const m=sB((x0+x1)/2,(z0+z1)/2,x1-x0,y1-y0,z1-z0,y0,0xffffff);m.visible=false;return m;} // colisión invisible
+// halo de foco que atraviesa la neblina (faroles, LED, propulsores, faros)
+STORY.glowMat=c=>{STORY.gdot=STORY.gdot||tex(32,32,(g,w)=>{const l=g.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);l.addColorStop(0,'rgba(255,255,255,1)');l.addColorStop(.25,'rgba(255,255,255,.45)');l.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=l;g.fillRect(0,0,w,w);});
+  return new T.SpriteMaterial({map:STORY.gdot,color:c,transparent:true,depthWrite:false,blending:T.AdditiveBlending,fog:false});};
+// halos y charcos de luz fijos: se juntan y al final se dibujan en pocos objetos (uno por tamaño de halo y uno para todos los charcos)
+STORY.halo=(x,y,z,col,s,op)=>{const B=STORY.hb||(STORY.hb={h:{},p:[]}),k=Math.round(s*2)/2;(B.h[k]=B.h[k]||[]).push([x,y,z,col,op===undefined?.7:op]);};
+STORY.pool=(x,z,s,y)=>{(STORY.hb||(STORY.hb={h:{},p:[]})).p.push([x,y||.3,z,s]);};
+STORY.haloFlush=()=>{const B=STORY.hb;if(!B)return;STORY.hb=null;const c=new T.Color();STORY.glowMat(0);
+  for(const k in B.h){const L=B.h[k],P=new Float32Array(L.length*3),C=new Float32Array(L.length*3);L.forEach((q,i)=>{P.set([q[0],q[1],q[2]],i*3);c.setHex(q[3]).multiplyScalar(q[4]);C.set([c.r,c.g,c.b],i*3);});
+    const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(P,3));g.setAttribute('color',new T.BufferAttribute(C,3));
+    sAdd(new T.Points(g,new T.PointsMaterial({map:STORY.gdot,vertexColors:true,size:+k*.75,transparent:true,depthWrite:false,blending:T.AdditiveBlending,fog:false})));}
+  if(B.p.length){const P=new Float32Array(B.p.length*18),U=new Float32Array(B.p.length*12);B.p.forEach(([x,y,z,s],i)=>{const h=s/2;P.set([x-h,y,z-h,x-h,y,z+h,x+h,y,z+h,x-h,y,z-h,x+h,y,z+h,x+h,y,z-h],i*18);U.set([0,0,0,1,1,1,0,0,1,1,1,0],i*12);});
+    const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(P,3));g.setAttribute('uv',new T.BufferAttribute(U,2));
+    const pt=tex(64,64,(x,w)=>{const l=x.createRadialGradient(w/2,w/2,0,w/2,w/2,w/2);l.addColorStop(0,'rgba(255,170,90,.55)');l.addColorStop(1,'rgba(255,170,90,0)');x.fillStyle=l;x.fillRect(0,0,w,w);});
+    sAdd(new T.Mesh(g,new T.MeshBasicMaterial({map:pt,transparent:true,depthWrite:false,blending:T.AdditiveBlending,side:T.DoubleSide})));}};
 function sDeco(w,h,d,col,x,y,z,ry,rz){const m=sAdd(new T.Mesh(new T.BoxGeometry(w,h,d),toon(col)));m.position.set(x,y+(inMk(x,z)?LIFT:0),z);m.rotation.set(0,ry||0,rz||0);return m;}
 // modelos que entregó el usuario (assets-source/, ver MANIFEST.csv); un clon comparte la geometría del original
 const ASSET={stallO:'market/props/unclassified/tripo_convert_3e715fed-5c56-419f-8676-e533d3cec6ae',stallR:'market/props/unclassified/tripo_convert_604263cf-fad1-41dd-9715-bfb5e8cadf5b',
@@ -4028,34 +4056,22 @@ function sRampCol(H,x0,x1,z0,z1,c,top){let g=sHeights(H,x0,x1,z0,z1,c);
   const hi=[];g.forEach((r,j)=>r.forEach((h,i)=>{if(x0+i*c>x1-6&&z0+j*c<z0+5&&h>1)hi.push(h);}));hi.sort((a,b)=>a-b);
   if(hi.length){H.position.y+=top-hi[Math.floor(hi.length*.25)];g=sHeights(H,x0,x1,z0,z1,c);}
 }
-// la rampa en U se camina por tres tramos rectos (medidos sobre el modelo): sur hacia el oeste, oeste hacia el norte y norte hacia el este
-// la rampa en U construida: tramos inclinados con piso de franjas, descansos, columnas y barandal
-// el último tramo termina en x=33, donde empieza el descanso plano: la rampa visible y la colisión coinciden
-const RAMP_P=[[38.6,61.6,.35],[27.6,61.6,2.6],[27.6,50.6,4.4],[33,50.6,5.5]];
-function rampVisual(){const P=RAMP_P,W=4.4;
-  for(let i=0;i<3;i++){const a=P[i],b=P[i+1],dx=b[0]-a[0],dz=b[1]-a[1],L=Math.hypot(dx,dz),dh=b[2]-a[2],ang=Math.atan2(dh,L),cx=(a[0]+b[0])/2,cz=(a[1]+b[1])/2,cy=(a[2]+b[2])/2-.2,alongX=Math.abs(dx)>.1;
-    const len=Math.hypot(L,dh);if(alongX)sTex(len,.4,W,cx,cy,cz,'assets-source/textures/floors/floor_01_cream_orange_stripe.png',4,0xffffff,0,0,dx>0?-ang:ang);else sTex(W,.4,len,cx,cy,cz,'assets-source/textures/floors/floor_01_cream_orange_stripe.png',4,0xffffff,0,dz>0?ang:-ang,0);
-    for(let s=0;s<=1.001;s+=.25){const x=a[0]+dx*s,z=a[1]+dz*s,h=a[2]+dh*s;for(const o of [-1,1]){const ox=alongX?0:o*(W/2-.1),oz=alongX?o*(W/2-.1):0;sTex(.1,1.05,.1,x+ox,h+.5,z+oz,null,1,0x2f6b4a);}
-      if(s>0&&s<1)sTex(.5,h,.5,x,h/2,z,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);}
-    for(const o of [-1,1]){const ox=alongX?0:o*(W/2-.1),oz=alongX?o*(W/2-.1):0;if(alongX)sTex(len,.1,.12,cx+ox,cy+1.25,cz+oz,null,1,0x2f6b4a,0,0,dx>0?-ang:ang);else sTex(.12,.1,len,cx+ox,cy+1.25,cz+oz,null,1,0x2f6b4a,0,dz>0?ang:-ang,0);}}
-  for(const [x,z,h] of [P[1],P[2]]){sTex(W,.4,W,x,h-.2,z,'assets-source/textures/floors/floor_01_cream_orange_stripe.png',4);sTex(.6,h-.4,.6,x,(h-.4)/2,z,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);sTex(.3,.5,W,x+(x<30?-W/2:W/2),h-.45,z,'assets-source/textures/walls/wall_04_orange_safety_band.png',1);}}
-function sRampPath(){const P=RAMP_P,W=4.4;let L=0;const seg=[];
-  for(let i=0;i<3;i++){const a=P[i],b=P[i+1];seg.push([a,b,Math.hypot(b[0]-a[0],b[1]-a[1])]);}
-  for(const [a,b,l] of seg)for(let s=0;s<=l;s+=.5){const k=s/l,x=a[0]+(b[0]-a[0])*k,z=a[1]+(b[1]-a[1])*k,h=a[2]+(b[2]-a[2])*k,ax=Math.abs(b[0]-a[0])>.1;
-    const m=sB(x,z,ax?.6:W,h,ax?W:.6,0,0xffffff);m.visible=false;m.userData.box.stair=true;}
-  for(const [x,z,h] of [P[1],P[2]]){const m=sB(x,z,W,h,W,0,0xffffff);m.visible=false;m.userData.box.stair=true;}
-  sCol(33,39,47,52.8,MK.gal-.5,MK.gal);sTex(6,.5,5.8,36,MK.gal-.25,49.9,'assets-source/textures/floors/floor_01_cream_orange_stripe.png',4); // descanso de llegada: antes no tenía piso visible
-  // hueco entre la galería este y la rampa (x 29.7-33, z 47-48.4): barandal y muro invisible
-  sCol(MK.galX,33,46.7,47,MK.gal,MK.gal+3);sCol(33,33.3,47,48.4,MK.gal,MK.gal+3);
-  for(const y of [MK.gal+1.05,MK.gal+.55]){sTex(3.3,.1,.12,(MK.galX+33)/2,y,46.88,null,1,0x2f6b4a);sTex(.12,.1,1.4,33.12,y,47.7,null,1,0x2f6b4a);}
-  for(const x of [MK.galX+.1,31.4,33.12])sTex(.1,1.05,.1,x,MK.gal+.52,46.88,null,1,0x2f6b4a);sTex(.1,1.05,.1,33.12,MK.gal+.52,48.4,null,1,0x2f6b4a);}
+// rampa recta de 45° al este, a la izquierda de la entrada vista desde adentro: sube hacia +x y sigue plana hasta la galería, sin barandal (/‾‾‾)
+const RAMP={x0:22.4,z0:47,z1:52.8}; // el pie queda en x0; arriba en x0+MK.gal (45°: sube lo mismo que avanza)
+function sRamp(){const {x0,z0,z1}=RAMP,W=z1-z0,cz=(z0+z1)/2,x1=x0+MK.gal,FL='assets-source/textures/floors/floor_01_cream_orange_stripe.png';
+  for(let x=x0+.2;x<x1;x+=.4){const m=sB(x,cz,.4,Math.min(MK.gal,x-x0+.2),W,0,0xffffff);m.visible=false;m.userData.box.stair=true;} // escalones de 0.4 m: se sube sin saltar
+  sTex(Math.hypot(MK.gal,MK.gal),.4,W,(x0+x1)/2+.14,MK.gal/2-.14,cz,FL,4,0xffffff,0,0,PI/4);
+  {const g=new T.ExtrudeGeometry(new T.Shape([new T.Vector2(0,0),new T.Vector2(MK.gal,0),new T.Vector2(MK.gal,MK.gal)]),{depth:W-.2,bevelEnabled:false}); // cuerpo macizo bajo la rampa
+    const o=sAdd(new T.Mesh(g,toon(0x8d8780)));o.position.set(x0,LIFT,z0+.1);o.castShadow=o.receiveShadow=true;inkOutline(o);}
+  sCol(x1,39,z0,z1,MK.gal-.5,MK.gal);sTex(39-x1,.5,W,(x1+39)/2,MK.gal-.25,cz,FL,4); // piso plano de la rampa a la galería este y al descanso
+  sTex(.55,MK.gal-.5,.55,30.5,(MK.gal-.5)/2,cz,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);}
 // caja sólo visual con textura (sin colisión)
 function sTex(w,h,d,x,y,z,tx,tile,col,ry,rx,rz){const g=new T.BoxGeometry(w,h,d);boxUV(g,w,h,d,tile||2);const m=toon(col||0xffffff);if(tx)useTex(m,tx);const o=sAdd(new T.Mesh(g,m));o.position.set(x,y+(inMk(x,z)?LIFT:0),z);o.rotation.set(rx||0,ry||0,rz||0);o.castShadow=o.receiveShadow=true;inkOutline(o);return o;}
 // tramo de galería: piso de concreto con franjas, canto naranja, vigas, columnas y barandal del lado abierto (edge)
 function galRun(ax,x0,x1,z0,z1,edge,top){top=top||MK.gal;const cx=(x0+x1)/2,cz=(z0+z1)/2,w=x1-x0,d=z1-z0,L=ax==='z'?d:w;
   sTex(w,.5,d,cx,top-.25,cz,'assets-source/textures/floors/floor_01_cream_orange_stripe.png',4);sTex(ax==='z'?.3:w,.55,ax==='z'?d:.3,ax==='z'?(edge===x0?x0+.15:x1-.15):cx,top-.6,ax==='z'?cz:(edge===z0?z0+.15:z1-.15),'assets-source/textures/walls/wall_04_orange_safety_band.png',1.2); // canto
   if(edge===null||edge===undefined)edge=ax==='z'?x0:z0;
-  for(let s=0;s<=L;s+=6){const px=ax==='z'?edge+(edge===x0?.4:-.4):x0+s,pz=ax==='z'?z0+s:edge+(edge===z0?.4:-.4);if(ax==='z'&&(pz<z0||pz>z1))continue;if(px>24&&pz>46&&pz<66)continue; // sin columnas sobre la rampa
+  for(let s=0;s<=L;s+=6){const px=ax==='z'?edge+(edge===x0?.4:-.4):x0+s,pz=ax==='z'?z0+s:edge+(edge===z0?.4:-.4);if(ax==='z'&&(pz<z0||pz>z1))continue;
     sTex(.55,top-.5,.55,px,(top-.5)/2,pz,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);sTex(ax==='z'?w:.35,.35,ax==='z'?.35:d,ax==='z'?cx:px,top-.68,ax==='z'?pz:cz,null,1,0x3a3432);}
   // barandal: postes cada 2 m, pasamanos y travesaño
   const rx=ax==='z'?edge+(edge===x0?.12:-.12):0,rz=ax==='x'?edge+(edge===z0?.12:-.12):0;
@@ -4078,14 +4094,20 @@ function stall(x,z,w,d,ci,ry){ // mostrador sólido del tamaño real del modelo;
 function fallen(x,z,w,h,ci){sCol(x-w/2,x+w/2,z-.45,z+.45,0,h); // barrera baja de concreto: obvia para enseñar a saltarla
   for(let i=0;i<5;i++)sFit(i%2?'jersey2':'jersey',x-w/2+1.2+i*2.4,0,z,0,h,0,srand(-.05,.05));
   sFit('pallet',x+srand(-4,4),0,z+1.8,0,1.3,0,srand(0,6));sFit('drum',x+srand(-5,5),0,z-1.6,0,1,0,0);}
-function sFlames(n,x0,x1,y0,y1,z0,z1,s){const ft=STORY.ftex||(STORY.ftex=tex(64,128,(g,w,h)=>{const l=g.createRadialGradient(w/2,h*.7,2,w/2,h*.6,w*.55);l.addColorStop(0,'rgba(255,240,180,1)');l.addColorStop(.35,'rgba(255,150,40,.95)');l.addColorStop(.75,'rgba(255,70,10,.5)');l.addColorStop(1,'rgba(255,40,0,0)');g.fillStyle=l;g.fillRect(0,0,w,h);}));
-  for(let i=0;i<n;i++){const p=sAdd(new T.Sprite(new T.SpriteMaterial({map:ft,transparent:true,depthWrite:false,blending:T.AdditiveBlending,fog:false})));p.position.set(rand(x0,x1),rand(y0,y1),rand(z0,z1));p.userData.s=s*rand(.7,1.3);p.userData.ph=rand(0,6);STORY.flames.push(p);
+// llamas dibujadas del paquete Wallcoeur (atlas 3×3): cada cuadro es una textura que comparte la misma imagen
+function flameFrames(){if(STORY.ffr)return STORY.ffr;const F=STORY.ffr=[];for(let i=0;i<9;i++){const t=new T.Texture();t.repeat.set(1/3,1/3);t.offset.set((i%3)/3,1-(1+(i/3|0))/3);F.push(t);}
+  new T.TextureLoader().load('fx/flame-atlas.png',b=>{for(const t of F){t.image=b.image;t.needsUpdate=true;}});return F;}
+function sFlames(n,x0,x1,y0,y1,z0,z1,s){const FR=flameFrames();
+  {const g=sAdd(new T.Sprite(STORY.glowMat(0xff6a1a)));g.position.set((x0+x1)/2,(y0+y1)/2+s*.7,(z0+z1)/2);g.scale.setScalar(s*4+Math.max(x1-x0,z1-z0)*1.6);g.material.opacity=.7;g.userData={glow:1,ph:rand(0,6),o:.7};STORY.flames.push(g);} // resplandor de cada foco de fuego
+  for(let i=0;i<n;i++){const x=rand(x0,x1),y=rand(y0,y1),z=rand(z0,z1),sc=s*rand(.7,1.3),ph=rand(0,9);
+    for(const [col,k,o] of [[0xff4a12,1,0],[0xffb733,.62,1]]){const p=sAdd(new T.Sprite(new T.SpriteMaterial({map:FR[0],color:col,transparent:true,alphaTest:.3,depthWrite:false,fog:false})));p.center.set(.5,.08);p.renderOrder=o;
+      p.position.set(x,y,z);p.userData={s:sc*k,ph:ph+o*4,fr:1,lit:o===0&&i%3===0};STORY.flames.push(p);}const p={position:new V3(x,y,z)};
     if(i%2===0){const sm=STORY.stex||(STORY.stex=tex(64,64,(g,w,h)=>{const l=g.createRadialGradient(w/2,h/2,2,w/2,h/2,w/2);l.addColorStop(0,'rgba(60,48,50,.9)');l.addColorStop(1,'rgba(60,48,50,0)');g.fillStyle=l;g.fillRect(0,0,w,h);}));
       const q=sAdd(new T.Sprite(new T.SpriteMaterial({map:sm,transparent:true,depthWrite:false,opacity:.6})));q.position.copy(p.position);q.userData={smoke:1,y0:p.position.y,ph:rand(0,1),s:s*2.2};STORY.flames.push(q);}}}
 function sFloor(tx,cx,cz,w,d,y,tile){const g=new T.PlaneGeometry(w,d),uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*w/tile,uv.getY(i)*d/tile);
   const m=toon(0xffffff,{polygonOffset:true,polygonOffsetFactor:-1});useTex(m,tx);const o=sAdd(new T.Mesh(g,m));o.rotation.x=-PI/2;o.position.set(cx,y,cz);o.receiveShadow=true;return o;}
 // vehículos del usuario que se pueden manejar: G para subir y bajar; atropellan invasores
-function sCar(k,x,z,L,ry){const H=sFit(k,0,0,0,L,0,L,0);const c={k,H,L,x,z,yaw:ry,v:0,hover:k==='rover',ph:Math.random()*6,col:sCol(x-L*.42,x+L*.42,z-L*.42,z+L*.42,0,1.8).userData.box};H.position.set(x,k==='rover'?1.1:0,z);H.rotation.y=ry;return c;} // el rover es un pod: flota
+function sCar(k,x,z,L,ry){const H=sFit(k,0,0,0,L,0,L,0,0,0,null,()=>{c.ready=1;if(c.hl)c.hl(H);});const c={k,H,L,x,z,yaw:ry,v:0,hover:k==='rover',ph:Math.random()*6,col:sCol(x-L*.42,x+L*.42,z-L*.42,z+L*.42,0,1.8).userData.box};H.position.set(x,k==='rover'?1.1:0,z);H.rotation.y=ry;return c;} // el rover es un pod: flota
 // el jugador va sentado en la cabina (o en la cápsula del pod), mirando hacia donde avanza el vehículo
 STORY.seat=function(c){const y=c.hover?c.H.position.y:0;player.pos.set(c.x,y+.35,c.z);player.vel.set(0,0,0);player.m.g.visible=false;player.m.sh.visible=false; // adentro: no se ve
   (window.__camFollow=window.__camFollow||new V3()).set(c.x,y+(c.k==='truck'?2.6:2.9),c.z);window.__camBack=c.k==='truck'?6.5:5.5;};
@@ -4134,25 +4156,55 @@ STORY.horizon=function(){SEED=31;const CZ=-60;
   for(let x=-60;x<60;){const L=srand(4,7);if(Math.abs(x)>14&&srand(0,1)<.8)sFit(WL[(srand(0,6)|0)],x,0,srand(126,129),L,0,1.2,0);x+=L+srand(0,3);}};
 // luz de la historia: sol bajo y cálido, más contraste, borde tibio; la sombra sigue al jugador
 STORY.light=function(on){const U=mFinal.uniforms;
-  if(on){STORY.lw={hc:hemi.color.getHex(),hg:hemi.groundColor.getHex(),hi:hemi.intensity,sc:sun.color.getHex(),si:sun.intensity,sp:sun.position.clone(),con:U.con.value,sat:U.sat.value,rim:RIM.value.clone()};
-    hemi.color.setHex(0xffd6b8);hemi.groundColor.setHex(0x4a3846);hemi.intensity=.5;sun.color.setHex(0xffbe7a);sun.intensity=1.35;STORY.sunDir=new V3(-.55,.42,.72).normalize();U.con.value=.3;U.sat.value=1.06;RIM.value.setHex(0xffa060).multiplyScalar(.34);}
-  else if(STORY.lw){const L=STORY.lw;hemi.color.setHex(L.hc);hemi.groundColor.setHex(L.hg);hemi.intensity=L.hi;sun.color.setHex(L.sc);sun.intensity=L.si;sun.position.copy(L.sp);sun.target.position.set(0,0,0);sun.target.updateMatrixWorld();U.con.value=L.con;U.sat.value=L.sat;RIM.value.copy(L.rim);STORY.lw=null;STORY.sunDir=null;}};
+  if(on){STORY.lw={hc:hemi.color.getHex(),hg:hemi.groundColor.getHex(),hi:hemi.intensity,sc:sun.color.getHex(),si:sun.intensity,sp:sun.position.clone(),con:U.con.value,sat:U.sat.value,rim:RIM.value.clone(),mist:U.mist.value,mc:U.mistC.value.clone()};
+    // neblina suave en las luces, LUT Portra 400 y un poco de grano
+    if(!STORY.lut){STORY.lut=new T.TextureLoader().load('fx/portra400-lut.png');STORY.lut.flipY=false;STORY.lut.generateMipmaps=false;STORY.lut.minFilter=STORY.lut.magFilter=T.LinearFilter;}
+    U.L.value=STORY.lut;U.lutK.value=.55;U.grain.value=.05;U.mist.value=SET.mist?.38:0;U.mistC.value.set(.62,.5,.58);
+    // 7 pm: ya no queda sol; luz de luna fría y el resto lo ponen faroles, LED y disparos
+    hemi.color.setHex(0x55618f);hemi.groundColor.setHex(0x2a1c22);hemi.intensity=.56;sun.color.setHex(0x8fa2d8);sun.intensity=.22;STORY.sunDir=new V3(-.55,.42,.72).normalize();U.con.value=.44;U.sat.value=1.08;RIM.value.setHex(0x6f86ff).multiplyScalar(.3);}
+  else if(STORY.lw){const L=STORY.lw;hemi.color.setHex(L.hc);hemi.groundColor.setHex(L.hg);hemi.intensity=L.hi;sun.color.setHex(L.sc);sun.intensity=L.si;sun.position.copy(L.sp);sun.target.position.set(0,0,0);sun.target.updateMatrixWorld();U.con.value=L.con;U.sat.value=L.sat;RIM.value.copy(L.rim);U.mist.value=L.mist;U.mistC.value.copy(L.mc);U.lutK.value=0;U.grain.value=0;STORY.lw=null;STORY.sunDir=null;}};
 STORY.hideMap=function(again){if(!again){STORY.hid=[];STORY.pulled=[];[1500,4000,9000].forEach(ms=>setTimeout(()=>{if(STORY.on)STORY.hideMap(true);},ms));}if(!mapGroup)return; // las casas del mapa cargan tarde: se vuelve a revisar
-  for(const o of mapGroup.children){const p=o.position;let hide=false,pull=false;
+  for(const o of mapGroup.children){if(o.isLight){if(o.visible){o.visible=false;STORY.hid.push(o);}continue;} /* las luces del mapa de arena no se ven en la historia pero se calculaban en cada píxel */
+    const p=o.position;let hide=false,pull=false;
     if(o.isMesh&&o.geometry&&o.geometry.type==='BoxGeometry'){const g=o.geometry.parameters,big=g.width>100;
       if(!big&&(p.z<-8||(p.z>78&&p.z<108&&Math.abs(p.x)>30)))hide=pull=true;else if(Math.abs(p.x)>=79)hide=true;}
     else if(!o.isMesh&&(Math.abs(p.x)>=60||(p.z<-8&&Math.abs(p.x)>25)||(p.z>78&&p.z<108&&Math.abs(p.x)>30)))hide=true;
     if(!hide||!o.visible)continue;o.visible=false;STORY.hid.push(o);
     if(pull){const g=o.geometry.parameters;for(let k=boxes.length-1;k>=0;k--){const b=boxes[k];if(Math.abs((b.x0+b.x1)/2-p.x)<.01&&Math.abs((b.z0+b.z1)/2-p.z)<.01&&Math.abs((b.y0+b.y1)/2-p.y)<.01&&Math.abs(b.x1-b.x0-g.width)<.01){STORY.pulled.push(b);boxes.splice(k,1);break;}}}}};
 STORY.restoreMap=function(){for(const o of STORY.hid||[])o.visible=true;for(const b of STORY.pulled||[])boxes.push(b);STORY.hid=[];STORY.pulled=[];};
-STORY.dressOutside=function(){let i=0;SEED=7;
+STORY.dressOutside=function(){let i=0;SEED=7;STORY.roofs=[];
   // edificios del usuario a ambos lados, irregulares: alturas, giros, huecos y retranqueos distintos
   for(const s of [-1,1])for(let z=118;z>-262;){const k='brutal',h=srand(13,27),w=srand(11,19); // solo los edificios del usuario; nada de mercados repetidos
-    sFit(k,s*srand(67,76),0,z-w/2,0,h,0,(srand(0,4)|0)*PI/2+srand(-.12,.12));z-=w+srand(0,7);}
+    sFit(k,s*srand(67,76),0,z-w/2,0,h,0,(srand(0,4)|0)*PI/2+srand(-.12,.12),0,0,null,H=>{H.updateMatrixWorld(true);STORY.roofs.push(new T.Box3().setFromObject(H));});z-=w+srand(0,7);} // azoteas para los tiradores
   sFit('rubbleBig',-50,0,-118,0,5,0,.3);sFit('rubbleBig',54,0,-62,0,4,0,2.1);sCol(-60,-40,-124,-112,0,3);sCol(45,63,-68,-56,0,2.5);
   // árboles y faroles sin simetría
   for(let k=0;k<22;k++){const s=k%2?1:-1,z=srand(-230,108);if(z>-8&&z<74)continue;sFit(srand(0,1)<.5?'tree':'tree2',s*srand(44,62),0,z,0,srand(5,8),0,srand(0,6));}
-  for(let z=-20;z>-200;z-=srand(24,36))for(const s of [-1,1])sFit('lampPost',s*srand(20,30),0,z+srand(-6,6),0,7,0,s<0?0:PI);
+  // faroles cálidos: halo en todos, luz real alternando lados (cada luz cuesta en todos los materiales)
+  const posts={'-1':[],'1':[]};for(let z=-20;z>-200;z-=srand(24,36))for(const s of [-1,1]){const x=s*srand(20,30),zz=z+srand(-6,6);sFit('lampPost',x,0,zz,0,7,0,s<0?0:PI);posts[s].push([x,zz]);
+    STORY.halo(x,6.7,zz,0xffb35c,2.6);STORY.pool(x,zz,14);if(posts[s].length%3===1){const l=sAdd(new T.PointLight(0xffa44a,1.1,26,2));l.position.set(x,6.2,zz);}} // halo y charco en todos; luz real en uno de cada tres
+  // guirnaldas de foquitos: de farol a farol, cruzando la calle, y frente a la entrada del mercado (sin luz real: solo puntos que brillan)
+  const W=[];const str=(a,b,y,sag)=>{const n=Math.max(8,Math.hypot(b[0]-a[0],b[1]-a[1])/.9|0);for(let i=0;i<=n;i++){const t=i/n;W.push([a[0]+(b[0]-a[0])*t,y-sag*4*t*(1-t),a[1]+(b[1]-a[1])*t]);}};
+  for(const s of ['-1','1'])for(let k=1;k<posts[s].length;k++)str(posts[s][k-1],posts[s][k],6.4,1.2);
+  for(let k=0;k<Math.min(posts['-1'].length,posts['1'].length);k+=2)str(posts['-1'][k],posts['1'][k],6.6,2);
+  for(const z of [74.5,82,90])str([-38,z],[38,z],z<75?5.5:6.5,1.6);for(const x of [-30,-10,10,30])str([x,74.5],[x*.6,104],6.2,1.4);
+  {const g=new T.BufferGeometry(),P=new Float32Array(W.length*3),C=new Float32Array(W.length*3),pal=[[1,.72,.36],[1,.62,.25],[1,.8,.5],[.45,1,.5],[.5,.6,1]];
+    W.forEach((w,i)=>{P.set(w,i*3);C.set(pal[i%7<5?i%3:3+(i%2)],i*3);});g.setAttribute('position',new T.BufferAttribute(P,3));g.setAttribute('color',new T.BufferAttribute(C,3));
+    sAdd(new T.Points(g,new T.PointsMaterial({map:STORY.glowMat(0xffffff).map,vertexColors:true,size:.55,transparent:true,depthWrite:false,blending:T.AdditiveBlending,fog:false})));}
+  {const l=sAdd(new T.PointLight(0xffb060,1.3,42,2));l.position.set(0,7,86);} // la plaza de la entrada
+  // faroles en la orilla de los edificios: halo y charco de luz pintado en el piso (barato); solo uno de cada tres alumbra de verdad
+  for(const s of [-1,1])for(let z=110;z>-258;z-=srand(22,28)){if(z>-8&&z<78)continue;const x=s*srand(58,62);sFit('lampPost',x,0,z,0,7,0,s<0?0:PI);STORY.halo(x,6.7,z,0xffb35c,2.4);STORY.pool(x,z,14);}
+  // zona de evacuación: dos reflectores cálidos en postes altos apuntando a la plataforma
+  for(const s of [-1,1]){const x=s*27,z=MK.lz[1]+16;sTex(.7,18,.7,x,9,z,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);sTex(2.6,1.2,1.2,x,18.4,z,null,1,0x2a2a2e);
+    const sp=sAdd(new T.SpotLight(0xffd29a,1.5,110,1,.85,1.2)),tg=sAdd(new T.Object3D()); // haz ancho y suave: cubre la plataforma sin quemarsp.position.set(x,18,z-.6);tg.position.set(0,0,MK.lz[1]);sp.target=tg;
+    const g=sAdd(new T.Sprite(STORY.glowMat(0xffe0b0)));g.position.set(x,18.2,z-.8);g.scale.setScalar(7);g.material.opacity=.85;}
+  // la rueda de la feria iluminada: foquitos de colores en el aro (el eje es el lado más delgado de su caja) y luz rosada al centro
+  sFit('wheel',33,0,-236,0,34,0,PI/2,0,0,null,H=>{const R=H.children.find(o=>o.isGroup);if(!R)return;const b=localBox(H,R),sz=b.getSize(new V3()),c=b.getCenter(new V3()),ax=sz.x<sz.z,r=Math.min(sz.y,ax?sz.z:sz.x)*.46,n=64,P=new Float32Array(n*3),C=new Float32Array(n*3),pal=[[1,.35,.6],[1,.8,.3],[.4,.8,1],[.6,1,.5]];
+    for(let i=0;i<n;i++){const a=i/n*PI*2,u=Math.cos(a)*r,v=Math.sin(a)*r;P.set(ax?[c.x,c.y+v,c.z+u]:[c.x+u,c.y+v,c.z],i*3);C.set(pal[i%4],i*3);}
+    const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(P,3));g.setAttribute('color',new T.BufferAttribute(C,3));H.add(new T.Points(g,new T.PointsMaterial({map:STORY.glowMat(0xffffff).map,vertexColors:true,size:1.3,transparent:true,depthWrite:false,blending:T.AdditiveBlending,fog:false})));
+    const hub=new T.Sprite(STORY.glowMat(0xff7ab0));hub.position.copy(c);hub.scale.setScalar(9);hub.material.opacity=.6;H.add(hub);});
+  {const l=sAdd(new T.PointLight(0xff8ac0,1.4,40,2));l.position.set(33,17,-236);}
+  // la ciudad arde: resplandor rojo detrás de los edificios y entre ellos
+  for(let k=0;k<26;k++){const s=k%2?1:-1,g=sAdd(new T.Sprite(STORY.glowMat(k%3?0xff3a12:0xff7a1a)));g.position.set(s*srand(95,170),srand(6,26),srand(-300,160));g.scale.setScalar(srand(50,95));g.material.opacity=srand(.22,.4);g.userData={glow:1,ph:srand(0,6),o:g.material.opacity,sp:.8};STORY.flames.push(g);}
   // puestos y bancas en la plaza de la catedral
   for(const z of [82,97])for(const x of [-54,-41,-28,29,43,55])if(srand(0,1)<.85)stall(x+srand(-2,2),z+srand(-2,2),7,4,i++,(x<0?PI/2:-PI/2)+srand(-.25,.25));
   for(const x of [-22,-13,15,24])sFit('bench',x,0,84+srand(-1,1),4.6,0,2.2,PI+srand(-.2,.2));for(const x of [-18,19])sFit('sign',x,0,76,0,1.8,0,srand(-.6,.6));sFit('cart',-34,0,104,0,3,0,.5);sFit('cart',36,0,101,0,3,0,-.8);
@@ -4179,28 +4231,56 @@ function civ2(i,x,z){const f=unit('civ',player.team,'',CIVK[i%CIVK.length],0,x,0
 function brute(x,z){const f=unit('mob',1-player.team,'Bruto',1,0,x,0,z,0);f.brute=true;f.maxHp=f.hp=120;f.weapon=1;f.side=Math.random()<.5?-1:1;attachCreature(f,'acechador',3.4);
   ring(x,0,z,0x9a4dff,4.2,.7);burst(x,1.5,z,0x9a4dff,22,7);return f;}
 function crawler(x,y,z,beam){const f=sniper(x,y,z,0);f.maxHp=f.hp=beam?45:60;f.rail=beam||null;f.dir=Math.random()<.5?-1:1;return f;}
+// rastrero en la azotea de un edificio de la calle: no baja, dispara de lejos
+function roofSniper(){const R=(STORY.roofs||[]).filter(b=>!b.used&&b.max.z<-90&&b.min.z>-240);if(!R.length)return;const b=R[Math.random()*R.length|0];b.used=1;
+  const cx=(b.min.x+b.max.x)/2,x=cx<0?b.max.x-1.6:b.min.x+1.6,z=(b.min.z+b.max.z)/2,y=b.max.y;STORY.noLift=true;sCol(x-1.6,x+1.6,z-1.6,z+1.6,y-.5,y);STORY.noLift=false;
+  const f=crawler(x,y+.05,z);f.perch=true;return f;}
+// explosiones horneadas: en la carga se toman 16 cuadros de cada clip, se recorta el fondo azul y queda un atlas 4×4 (sin decodificar video en plena pelea)
+function bakeBlasts(){if(STORY.bfr)return;STORY.bfr=[];STORY.bvid=[];for(const src of ['fx/blast-02.mp4','fx/blast-03.mp4']){const v=document.createElement('video'),N=16,cw=256,chh=144,cv=document.createElement('canvas');v.muted=true;v.preload='auto';v.src=src;STORY.bvid.push(v);/* se guarda la referencia: un video suelto se recolecta a media carga */cv.width=cw*4;cv.height=chh*4;const g=cv.getContext('2d');let i=0;
+  v.onloadeddata=()=>{const step=()=>{v.currentTime=(i+.5)/N*v.duration;};v.onseeked=()=>{g.drawImage(v,(i%4)*cw,(i/4|0)*chh,cw,chh);if(++i<N){step();return;}
+    const d=g.getImageData(0,0,cv.width,cv.height),a=d.data;for(let k=0;k<a.length;k+=4){const m=Math.max(a[k],a[k+1]);a[k+3]=Math.max(0,Math.min(255,(m-a[k+2]*.3-5)*5));if(a[k+2]>m)a[k+2]=m;}g.putImageData(d,0,0);
+    STORY.bfr.push(new T.CanvasTexture(cv));v.removeAttribute('src');v.load();};step();};}}
+// explosión: atlas horneado, destello, chispas y temblor
+function sBlast(x,z,k,y){y=y||0;if(!k){bakeBlasts();return;}burst(x,y+1.5,z,0xffb050,30,10);lightFlash(x,y+5,z,0xffa040,3*k,45,.9);if(player.pos.distanceTo(new V3(x,y,z))<70)shake=Math.max(shake,.18);
+  const B=STORY.bfr&&STORY.bfr[Math.random()*STORY.bfr.length|0];if(!B)return;const t=B.clone();t.repeat.set(.25,.25);t.needsUpdate=true; // una copia por explosión: solo cambia el recorte del cuadro
+  const s=sAdd(new T.Sprite(new T.SpriteMaterial({map:t,transparent:true,depthWrite:false,fog:false})));s.center.set(.5,.15);s.position.set(x,y,z);s.scale.set(32*k,18*k,1);s.userData={bl:t,t:0};STORY.flames.push(s);}
+// fuego que se acerca: empieza en la ciudad lejana, pasa por los puestos y el techo del mercado y termina en azoteas cercanas; nunca en la zona que defendemos
+function sFireSpot(t){const C=[];for(const b of STORY.roofs||[])C.push([(b.min.x+b.max.x)/2,b.max.y,(b.min.z+b.max.z)/2,1]);
+  for(const x of [-24,-12,12,24])for(const z of [10,36,48,62])C.push([x,LIFT,z,0]);
+  for(const x of [-28,-10,10,28])for(const z of [6,30,54])C.push([x,23,z,2]);
+  const want=260-190*t;let best=null,bd=1e9;for(const c of C){if(c.used||(Math.abs(c[0])<50&&c[2]<-95&&c[2]>-235))continue;const s=Math.abs(Math.hypot(c[0],c[2]+180)-want)+rand(0,25);if(s<bd){bd=s;best=c;}}return best;}
 function civRun(f,wp){const o=(f.side||1)*srand(.6,2.6),q=srand(-1.5,1.5);f.st='run';f.wp=wp.map((p,i)=>i===wp.length-1?[p[0],p[1]]:[p[0]+o,p[1]+q]);f.runT=0;} // cada civil toma su propio carril
-function buildShip(){const g=new T.Group();sFit('ship',0,-3.2,0,15,0,26,0,0,0,o=>g.add(o)); // transporte del usuario
-  const L=new T.PointLight(0xffa040,2.4,30,2);L.position.y=-3;g.add(L);return g;}
+// propulsores medidos sobre el modelo: dos bancos de toberas naranjas en la cara -z (cola), a 13 % y 87 % del ancho y de 25 % a 65 % del alto
+// la luz ya existe desde el inicio para no recompilar shaders
+// caja del modelo en ejes de su raíz (sin el giro ni la posición del mundo): si no, un modelo girado deja las luces fuera
+function localBox(root,obj){const p=root.position.clone(),q=root.quaternion.clone();root.position.set(0,0,0);root.quaternion.identity();root.updateMatrixWorld(true);const b=new T.Box3().setFromObject(obj);root.position.copy(p);root.quaternion.copy(q);root.updateMatrixWorld(true);return b;}
+function buildShip(){const g=new T.Group(),L=STORY.shipL,gl=[];L.intensity=2.6;g.add(L);
+  for(const fx of [.13,.87])for(const fy of [.25,.45,.65]){const s=new T.Sprite(STORY.glowMat(0xff9a3a));s.scale.setScalar(2.6);s.userData.f=[fx,fy];gl.push(s);g.add(s);}
+  sFit('ship',0,-3.2,0,15,0,26,0,0,0,o=>g.add(o),H=>{const R=H.children.find(o=>o.isGroup);if(!R)return;const b=localBox(g,R),s=b.getSize(new V3());
+    for(const q of gl)q.position.set(b.min.x+s.x*q.userData.f[0],b.min.y+s.y*q.userData.f[1],b.min.z-.2);L.position.set(b.min.x+s.x/2,b.min.y+s.y*.45,b.min.z-1.5);});return g;} // transporte del usuario
 STORY.begin=function(){
-  STORY.on=true;document.body.classList.add('story');try{if(!STORY.amb){STORY.amb=new Audio('music/warzone.mp3');STORY.amb.loop=true;}STORY.amb.volume=.16;STORY.amb.currentTime=0;STORY.amb.play().catch(()=>{});}catch(_){}
+  STORY.on=true;document.body.classList.add('story');try{if(!STORY.amb){STORY.amb=new Audio('music/warzone.mp3');STORY.amb.loop=true;}STORY.amb.volume=.05;STORY.amb.currentTime=0;STORY.amb.play().catch(()=>{});}catch(_){}
   STORY.ph='intro';STORY.flags={};STORY.units.length=0;STORY.t=0;STORY.flames=[];STORY.smoke=[];STORY.hold=300;STORY.spawnT=0;STORY.ship=null;STORY.navWas=NAV;NAV=null;
-  STORY.skyWas=scene.background;STORY.sky=STORY.sky||new T.TextureLoader().load('textures/ui/sky-olocuilta-sunset.webp',x=>{x.mapping=T.EquirectangularReflectionMapping;});scene.background=STORY.sky;
+  STORY.skyWas=scene.background;if(!STORY.sky){/* cielo pintado de la ciudad en llamas: dos copias (una en espejo) dan la vuelta completa y su horizonte queda en el del mundo */
+    const c=document.createElement('canvas');c.width=2048;c.height=1024;const g=c.getContext('2d'),gr=g.createLinearGradient(0,0,0,1024);gr.addColorStop(0,'#05060f');gr.addColorStop(.2,'#0d1026');gr.addColorStop(.7,'#1a0d10');gr.addColorStop(1,'#0b0708');g.fillStyle=gr;g.fillRect(0,0,2048,1024);
+    STORY.sky=new T.CanvasTexture(c);STORY.sky.mapping=T.EquirectangularReflectionMapping;const im=new Image();im.onload=()=>{const w=1024,h=w*im.height/im.width,top=512-h*.66;
+      for(const k of [0,1]){g.save();if(k){g.translate(2048,0);g.scale(-1,1);}g.drawImage(im,0,top,w,h);g.restore();}STORY.sky.needsUpdate=true;};im.src='textures/ui/sky-olocuilta-burning.jpg';}
+  scene.background=STORY.sky;
   sFloor('assets-source/textures/floors/floor_02_cracked_patches.png',0,(MK.zR+69.2)/2,78,69.2-MK.zR,LIFT+.03,7);STORY.noLift=true;sCol(MK.x0,MK.x1,MK.zR,69.2,0,LIFT);
   // escalones: frente (porche), puerta trasera y portón lateral del este
   sCol(-42,42,69.2,76.5,0,LIFT);sTex(84,.45,1.2,0,.22,77.1,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);sCol(-42,42,76.5,77.7,0,.45);
   sTex(12,.45,1.2,0,.22,MK.zR-.6,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);sCol(-6,6,MK.zR-1.2,MK.zR,0,.45);sTex(1.2,.45,6,40.1,.22,69.5,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);sCol(39,40.7,66.5,72.5,0,.45);STORY.noLift=false;sFloor('assets-source/textures/floors/floor_05_hazard_scuffs.png',0,-122,160,236,.25,14);sFloor('assets-source/textures/floors/floor_07_chipped_rust_flecks.png',0,92,160,40,.25,10);sFloor('assets-source/textures/floors/floor_04_service_panel_repairs.png',0,MK.lz[1],34,38,.27,6);
   STORY.hideMap();
-  setIndoor([[MK.x0,0,MK.zR,MK.x1,23,MK.zF,.9]],.42); // el techo del mercado oscurece el interior
+  setIndoor([[MK.x0,0,MK.zR,MK.x1,23,MK.zF,.9]],.45); // el techo del mercado oscurece el interior
   STORY.cp=[0,0,92,0];player.pos.set(0,0,92);player.yaw=0;camYaw=0;camPitch=-.04;
-  const me=mySlug();STORY.squad=['andres','connie','diego','gaby','isma','mau','yesy','tefa','rebecca','ricardo','milena'].filter(s=>s!==me).slice(0,7);
+  const me=mySlug();STORY.squad=['andres','connie','diego','gaby','isma','mau','yesy','tefa','rebecca','ricardo','milena'].filter(s=>s!==me).slice(0,5);
   for(const s of STORY.squad.concat(me)){const i=new Image();i.src=portraitOf(s)||'';}
   // muros del mercado (el modelo no tiene colisión): arco abierto al sur y puerta central al norte
   sCol(MK.x0-1,MK.x0,MK.zR-1,MK.zF+1,0,22);sCol(MK.x1,MK.x1+1,MK.zR-1,66.5,0,22);sCol(MK.x1,MK.x1+1,72.5,MK.zF+1,0,22); // el portón lateral del frente queda abierto
   sCol(MK.x0,-8,MK.zF,MK.zF+1,0,22);sCol(8,MK.x1,MK.zF,MK.zF+1,0,22);
   sCol(MK.x0,-6,MK.zR-1,MK.zR,0,22);sCol(6,MK.x1,MK.zR-1,MK.zR,0,22); // el porche ya tiene colisión al nivel del piso (arriba)
   // planta baja: hileras de puestos a los lados del pasillo central (x de -6 a 6)
-  let ci=0;for(const z of [62,55,48])for(const s of [-1,1]){stall(s*12,z,8,3,ci++);if(s<0||z<60)stall(s*24,z,8,3,ci++);} // al este queda libre el pie de la rampa
+  let ci=0;for(const z of [62,55,48])for(const s of [-1,1]){stall(s*12,z,8,3,ci++);if(s<0)stall(s*24,z,8,3,ci++);} // al este queda libre la rampa
   // tres barreras de puestos volcados cruzan el mercado; solo se pasa saltándolos por el pasillo
   for(const [z,h] of [[40,1],[32,1.1],[24,1.2]]){fallen(0,z,12,h,ci++);for(const s of [-1,1])for(let k=0;k<6;k++){stall(s*(8.75+k*5.5),z,3.2,5.5,ci++,PI/2);sCol(s*(8.75+k*5.5)-2.9,s*(8.75+k*5.5)+2.9,z-1.3,z+1.3,0,2.6);}}
   for(const z of [36,28])for(const s of [-1,1])stall(s*14,z,6,2.4,ci++);
@@ -4208,8 +4288,14 @@ STORY.begin=function(){
   // vigas del techo: aquí cuelgan y se arrastran los rastreros
   for(const z of [20,8]){sB(0,z,78,.6,1.6,12,0x3a3432);for(const x of [-26,0,26])sDeco(.4,9.4,.4,0x3a3432,x,17.3,z);for(const x of [-16,16])sFit('lamp',x,10.6,z,3.2,1.4,1.8,0);}
   for(const z of [58,44,30])for(const x of [-18,0,18])sFit('lamp',x,9.5,z,3.2,1.4,1.8,0);
+  // LED blancos del mercado: halo bajo cada lámpara y una luz por hilera
+  STORY.flick=[];for(const [z,y,xs] of [[58,9.5,[-18,0,18]],[44,9.5,[-18,0,18]],[30,9.5,[-18,0,18]],[20,10.6,[-16,16]],[8,10.6,[-16,16]]]){const fl=z===44||z===8,gs=[];for(const x of xs){if(!fl){STORY.halo(x,y+LIFT-.2,z,0xe8f0ff,1.4,.85);continue;}const g=sAdd(new T.Sprite(STORY.glowMat(0xe8f0ff)));g.position.set(x,y+LIFT-.2,z);g.scale.setScalar(1.4);g.material.opacity=.85;gs.push(g);}
+    const l=sAdd(new T.PointLight(0xeef4ff,.75,36,2));l.position.set(0,y+LIFT-1,z);if(fl)STORY.flick.push({l,gs,i:.75,t:0,on:1});} // dos hileras con falla eléctrica: parpadean (solo esas llevan halos sueltos)
+  // galerías: hilera de LED en el techo de cada tramo, como una nave industrial; una luz real por tramo
+  for(const [x,z] of [[34.5,40],[-34.5,40],[0,66.5]]){const l=sAdd(new T.PointLight(0xeef4ff,.7,34,2));l.position.set(x,MK.gal+LIFT+3.2,z);}
+  for(const [x,z] of [[34.5,22],[34.5,40],[34.5,56],[-34.5,22],[-34.5,40],[-34.5,56],[-20,66.5],[0,66.5],[20,66.5]])for(const o of [-3,3]){const f=Math.abs(z-66.5)<1;STORY.halo(f?x+o:x,MK.gal+LIFT+3.6,f?z:z+o,0xe8f0ff,1.1,.85);}
   // rampa intacta al este (abajo a la derecha, junto a la entrada) y galería larga hacia atrás
-  sRampPath();rampVisual();
+  sRamp();
   // tramos rectos del usuario: el modelo viene inclinado (~5° a lo largo y ~5.6° de lado); se nivela y se escala uniforme hasta que el piso queda a 5.5 m
   sCol(MK.galX,39,MK.gapZ1,47,MK.gal-.5,MK.gal);sCol(MK.galX-.3,MK.galX,MK.gapZ1,47,MK.gal,MK.gal+3);
   galRun('z',MK.galX,39,MK.gapZ1,47,MK.galX);
@@ -4221,6 +4307,9 @@ STORY.begin=function(){
   sCol(33,39,52.8,62.2,MK.gal-.5,MK.gal);sCol(32.7,33,52.8,61.9,MK.gal,MK.gal+3);galRun('z',33,39,52.8,62.2,33);
   // galería derrumbada al fondo: muro marcado para correr y repisa lejana tras el salto de muro
   {const wm=toon(0xffffff,{side:T.DoubleSide});useTex(wm,'assets-source/textures/walls/wall_04_orange_safety_band.png');const s=sAdd(new T.Mesh(new T.PlaneGeometry(MK.gapZ1-MK.shut+2,5),wm));s.rotation.y=-PI/2;s.position.set(MK.x1-.03,MK.gal+LIFT+1.2,(MK.gapZ1+MK.shut)/2);}
+  // paneles por dentro de las paredes laterales, del piso hasta los marcos: tapan los huecos del modelo como el del muro para correr
+  for(const [x,z0,z1,ry] of [[MK.x1-.01,MK.zR,66.5,-PI/2],[MK.x0+.01,MK.zR,MK.zF,PI/2]]){const L=z1-z0,h=9.2,g=new T.PlaneGeometry(L,h),uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*L/5,uv.getY(i)*h/5);
+    const m=toon(0xffffff,{side:T.DoubleSide});useTex(m,'assets-source/textures/walls/wall_04_orange_safety_band.png');const s=sAdd(new T.Mesh(g,m));s.rotation.y=ry;s.position.set(x,LIFT+h/2,(z0+z1)/2);}
   sCol(20,36,MK.zR,MK.shut-.6,MK.ledge-.5,MK.ledge);galRun('x',20,36,MK.zR,MK.shut-.6,null,MK.ledge); // repisa lejana: x 20 a 36
   // el tramo roto del usuario, volteado y alineado con la galería: cayó al piso bajo el hueco (sin colisión)
   galBroken();
@@ -4234,9 +4323,17 @@ STORY.begin=function(){
   // la feria con los modelos del usuario: rueda real (la procedural se oculta), vehículos como islas de cobertura
   if(mapGroup)for(const o of mapGroup.children)if(!o.isMesh&&Math.abs(o.position.x)<1&&Math.abs(o.position.z-34)<1)inkOutline(o);
   STORY.wheelProc=scene.getObjectByName('ferrisProc');if(STORY.wheelProc)STORY.wheelProc.visible=false;
-  sFit('wheel',33,0,-236,0,34,0,PI/2); // la rueda domina la zona de defensa, detrás de la línea
+  // la rueda domina la zona de defensa, detrás de la línea (se coloca con sus luces en dressOutside)
   STORY.horizon();STORY.light(true);
   STORY.cars=[];for(const [k,x,z,L,ry] of [['truck',-7,-16,6.2,PI/2],['rover',8,-20,4.6,PI/2],['truck',-21,-104,6.2,0],['rover',19,-48,4.6,-.4],['rover',-19,-158,4.6,.3],['truck',22,-140,6.2,PI]])STORY.cars.push(sCar(k,x,z,L,ry));
+  // luces medidas sobre los modelos (frente = +x local, hacia donde avanza al manejar); van pegadas al modelo y se acomodan cuando carga
+  // camioneta: faros en la cara delantera a 50 % del alto y ±36 % del ancho; rover: cuatro toberas azules atrás
+  for(const c of STORY.cars){const truck=c.k==='truck',sp=truck&&c!==STORY.cars[0]?new T.SpotLight(0xfff2d6,2.6,45,.5,.5,2):null,tg=new T.Object3D(),
+      gl=(truck?[[1,.5,-.36],[1,.5,.36]]:[[0,.3,.2],[0,.3,.8],[0,.55,.2],[0,.55,.8]]).map(f=>{const s=new T.Sprite(STORY.glowMat(truck?0xfff2d6:0x4fc8ff));s.scale.setScalar(truck?1.1:1.3);s.userData.f=f;return s;});
+    c.H.add(tg,...gl);if(sp){c.H.add(sp);sp.target=tg;}
+    c.hl=H=>{const R=H.children.find(o=>o.isGroup);if(!R)return;const b=localBox(H,R),s=b.getSize(new V3()),cz=(b.min.z+b.max.z)/2;
+      for(const q of gl){const [fx,fy,fz]=q.userData.f;q.position.set(fx?b.max.x+.04:b.min.x-.04,b.min.y+s.y*fy,truck?cz+fz*s.z:b.min.z+fz*s.z);}
+      if(sp){const y=b.min.y+s.y*.5;sp.position.set(b.max.x-.1,y,cz);tg.position.set(b.max.x+20,y-1.5,cz);}};if(c.ready)c.hl(c.H);}
   STORY.dressOutside();
   // supervivientes rodeados en el frente-centro del mercado
   STORY.civs=[[-2,51],[1.5,52],[3,50],[-1,49.5],[-3.5,50],[0,53],[3.5,52.5],[1,48.5]].map(([x,z],i)=>civ2(i,x,z));
@@ -4252,7 +4349,7 @@ STORY.check=function(){const F=STORY.flags;
   if(STORY.ph==='rescue'&&!STORY.units.some(u=>u.alive&&u.kind==='mob')){STORY.ph='talk';markAt(null);setTimeout(()=>say('rescate_fin',()=>{STORY.ph='vault';
       for(const c of STORY.civs)civRun(c,[[c.pos.x*.5,45]]);obj('Abre paso por el pasillo central','Salta los puestos volcados');markAt(0,0,40);}),900);}
   if(STORY.ph==='ceiling'&&!STORY.units.some(u=>u.alive&&u.kind==='sniper')&&!F.ceil){F.ceil=1;STORY.ph='talk';markAt(null);setTimeout(()=>say('cortina',()=>{STORY.ph='ramp';STORY.cp=[0,LIFT,30,0];
-      obj('Sube por la rampa del lado este','La galería pasa por encima de la cortina');markAt(37,0,63);}),900);}
+      obj('Sube por la rampa del lado este','La galería pasa por encima de la cortina');markAt(RAMP.x0,0,(RAMP.z0+RAMP.z1)/2);}),900);}
 };
 // cámara de cine: puntos [pos, mira, fov] interpolados suave; clic, ESPACIO o ESC la saltan
 STORY.cine=function(keys,dur,done){STORY.cn={k:keys,d:dur,t:0,done};window.__camOverride=true;document.body.classList.add('talking');$('hud').style.opacity='0';};
@@ -4264,6 +4361,8 @@ window.addEventListener('keydown',e=>{if(STORY.cn&&['Space','Enter','Escape'].in
 window.addEventListener('mousedown',e=>{if(STORY.cn&&e.button===0){e.stopImmediatePropagation();STORY.cineEnd();}},true);
 // atmósfera: polvo y rayos de luz dentro del mercado, humo sobre la ciudad, brasas, naves lejanas
 STORY.atmo=function(){const A=STORY.at={smoke:[],ember:null,dust:null,ships:[],k:.35};
+  STORY.shipL=sAdd(new T.PointLight(0xffa040,0,70,2));sBlast(0,0,0); // luces y shaders listos desde el inicio: agregarlos a media pelea congela la página
+  STORY.haloFlush();for(const n of ['acechador','rastrero'])creatureModel(n).then(s=>{if(!s||!STORY.on)return;const o=T.SkeletonUtils.clone(s);o.position.set(0,-40,92);sAdd(o);setTimeout(()=>scene.remove(o),4000);}); // halos en pocos objetos; criaturas dibujadas una vez durante la carga (shaders listos)
   const soft=STORY.stex||(STORY.stex=tex(64,64,(g,w,h)=>{const l=g.createRadialGradient(w/2,h/2,2,w/2,h/2,w/2);l.addColorStop(0,'rgba(60,48,50,.9)');l.addColorStop(1,'rgba(60,48,50,0)');g.fillStyle=l;g.fillRect(0,0,w,h);}));
   const dot=tex(32,32,(g,w,h)=>{const l=g.createRadialGradient(w/2,h/2,0,w/2,h/2,w/2);l.addColorStop(0,'rgba(255,255,255,1)');l.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=l;g.fillRect(0,0,w,h);});
   const pts=(n,f,col,size,op)=>{const g=new T.BufferGeometry(),a=new Float32Array(n*3);for(let i=0;i<n;i++){const v=f(i);a[i*3]=v[0];a[i*3+1]=v[1];a[i*3+2]=v[2];}g.setAttribute('position',new T.BufferAttribute(a,3));
@@ -4271,17 +4370,13 @@ STORY.atmo=function(){const A=STORY.at={smoke:[],ember:null,dust:null,ships:[],k
   A.dust=pts(700,()=>[srand(MK.x0,MK.x1),srand(.5,18),srand(MK.zR,MK.zF)],0xffe3b0,.16,.55);
   A.ember=pts(520,()=>[srand(-70,70),srand(0,30),srand(-240,90)],0xff8a2a,.34,.9);A.ash=pts(600,()=>[srand(-80,80),srand(0,40),srand(-240,110)],0x9a8c88,.22,.5);A.boomT=3;
   A.flash=sAdd(new T.Sprite(new T.SpriteMaterial({map:dot,color:0xffb060,transparent:true,depthWrite:false,blending:T.AdditiveBlending,opacity:0,fog:false})));
-  // rayos de luz que entran por las puertas traseras y el arco
-  const ray=tex(64,256,(g,w,h)=>{const l=g.createLinearGradient(0,0,0,h);l.addColorStop(0,'rgba(255,214,150,0)');l.addColorStop(.3,'rgba(255,214,150,.55)');l.addColorStop(1,'rgba(255,214,150,0)');g.fillStyle=l;g.fillRect(0,0,w,h);});
-  for(const [x,z,ry,rx,w] of [[-12,4,0,.55,9],[0,3,0,.5,11],[12,4,0,.55,9],[0,64,PI,.5,14],[-24,30,PI/2,.7,7],[24,40,-PI/2,.7,7]]){
-    const m=sAdd(new T.Mesh(new T.PlaneGeometry(w,24),basic(0xffd59a,{map:ray,transparent:true,opacity:.34,depthWrite:false,side:T.DoubleSide,blending:T.AdditiveBlending,fog:false})));m.position.set(x,9,z);m.rotation.set(rx,ry,0,'YXZ');}
   // columnas de humo sobre la ciudad (crecen con la batalla)
   for(const [x,z] of [[-110,-60],[95,-150],[-90,60],[120,20],[0,34],[-60,-260],[80,-280],[140,-90],[-140,-180],[60,140],[-30,170],[160,-230]])for(let i=0;i<8;i++){
     const q=sAdd(new T.Sprite(new T.SpriteMaterial({map:soft,transparent:true,depthWrite:false,opacity:.5,fog:false})));q.userData={x,z,ph:i/7,s:srand(16,26)};A.smoke.push(q);}
   // naves y drones a lo lejos cruzando el cielo
   for(let i=0;i<5;i++){const s=sFit(i<3?'fighter':'rover',0,0,0,0,i<3?3:2.6,0,0);/* la nave grande es la base: sólo aparece al final */s.userData.fly={r:srand(180,320),h:srand(55,110),sp:srand(.03,.07)*(i%2?1:-1),ph:srand(0,6)};A.ships.push(s);}
-  // niebla de atardecer: el campo de 200 m se lee enorme
-  STORY.fogWas=[scene.fog.color.getHex(),scene.fog.near,scene.fog.far];scene.fog.color.setHex(0xc98a86);scene.fog.near=110;scene.fog.far=1150;STORY.farWas=camera.far;camera.far=2600;camera.updateProjectionMatrix();};
+  // neblina de noche: tapa la lejanía y deja que los focos brillen
+  STORY.fogWas=[scene.fog.color.getHex(),scene.fog.near,scene.fog.far];scene.fog.color.setHex(0x2a2232);scene.fog.near=10;scene.fog.far=290;STORY.farWas=camera.far;camera.far=2600;camera.updateProjectionMatrix();};
 STORY.atmoTick=function(dt){const A=STORY.at;if(!A)return;const ph=STORY.ph,tgt=(ph==='hold'||ph==='ship'||ph==='board'||ph==='depart')?1:(ph==='cross'||ph==='pass')?.7:.35;A.k+=(tgt-A.k)*Math.min(1,dt*.3); // el humo crece con la batalla
   for(const q of A.smoke){const U=q.userData;U.ph=(U.ph+dt*.035)%1;q.position.set(U.x+Math.sin(U.ph*3+U.x)*4,10+U.ph*70,U.z);const s=U.s*(.5+U.ph*1.8);q.scale.set(s,s,1);q.material.opacity=.55*A.k*(1-U.ph)*Math.min(1,U.ph*6);}
   const ea=A.ember.geometry.attributes.position;for(let i=0;i<ea.count;i++){let y=ea.getY(i)+dt*(1.5+(i%5)*.4);if(y>34)y=0;ea.setY(i,y);ea.setX(i,ea.getX(i)+Math.sin(now+i)*dt*.6);}ea.needsUpdate=true;A.ember.material.opacity=.9*A.k;
@@ -4310,8 +4405,8 @@ STORY.tick=function(dt){updDlg(dt);STORY.fx(dt);STORY.atmoTick(dt);
   if(ph==='ramp'&&ga&&p.pos.x>32){STORY.ph='gallery';STORY.cp=[36,MK.gal+LIFT,44,0];obj('Recorre la galería hacia el fondo','');markAt(36,MK.gal,MK.gapZ1+1);}
   if(ph==='gallery'&&ga&&p.pos.z<MK.gapZ1+5){STORY.ph='gap';{const k=boxes.indexOf(STORY.shutCap);if(k>=0)boxes.splice(k,1);}STORY.cp=[36,MK.gal+LIFT,MK.gapZ1+4,0];hint('Sin piso: corre, salta hacia el muro naranja y corre por él. Al final salta (ESPACIO) hacia la repisa',6);
     obj('Cruza la galería derrumbada','Corre por el muro y salta a la repisa');markAt(28,MK.ledge,-1.5);}
-  if(ph==='gap'||ph==='gallery'){ // caer bajo el hueco te regresa a la galería
-    if(p.pos.y<1+LIFT&&p.pos.x>30&&p.pos.z<MK.gapZ1+2&&(p.pos.z>MK.shut+.5||p.pos.x>35.6)){p.pos.set(36,MK.gal+LIFT,MK.gapZ1+4);p.vel.set(0,0,0);camYaw=0;hint('Otra vez: salta hacia el muro mientras corres',3);}}
+  if(ph==='gap'||ph==='gallery'){ // caer bajo el hueco (piso o losa caída) te regresa a la galería: la carrera por el muro no se salta
+    if(p.pos.y<MK.ledge-.6+LIFT&&p.pos.x>30&&p.pos.z<MK.gapZ1+2&&(p.pos.z>MK.shut+.5||p.pos.x>35.6)){p.pos.set(36,MK.gal+LIFT,MK.gapZ1+4);p.vel.set(0,0,0);camYaw=0;hint('Otra vez: salta hacia el muro mientras corres',3);}}
   if((ph==='gap'||ph==='gallery'||ph==='ramp')&&p.pos.z<MK.shut-.5&&p.pos.x<35.6){STORY.ph='lever';STORY.cp=[25,MK.ledge+LIFT,-2,PI/2];obj('Abre la cortina','La palanca está junto al pasillo');markAt(7,0,MK.shut-.6);}
   if(ph==='lever'&&!ga&&p.pos.z<MK.shut&&Math.hypot(p.pos.x-7,p.pos.z-MK.shut+.6)<2.6){STORY.ph='talk';markAt(null);STORY.openShutter();STORY.cp=[0,LIFT,-1,0];
     for(const c of STORY.civs)civRun(c,[[0,c.pos.z],[0,22],[0,6],[c.pos.x*.6,-1.5]]);
@@ -4330,13 +4425,18 @@ STORY.tick=function(dt){updDlg(dt);STORY.fx(dt);STORY.atmoTick(dt);
     if(!left||STORY.passT>40){STORY.ph='talk';markAt(null);setTimeout(()=>say('defensa',()=>{STORY.ph='hold';STORY.hold=180;STORY.spawnT=2;obj('Resiste hasta que llegue la nave','');banner('¡RESISTE!','#ff7a1a',1.6);}),600);}}
   if(ph==='hold'){STORY.hold-=dt;const h=Math.max(0,STORY.hold),mm=Math.floor(h/60),ss=Math.floor(h%60);STORY.od='Nave en '+mm+':'+String(ss).padStart(2,'0')+' · invasores '+sMobs();
     for(const [s,k] of [[150,'quedan3'],[120,'quedan2'],[60,'quedan1'],[30,'quedan30']])if(h<s&&!F[k]){F[k]=1;say(k,null,true);}
-    const el=180-h;if((STORY.spawnT-=dt)<=0){STORY.spawnT=rand(1.6,2.6);const cap=Math.min(34,14+Math.floor(el/9));
-      if(sMobs()<cap){const src=Math.random()*3|0,n=3+(Math.random()*3|0)+(el>150?2:0);for(let i=0;i<n;i++){
+    const el=180-h;if((STORY.spawnT-=dt)<=0){STORY.spawnT=rand(1.4,2.4);const cap=Math.min(28,14+Math.floor(el/8));
+      if(sMobs()<cap){const src=Math.random()*3|0,n=3+(Math.random()*3|0)+(el>120?2:0)+(el>155?2:0);for(let i=0;i<n;i++){
           if(src===0)mob(rand(-30,30),-148+rand(-6,6),0);else mob(src===1?-72:72,-168+rand(-10,10),0);}}}
-    for(const [s,kind] of [[30,'b'],[50,'c'],[80,'b'],[100,'c'],[130,'b'],[150,'c']])if(el>s&&!F['w'+s]){F['w'+s]=1;if(kind==='b')brute(rand(-20,20),-120);else crawler(rand(-25,25),0,-125);}
-    if(h<=0){STORY.ph='ship';STORY.shipT=0;STORY.ship=sAdd(buildShip());STORY.ship.position.set(0,70,-280);obj('La nave está llegando','Mantén despejada la zona de aterrizaje');say('nave',null,true);STORY.cine([[[22,6,-186],[0,40,-262],42],[[18,5,-190],[0,14,-235],36],[[6,3.5,-196],[0,5,-222],48]],5);}}
+    for(const [s,kind] of [[30,'b'],[50,'c'],[80,'b'],[100,'c'],[110,'b'],[125,'b'],[130,'b'],[140,'b'],[150,'c'],[158,'b'],[166,'b'],[172,'b']])if(el>s&&!F['w'+s]){F['w'+s]=1;if(kind==='b')brute(rand(-20,20),-120);else crawler(rand(-25,25),0,-125);}
+    // mientras se acerca la nave: más fuego, explosiones y tiradores en las azoteas
+    for(const s of [15,40,65,90,110,128,142,154,163,170,175])if(el>s&&!F['f'+s]){F['f'+s]=1;const c=sFireSpot(el/180);if(!c)continue;c.used=1;const [x,y,z,kind]=c,far=Math.hypot(x,z+180);
+      sFlames(3+(el/45|0),x-3,x+3,y,y+.5,z-3,z+3,rand(2.4,3.6)*(1+far/250));if(kind){const g=sAdd(new T.Sprite(STORY.glowMat(0xff7a2a)));g.position.set(x,y+3,z);g.scale.setScalar(16+far/20);g.material.opacity=.4;} // el fuego en techos brilla
+      sBlast(x,z,1+far/160,y);}
+    for(const s of [35,60,85,105,120,135,148,160,168])if(el>s&&!F['r'+s]){F['r'+s]=1;roofSniper();if(el>120)roofSniper();}
+    if(h<=0){for(const u of STORY.units)if(u.downT){u.downT=0;u.crouch=false;u.ahp=300;}/* nadie se queda tirado al subir a la nave */STORY.ph='ship';STORY.shipT=0;STORY.ship=sAdd(buildShip());STORY.ship.position.set(0,70,-280);obj('La nave está llegando','Mantén despejada la zona de aterrizaje');say('nave',null,true);STORY.cine([[[22,6,-186],[0,40,-262],42],[[18,5,-190],[0,14,-235],36],[[6,3.5,-196],[0,5,-222],48]],5);}}
   if(ph==='ship'){const k=Math.min(1,STORY.shipT/8),S=STORY.ship;
-    if(STORY.shipT>2&&STORY.shipT<9&&Math.random()<dt*4)for(const u of STORY.units)if(u.alive&&(u.kind==='mob'||u.kind==='sniper')&&Math.random()<.35){tracer(S.position,u.pos,0xffb347,.09,.12);damage(u,999,player);break;} // la nave limpia la zona
+    if(STORY.shipT>2&&Math.random()<dt*(STORY.shipT<9?10:30))for(const u of STORY.units)if(u.alive&&(u.kind==='mob'||u.kind==='sniper')&&(STORY.shipT>9||Math.random()<.35)){_a.copy(S.position);_a.y-=2;tracer(_a,u.pos,0xffb347,.12,.14);burst(u.pos.x,u.pos.y+1,u.pos.z,0xffb347,10,5);damage(u,999,player);break;} // la nave barre la zona a tiros hasta dejarla limpia
     if(k>=1&&!STORY.flags.land){STORY.flags.land=1;for(const u of STORY.units)if(u.alive&&(u.kind==='mob'||u.kind==='sniper'))damage(u,999,player);
       STORY.ph='board';obj('Sube a la nave','');markAt(0,0,MK.lz[1]+15);say('abordar',null,true);
 }}
@@ -4359,8 +4459,11 @@ STORY.startCross=function(){ // al salir: el escuadrón se ve lejos, tras las ba
     setTimeout(()=>{if(STORY.ph==='cross')for(let i=0;i<8;i++)mob(rand(-5,5),-8-i*1.5,0);},3500);}));};
 STORY.fx=function(dt){if(!STORY.on)return;
   if(STORY.shutUp!==undefined&&STORY.shutUp<5){STORY.shutUp=Math.min(5,STORY.shutUp+dt*2.2);STORY.shutter.position.y=2.6+LIFT+STORY.shutUp;}
-  for(const p of STORY.flames){if(p.userData.smoke){const U=p.userData;U.ph=(U.ph+dt*.12)%1;p.position.y=U.y0+U.ph*30;const k=U.s*(.6+U.ph*1.6);p.scale.set(k,k,1);p.material.opacity=.6*(1-U.ph);continue;}
-    const u=p.userData.ph+now*6,s=p.userData.s;p.scale.set(s*(.85+.15*Math.sin(u)),s*(1.2+.35*Math.abs(Math.sin(u*.7))),1);p.material.opacity=.75+.25*Math.sin(u*1.3);}
+  for(const p of STORY.flames){if(p.userData.bl){const U=p.userData,f=(U.t+=dt)/2.2*16|0;if(f<16)U.bl.offset.set((f%4)/4,1-((f/4|0)+1)/4);else if(p.visible){p.visible=false;U.bl.dispose();p.material.dispose();}continue;}if(p.userData.glow){const U=p.userData;p.material.opacity=U.o*(.78+.22*Math.sin(now*(U.sp||8)+U.ph)*Math.sin(now*(U.sp||8)*.37+U.ph*2));continue;}if(p.userData.smoke){const U=p.userData;U.ph=(U.ph+dt*.12)%1;p.position.y=U.y0+U.ph*30;const k=U.s*(.6+U.ph*1.6);p.scale.set(k,k,1);p.material.opacity=.6*(1-U.ph);continue;}
+    const U=p.userData,u=U.ph+now*6,s=U.s;p.scale.set(s*(.85+.15*Math.sin(u)),s*(1.2+.35*Math.abs(Math.sin(u*.7))),1);
+    if(U.fr){p.material.map=STORY.ffr[((U.ph+now*11)|0)%9];if(U.lit)reqLight(p.position.x,p.position.y+s*.6,p.position.z,0xff7a2a,2.6+.7*Math.sin(u*2.3),20);}else p.material.opacity=.75+.25*Math.sin(u*1.3);}
+  mFinal.uniforms.gt.value=now%7; // el grano cambia cada cuadro
+  for(const L of STORY.flick||[]){if((L.t-=dt)<=0){L.t=rand(.04,L.on?.9:.25);L.on=Math.random()>.3;}L.l.intensity=L.on?L.i:L.i*.06;for(const g of L.gs)g.material.opacity=L.on?.85:.05;}
   for(const c of STORY.cars||[])if(c.hover&&c!==STORY.drive)c.H.position.y=1.1+Math.sin(now*2.2+c.ph)*.12;
   if(STORY.ship&&STORY.ph==='ship'){STORY.shipT+=dt;const k=Math.min(1,STORY.shipT/8),e=k*k*(3-2*k);STORY.ship.position.set(0,70+(4.2-70)*e,-280+(MK.lz[1]+280)*e);}
   if(STORY.ship){const S=STORY.ship;S.rotation.z=Math.sin(now*1.3)*.03;if(STORY.ph==='board')S.position.y=4.2+Math.sin(now*1.6)*.15;}};
