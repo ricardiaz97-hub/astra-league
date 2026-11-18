@@ -3995,14 +3995,14 @@ const ASSET={stallO:'market/props/unclassified/tripo_convert_3e715fed-5c56-419f-
   bollard:'market/props/unclassified/tripo_convert_e3f4ca5f-6ea7-4dc1-a9cb-f4b05eae4296',truck:'market-gear/unclassified/tripo_convert_90281c8c-e2ba-4f8c-bdce-f39c79fd839a',rover:'market-gear/unclassified/tripo_convert_bb61885c-ac6b-4de3-bb27-894e6a2798f3',
   ship:'market-gear/unclassified/tripo_convert_bbc258c9-0551-4ac9-8c97-d61d882f9562',fighter:'market-gear/unclassified/tripo_convert_9019c4ab-2245-4844-90e8-f0460dc06a13',
   // piezas modulares del mercado: losa, lámpara colgante, galería rota, escombro, rampa en U y tramo recto de galería
-  slab:'../art/markets/models/tripo_convert_1ea7c5cf-e6b2-4760-8195-3678fbcfefb9',lamp:'../art/markets/models/tripo_convert_3b3c3c5d-c06f-466b-8b93-09e54f772545',
-  galBroken:'../art/markets/models/tripo_convert_87ce8fc1-d215-44e2-b9ea-c9c667386a46',rubble:'../art/markets/models/tripo_convert_9284771c-71e7-4e08-87fe-13fa92a0fba7',
-  rampU:'../art/markets/models/tripo_convert_c9e895bd-8c54-490c-b06c-c44e4bd00ec3',galSeg:'../art/markets/models/tripo_convert_dac8f8a2-02f8-4e8c-ae37-2e9979a50bea',
+  slab:'art/markets/models/tripo_convert_1ea7c5cf-e6b2-4760-8195-3678fbcfefb9',lamp:'art/markets/models/tripo_convert_3b3c3c5d-c06f-466b-8b93-09e54f772545',
+  galBroken:'art/markets/models/tripo_convert_87ce8fc1-d215-44e2-b9ea-c9c667386a46',rubble:'art/markets/models/tripo_convert_9284771c-71e7-4e08-87fe-13fa92a0fba7',
+  rampU:'art/markets/models/tripo_convert_c9e895bd-8c54-490c-b06c-c44e4bd00ec3',galSeg:'art/markets/models/tripo_convert_dac8f8a2-02f8-4e8c-ae37-2e9979a50bea',
   // ciudad (assets-source/incoming/city) y piezas lowpoly del proyecto
   brutal:'incoming/city/brutalist_building',storefront:'incoming/city/storefront',hall:'incoming/city/market_hall',rubbleBig:'incoming/city/construction_rubble',
-  jersey:'../assets-lowpoly/modular-roads/road_barier_2a',jersey2:'../assets-lowpoly/modular-roads/road_barier_2b',barrel:'../assets-lowpoly/modular-roads/traffic_barell_1',
-  tree:'../assets-lowpoly/modular-roads/tree_1_a',tree2:'../assets-lowpoly/modular-roads/Tree3',lampPost:'../assets-lowpoly/modular-roads/lamp_1',pallet:'../assets-lowpoly/gas-station/pallet_cluster_1',
-  wreck:'../assets-lowpoly/postapoc/car',drum:'../assets-lowpoly/postapoc/barrel',
+  jersey:'assets-lowpoly/modular-roads/road_barier_2a',jersey2:'assets-lowpoly/modular-roads/road_barier_2b',barrel:'assets-lowpoly/modular-roads/traffic_barell_1',
+  tree:'assets-lowpoly/modular-roads/tree_1_a',tree2:'assets-lowpoly/modular-roads/Tree3',lampPost:'assets-lowpoly/modular-roads/lamp_1',pallet:'assets-lowpoly/gas-station/pallet_cluster_1',
+  wreck:'assets-lowpoly/postapoc/car',drum:'assets-lowpoly/postapoc/barrel',
   t1:'incoming/trees/SM_Tree_01',t2:'incoming/trees/SM_Tree_02',t3:'incoming/trees/SM_Tree_03',t4:'incoming/trees/SM_Tree_04',t5:'incoming/trees/SM_Tree_05',turbine:'incoming/windturbine',
   plaster:'incoming/zips/all_fences1/Fences/plaster_wall/plaster_wall',plasterF:'incoming/zips/all_fences1/Fences/plaster_wall/plaster_wall_fenced',plackard:'incoming/zips/all_fences1/Fences/plackard_wall/plackard_closed',plackardB:'incoming/zips/all_fences1/Fences/plackard_wall/plackard_broken',brick:'incoming/zips/all_fences1/Fences/brick_fence/brick_wall',metal:'incoming/zips/all_fences1/Fences/metal_fence/metalfence_one_side_topbar'};
 // azar con semilla: el mismo acomodo irregular en cada partida
@@ -4034,17 +4034,17 @@ function sRampCol(H,x0,x1,z0,z1,c,top){let g=sHeights(H,x0,x1,z0,z1,c);
 const RAMP_P=[[38.6,61.6,.35],[27.6,61.6,2.6],[27.6,50.6,4.4],[33,50.6,5.5]];
 function rampVisual(){const P=RAMP_P,W=4.4;
   for(let i=0;i<3;i++){const a=P[i],b=P[i+1],dx=b[0]-a[0],dz=b[1]-a[1],L=Math.hypot(dx,dz),dh=b[2]-a[2],ang=Math.atan2(dh,L),cx=(a[0]+b[0])/2,cz=(a[1]+b[1])/2,cy=(a[2]+b[2])/2-.2,alongX=Math.abs(dx)>.1;
-    const len=Math.hypot(L,dh);if(alongX)sTex(len,.4,W,cx,cy,cz,'../assets-source/textures/floors/floor_01_cream_orange_stripe.png',4,0xffffff,0,0,dx>0?-ang:ang);else sTex(W,.4,len,cx,cy,cz,'../assets-source/textures/floors/floor_01_cream_orange_stripe.png',4,0xffffff,0,dz>0?ang:-ang,0);
+    const len=Math.hypot(L,dh);if(alongX)sTex(len,.4,W,cx,cy,cz,'assets-source/textures/floors/floor_01_cream_orange_stripe.png',4,0xffffff,0,0,dx>0?-ang:ang);else sTex(W,.4,len,cx,cy,cz,'assets-source/textures/floors/floor_01_cream_orange_stripe.png',4,0xffffff,0,dz>0?ang:-ang,0);
     for(let s=0;s<=1.001;s+=.25){const x=a[0]+dx*s,z=a[1]+dz*s,h=a[2]+dh*s;for(const o of [-1,1]){const ox=alongX?0:o*(W/2-.1),oz=alongX?o*(W/2-.1):0;sTex(.1,1.05,.1,x+ox,h+.5,z+oz,null,1,0x2f6b4a);}
-      if(s>0&&s<1)sTex(.5,h,.5,x,h/2,z,'../assets-source/textures/walls/wall_07_repaired_concrete.png',2);}
+      if(s>0&&s<1)sTex(.5,h,.5,x,h/2,z,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);}
     for(const o of [-1,1]){const ox=alongX?0:o*(W/2-.1),oz=alongX?o*(W/2-.1):0;if(alongX)sTex(len,.1,.12,cx+ox,cy+1.25,cz+oz,null,1,0x2f6b4a,0,0,dx>0?-ang:ang);else sTex(.12,.1,len,cx+ox,cy+1.25,cz+oz,null,1,0x2f6b4a,0,dz>0?ang:-ang,0);}}
-  for(const [x,z,h] of [P[1],P[2]]){sTex(W,.4,W,x,h-.2,z,'../assets-source/textures/floors/floor_01_cream_orange_stripe.png',4);sTex(.6,h-.4,.6,x,(h-.4)/2,z,'../assets-source/textures/walls/wall_07_repaired_concrete.png',2);sTex(.3,.5,W,x+(x<30?-W/2:W/2),h-.45,z,'../assets-source/textures/walls/wall_04_orange_safety_band.png',1);}}
+  for(const [x,z,h] of [P[1],P[2]]){sTex(W,.4,W,x,h-.2,z,'assets-source/textures/floors/floor_01_cream_orange_stripe.png',4);sTex(.6,h-.4,.6,x,(h-.4)/2,z,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);sTex(.3,.5,W,x+(x<30?-W/2:W/2),h-.45,z,'assets-source/textures/walls/wall_04_orange_safety_band.png',1);}}
 function sRampPath(){const P=RAMP_P,W=4.4;let L=0;const seg=[];
   for(let i=0;i<3;i++){const a=P[i],b=P[i+1];seg.push([a,b,Math.hypot(b[0]-a[0],b[1]-a[1])]);}
   for(const [a,b,l] of seg)for(let s=0;s<=l;s+=.5){const k=s/l,x=a[0]+(b[0]-a[0])*k,z=a[1]+(b[1]-a[1])*k,h=a[2]+(b[2]-a[2])*k,ax=Math.abs(b[0]-a[0])>.1;
     const m=sB(x,z,ax?.6:W,h,ax?W:.6,0,0xffffff);m.visible=false;m.userData.box.stair=true;}
   for(const [x,z,h] of [P[1],P[2]]){const m=sB(x,z,W,h,W,0,0xffffff);m.visible=false;m.userData.box.stair=true;}
-  sCol(33,39,47,52.8,MK.gal-.5,MK.gal);sTex(6,.5,5.8,36,MK.gal-.25,49.9,'../assets-source/textures/floors/floor_01_cream_orange_stripe.png',4); // descanso de llegada: antes no tenía piso visible
+  sCol(33,39,47,52.8,MK.gal-.5,MK.gal);sTex(6,.5,5.8,36,MK.gal-.25,49.9,'assets-source/textures/floors/floor_01_cream_orange_stripe.png',4); // descanso de llegada: antes no tenía piso visible
   // hueco entre la galería este y la rampa (x 29.7-33, z 47-48.4): barandal y muro invisible
   sCol(MK.galX,33,46.7,47,MK.gal,MK.gal+3);sCol(33,33.3,47,48.4,MK.gal,MK.gal+3);
   for(const y of [MK.gal+1.05,MK.gal+.55]){sTex(3.3,.1,.12,(MK.galX+33)/2,y,46.88,null,1,0x2f6b4a);sTex(.12,.1,1.4,33.12,y,47.7,null,1,0x2f6b4a);}
@@ -4053,23 +4053,23 @@ function sRampPath(){const P=RAMP_P,W=4.4;let L=0;const seg=[];
 function sTex(w,h,d,x,y,z,tx,tile,col,ry,rx,rz){const g=new T.BoxGeometry(w,h,d);boxUV(g,w,h,d,tile||2);const m=toon(col||0xffffff);if(tx)useTex(m,tx);const o=sAdd(new T.Mesh(g,m));o.position.set(x,y+(inMk(x,z)?LIFT:0),z);o.rotation.set(rx||0,ry||0,rz||0);o.castShadow=o.receiveShadow=true;inkOutline(o);return o;}
 // tramo de galería: piso de concreto con franjas, canto naranja, vigas, columnas y barandal del lado abierto (edge)
 function galRun(ax,x0,x1,z0,z1,edge,top){top=top||MK.gal;const cx=(x0+x1)/2,cz=(z0+z1)/2,w=x1-x0,d=z1-z0,L=ax==='z'?d:w;
-  sTex(w,.5,d,cx,top-.25,cz,'../assets-source/textures/floors/floor_01_cream_orange_stripe.png',4);sTex(ax==='z'?.3:w,.55,ax==='z'?d:.3,ax==='z'?(edge===x0?x0+.15:x1-.15):cx,top-.6,ax==='z'?cz:(edge===z0?z0+.15:z1-.15),'../assets-source/textures/walls/wall_04_orange_safety_band.png',1.2); // canto
+  sTex(w,.5,d,cx,top-.25,cz,'assets-source/textures/floors/floor_01_cream_orange_stripe.png',4);sTex(ax==='z'?.3:w,.55,ax==='z'?d:.3,ax==='z'?(edge===x0?x0+.15:x1-.15):cx,top-.6,ax==='z'?cz:(edge===z0?z0+.15:z1-.15),'assets-source/textures/walls/wall_04_orange_safety_band.png',1.2); // canto
   if(edge===null||edge===undefined)edge=ax==='z'?x0:z0;
   for(let s=0;s<=L;s+=6){const px=ax==='z'?edge+(edge===x0?.4:-.4):x0+s,pz=ax==='z'?z0+s:edge+(edge===z0?.4:-.4);if(ax==='z'&&(pz<z0||pz>z1))continue;if(px>24&&pz>46&&pz<66)continue; // sin columnas sobre la rampa
-    sTex(.55,top-.5,.55,px,(top-.5)/2,pz,'../assets-source/textures/walls/wall_07_repaired_concrete.png',2);sTex(ax==='z'?w:.35,.35,ax==='z'?.35:d,ax==='z'?cx:px,top-.68,ax==='z'?pz:cz,null,1,0x3a3432);}
+    sTex(.55,top-.5,.55,px,(top-.5)/2,pz,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);sTex(ax==='z'?w:.35,.35,ax==='z'?.35:d,ax==='z'?cx:px,top-.68,ax==='z'?pz:cz,null,1,0x3a3432);}
   // barandal: postes cada 2 m, pasamanos y travesaño
   const rx=ax==='z'?edge+(edge===x0?.12:-.12):0,rz=ax==='x'?edge+(edge===z0?.12:-.12):0;
   for(let s=0;s<=L;s+=2)sTex(.1,1.05,.1,ax==='z'?rx:x0+s,top+.52,ax==='z'?z0+s:rz,null,1,0x2f6b4a);
   for(const y of [top+1.05,top+.55])sTex(ax==='z'?.12:w,.1,ax==='z'?d:.12,ax==='z'?rx:cx,y,ax==='z'?cz:rz,null,1,0x2f6b4a);}
 // la galería rota: losas colgando del borde, otra caída en diagonal y escombro en el piso
 function galBroken(){const z=MK.gapZ1,cx=(MK.galX+39)/2;
-  sTex(6,.45,3.4,cx-1,MK.gal-1.5,z-1.5,'../assets-source/textures/floors/floor_02_cracked_patches.png',3,0xffffff,0,-.62,.12);sTex(3.6,.4,2.4,cx+2.2,MK.gal-1,z-.9,'../assets-source/textures/floors/floor_02_cracked_patches.png',3,0xffffff,0,-.38,-.2);
-  sTex(8.6,.5,5.2,cx-.5,1.25,(z+MK.shut)/2+.8,'../assets-source/textures/floors/floor_01_cream_orange_stripe.png',4,0xffffff,.2,.52,.1);sTex(5,.45,3.6,cx+1.2,.5,(z+MK.shut)/2-2.6,'../assets-source/textures/floors/floor_02_cracked_patches.png',3,0xffffff,-.4,-.25,.18);
+  sTex(6,.45,3.4,cx-1,MK.gal-1.5,z-1.5,'assets-source/textures/floors/floor_02_cracked_patches.png',3,0xffffff,0,-.62,.12);sTex(3.6,.4,2.4,cx+2.2,MK.gal-1,z-.9,'assets-source/textures/floors/floor_02_cracked_patches.png',3,0xffffff,0,-.38,-.2);
+  sTex(8.6,.5,5.2,cx-.5,1.25,(z+MK.shut)/2+.8,'assets-source/textures/floors/floor_01_cream_orange_stripe.png',4,0xffffff,.2,.52,.1);sTex(5,.45,3.6,cx+1.2,.5,(z+MK.shut)/2-2.6,'assets-source/textures/floors/floor_02_cracked_patches.png',3,0xffffff,-.4,-.25,.18);
   // colisión de la losa caída (rampa de escombro en franjas) y del trozo bajo: ya no se atraviesan
   STORY.noLift=true;for(let k=0;k<10;k++){const z0=8.4+k*.445,zm=z0+.22,top=2.367-.497*((zm-10.6)/.868)-.1;const m=sB(cx-.5,zm,7,top-LIFT,.445,LIFT,0xffffff);m.visible=false;m.userData.box.stair=true;}
   {const m=sB(cx+1.2,7.2,4.2,.75,2.8,LIFT,0xffffff);m.visible=false;m.userData.box.stair=true;}STORY.noLift=false;
   for(let i=0;i<9;i++)sTex(.06,srand(.8,1.8),.06,cx-3+i*.75,MK.gal-.9,z-.15,null,1,0x5a4a40,0,srand(-.7,-.2),srand(-.3,.3)); // varillas
-  for(let i=0;i<14;i++)sTex(srand(.4,1.3),srand(.3,.8),srand(.4,1.2),cx+srand(-4,4),.25,(z+MK.shut)/2+srand(-4,4),'../assets-source/textures/walls/wall_07_repaired_concrete.png',1,0xffffff,srand(0,3),srand(0,1),srand(0,1));}
+  for(let i=0;i<14;i++)sTex(srand(.4,1.3),srand(.3,.8),srand(.4,1.2),cx+srand(-4,4),.25,(z+MK.shut)/2+srand(-4,4),'assets-source/textures/walls/wall_07_repaired_concrete.png',1,0xffffff,srand(0,3),srand(0,1),srand(0,1));}
 function sProp(i,x,y,z,ry,size){const k=['bench','sign','bollard','cart'][i%4],s=size;return sFit(k,x,y,z,s,s,s,ry);}
 const STALL=[0xe88136,0x245a91,0xf1e6d0,0x597254,0xd7aa55];
 function stall(x,z,w,d,ci,ry){ // mostrador sólido del tamaño real del modelo; el toldo es decorado
@@ -4107,7 +4107,7 @@ window.addEventListener('keydown',e=>{if(e.code!=='KeyG'||!STORY.on||game.talk||
 // oculta las casas repetidas, las bardas y los bloques grises del mapa multijugador mientras dura la historia
 // el mundo no se acaba: suelo hasta el horizonte, colinas, ciudad en capas, árboles, molinos y bardas
 STORY.horizon=function(){SEED=31;const CZ=-60;
-  {const g=new T.PlaneGeometry(2600,2600,1,1),m=toon(0xb89c76);useTex(m,'../assets-source/textures/floors/floor_05_hazard_scuffs.png');const uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*120,uv.getY(i)*120);
+  {const g=new T.PlaneGeometry(2600,2600,1,1),m=toon(0xb89c76);useTex(m,'assets-source/textures/floors/floor_05_hazard_scuffs.png');const uv=g.attributes.uv;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*120,uv.getY(i)*120);
    const o=sAdd(new T.Mesh(g,m));o.rotation.x=-PI/2;o.position.set(0,-.08,CZ);o.receiveShadow=true;}
   // anillo de colinas: suben con la distancia, como las montañas del cielo
   {const R0=300,R1=1250,NA=120,NR=26,pos=[],col=[],idx=[],c0=new T.Color(0x9a8a62),c1=new T.Color(0x587a4c),c2=new T.Color(0x3f5a49);
@@ -4117,7 +4117,7 @@ STORY.horizon=function(){SEED=31;const CZ=-60;
    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();
    sAdd(new T.Mesh(g,toon(0xffffff,{vertexColors:true})));}
   // ciudad en capas: modelos cerca, volúmenes texturizados lejos (la niebla los funde)
-  const WT=['../assets-source/textures/walls/wall_02_repaired_cracks.png','../assets-source/textures/walls/wall_03_vertical_water_streaks.png','../assets-source/textures/walls/wall_05_rust_runoff.png','../assets-source/textures/market/market-wall-base.png','../assets-source/textures/walls/wall_06_lower_mold.png'];
+  const WT=['assets-source/textures/walls/wall_02_repaired_cracks.png','assets-source/textures/walls/wall_03_vertical_water_streaks.png','assets-source/textures/walls/wall_05_rust_runoff.png','assets-source/textures/market/market-wall-base.png','assets-source/textures/walls/wall_06_lower_mold.png'];
   const blk=(x,z,i)=>{const w=srand(12,22),d=srand(12,22),h=srand(18,40);const o=sTex(w,h,d,x,h/2,z,WT[i%WT.length],8,[0x8f8378,0x7a7069,0x9a8a7e,0x6f6863][i%4],(srand(0,4)|0)*PI/2+srand(-.1,.1));o.castShadow=false;};let bi=0;
   for(const s of [-1,1])for(let z=150;z>-330;z-=srand(16,26))blk(s*srand(90,108),z,bi++);
   for(let x=-150;x<=150;x+=srand(18,28)){blk(x,-srand(265,300),bi++);if(Math.abs(x)>30)blk(x,srand(150,178),bi++);}
@@ -4186,10 +4186,10 @@ STORY.begin=function(){
   STORY.on=true;document.body.classList.add('story');try{if(!STORY.amb){STORY.amb=new Audio('music/warzone.mp3');STORY.amb.loop=true;}STORY.amb.volume=.16;STORY.amb.currentTime=0;STORY.amb.play().catch(()=>{});}catch(_){}
   STORY.ph='intro';STORY.flags={};STORY.units.length=0;STORY.t=0;STORY.flames=[];STORY.smoke=[];STORY.hold=300;STORY.spawnT=0;STORY.ship=null;STORY.navWas=NAV;NAV=null;
   STORY.skyWas=scene.background;STORY.sky=STORY.sky||new T.TextureLoader().load('textures/ui/sky-olocuilta-sunset.webp',x=>{x.mapping=T.EquirectangularReflectionMapping;});scene.background=STORY.sky;
-  sFloor('../assets-source/textures/floors/floor_02_cracked_patches.png',0,(MK.zR+69.2)/2,78,69.2-MK.zR,LIFT+.03,7);STORY.noLift=true;sCol(MK.x0,MK.x1,MK.zR,69.2,0,LIFT);
+  sFloor('assets-source/textures/floors/floor_02_cracked_patches.png',0,(MK.zR+69.2)/2,78,69.2-MK.zR,LIFT+.03,7);STORY.noLift=true;sCol(MK.x0,MK.x1,MK.zR,69.2,0,LIFT);
   // escalones: frente (porche), puerta trasera y portón lateral del este
-  sCol(-42,42,69.2,76.5,0,LIFT);sTex(84,.45,1.2,0,.22,77.1,'../assets-source/textures/walls/wall_07_repaired_concrete.png',2);sCol(-42,42,76.5,77.7,0,.45);
-  sTex(12,.45,1.2,0,.22,MK.zR-.6,'../assets-source/textures/walls/wall_07_repaired_concrete.png',2);sCol(-6,6,MK.zR-1.2,MK.zR,0,.45);sTex(1.2,.45,6,40.1,.22,69.5,'../assets-source/textures/walls/wall_07_repaired_concrete.png',2);sCol(39,40.7,66.5,72.5,0,.45);STORY.noLift=false;sFloor('../assets-source/textures/floors/floor_05_hazard_scuffs.png',0,-122,160,236,.25,14);sFloor('../assets-source/textures/floors/floor_07_chipped_rust_flecks.png',0,92,160,40,.25,10);sFloor('../assets-source/textures/floors/floor_04_service_panel_repairs.png',0,MK.lz[1],34,38,.27,6);
+  sCol(-42,42,69.2,76.5,0,LIFT);sTex(84,.45,1.2,0,.22,77.1,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);sCol(-42,42,76.5,77.7,0,.45);
+  sTex(12,.45,1.2,0,.22,MK.zR-.6,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);sCol(-6,6,MK.zR-1.2,MK.zR,0,.45);sTex(1.2,.45,6,40.1,.22,69.5,'assets-source/textures/walls/wall_07_repaired_concrete.png',2);sCol(39,40.7,66.5,72.5,0,.45);STORY.noLift=false;sFloor('assets-source/textures/floors/floor_05_hazard_scuffs.png',0,-122,160,236,.25,14);sFloor('assets-source/textures/floors/floor_07_chipped_rust_flecks.png',0,92,160,40,.25,10);sFloor('assets-source/textures/floors/floor_04_service_panel_repairs.png',0,MK.lz[1],34,38,.27,6);
   STORY.hideMap();
   setIndoor([[MK.x0,0,MK.zR,MK.x1,23,MK.zF,.9]],.42); // el techo del mercado oscurece el interior
   STORY.cp=[0,0,92,0];player.pos.set(0,0,92);player.yaw=0;camYaw=0;camPitch=-.04;
@@ -4220,11 +4220,11 @@ STORY.begin=function(){
   galRun('x',-39,33,62.2,MK.zF,62.2);galRun('z',33,39,62.2,MK.zF,39);
   sCol(33,39,52.8,62.2,MK.gal-.5,MK.gal);sCol(32.7,33,52.8,61.9,MK.gal,MK.gal+3);galRun('z',33,39,52.8,62.2,33);
   // galería derrumbada al fondo: muro marcado para correr y repisa lejana tras el salto de muro
-  {const wm=toon(0xffffff,{side:T.DoubleSide});useTex(wm,'../assets-source/textures/walls/wall_04_orange_safety_band.png');const s=sAdd(new T.Mesh(new T.PlaneGeometry(MK.gapZ1-MK.shut+2,5),wm));s.rotation.y=-PI/2;s.position.set(MK.x1-.03,MK.gal+LIFT+1.2,(MK.gapZ1+MK.shut)/2);}
+  {const wm=toon(0xffffff,{side:T.DoubleSide});useTex(wm,'assets-source/textures/walls/wall_04_orange_safety_band.png');const s=sAdd(new T.Mesh(new T.PlaneGeometry(MK.gapZ1-MK.shut+2,5),wm));s.rotation.y=-PI/2;s.position.set(MK.x1-.03,MK.gal+LIFT+1.2,(MK.gapZ1+MK.shut)/2);}
   sCol(20,36,MK.zR,MK.shut-.6,MK.ledge-.5,MK.ledge);galRun('x',20,36,MK.zR,MK.shut-.6,null,MK.ledge); // repisa lejana: x 20 a 36
   // el tramo roto del usuario, volteado y alineado con la galería: cayó al piso bajo el hueco (sin colisión)
   galBroken();
-  sB(18,-1.5,4,2,3,0,0x7a5c41,'../assets-source/textures/walls/wall_07_repaired_concrete.png');sB(14,-1.5,4,1,3,0,0x7a5c41,'../assets-source/textures/walls/wall_07_repaired_concrete.png'); // cajas para bajar
+  sB(18,-1.5,4,2,3,0,0x7a5c41,'assets-source/textures/walls/wall_07_repaired_concrete.png');sB(14,-1.5,4,1,3,0,0x7a5c41,'assets-source/textures/walls/wall_07_repaired_concrete.png'); // cajas para bajar
   // cortina metálica: separa el fondo del mercado; solo se abre desde atrás
   sB(-22.5,MK.shut,33,5.2,.6,0,0x55585a,'city/metal.jpg',2);sB(19.5,MK.shut,27,5.2,.6,0,0x55585a,'city/metal.jpg',2);sB(36,MK.shut,6,3.6,.6,0,0x55585a,'city/metal.jpg',2);
   sCol(MK.x0,-6,MK.shut-.3,MK.shut+.3,5.2,22);sCol(6,33,MK.shut-.3,MK.shut+.3,5.2,22);sCol(-6,6,MK.shut-.3,MK.shut+.3,5.2,22); // tampoco se trepa la cortina central
