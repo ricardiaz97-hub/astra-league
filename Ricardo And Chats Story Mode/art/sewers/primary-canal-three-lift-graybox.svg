@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100" viewBox="0 0 1600 1100">
+<defs>
+ <pattern id="water" width="48" height="30" patternUnits="userSpaceOnUse"><rect width="48" height="30" fill="#33434a"/><path d="M0 10q10-5 20 0t20 0M-12 25q10-5 20 0t20 0" fill="none" stroke="#88a8a8" stroke-width="2" opacity=".55"/></pattern>
+ <marker id="arr" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto"><path d="M0 0L12 6L0 12Z" fill="#e85d04"/></marker>
+ <style>text{font-family:Arial,Helvetica,sans-serif;fill:#1d1a22}.title{font-size:38px;font-weight:900;letter-spacing:2px}.sub{font-size:18px;fill:#5c5651}.label{font-size:19px;font-weight:800}.small{font-size:15px;fill:#514b49}.num{font-size:18px;font-weight:900;fill:#fff}</style>
+</defs>
+<rect width="1600" height="1100" fill="#f3ece2"/><path d="M0 0H1600V18H0Z" fill="#e85d04"/>
+<text x="70" y="78" class="title">PRIMARY CANAL — THREE LIFT DEFENSES</text>
+<text x="72" y="111" class="sub">REVEAL THE CREATURE → ACTIVATE LIFT → HOLD OFF SWARM → CROSS → REPEAT</text>
+<rect x="70" y="145" width="1460" height="690" rx="18" fill="#eee4d6" stroke="#1d1a22" stroke-width="4"/>
+<text x="95" y="185" class="label">TOP-DOWN GRAYBOX · ROUTE ALWAYS CONTINUES FORWARD</text>
+<!-- canal banks and water -->
+<rect x="110" y="235" width="1380" height="440" fill="url(#water)" stroke="#26343a" stroke-width="4"/>
+<path d="M110 235H1490V330H110Z M110 585H1490V675H110Z" fill="#cdbda8" stroke="#766b60" stroke-width="4"/>
+<text x="650" y="470" class="label" fill="#f3ece2">DEEP PRIMARY CANAL</text>
+<text x="114" y="222" class="small">NORTH BANK / MAINTENANCE WALKWAY</text><text x="114" y="710" class="small">SOUTH BANK / MAINTENANCE WALKWAY</text>
+<!-- start and route to stations -->
+<circle cx="150" cy="285" r="19" fill="#e85d04"/><text x="144" y="292" class="num">IN</text>
+<path d="M170 282H335V630H765V282H1190V630H1460" fill="none" stroke="#e85d04" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arr)"/>
+<!-- bridge lifts -->
+<g>
+ <rect x="295" y="325" width="90" height="260" rx="8" fill="#72685d" stroke="#1d1a22" stroke-width="4"/><path d="M310 340H370V570H310Z" fill="#bea991" stroke="#f3ece2" stroke-width="3" stroke-dasharray="8 6"/>
+ <rect x="720" y="325" width="90" height="260" rx="8" fill="#72685d" stroke="#1d1a22" stroke-width="4"/><path d="M735 340H795V570H735Z" fill="#bea991" stroke="#f3ece2" stroke-width="3" stroke-dasharray="8 6"/>
+ <rect x="1145" y="325" width="90" height="260" rx="8" fill="#72685d" stroke="#1d1a22" stroke-width="4"/><path d="M1160 340H1220V570H1160Z" fill="#bea991" stroke="#f3ece2" stroke-width="3" stroke-dasharray="8 6"/>
+</g>
+<!-- pump control stations -->
+<g>
+ <rect x="175" y="345" width="100" height="68" rx="9" fill="#d6c9b6" stroke="#1d1a22" stroke-width="3"/><path d="M195 380h60m-44-17v34m28-34v34" stroke="#e85d04" stroke-width="5"/><text x="176" y="435" class="small">PUMP / LIFT 1</text>
+ <rect x="605" y="600" width="100" height="68" rx="9" fill="#d6c9b6" stroke="#1d1a22" stroke-width="3"/><path d="M625 635h60m-44-17v34m28-34v34" stroke="#e85d04" stroke-width="5"/><text x="606" y="690" class="small">PUMP / LIFT 2</text>
+ <rect x="1030" y="345" width="100" height="68" rx="9" fill="#d6c9b6" stroke="#1d1a22" stroke-width="3"/><path d="M1050 380h60m-44-17v34m28-34v34" stroke="#e85d04" stroke-width="5"/><text x="1031" y="435" class="small">PUMP / LIFT 3</text>
+</g>
+<!-- horde source hatches -->
+<g fill="#1d1a22" stroke="#e85d04" stroke-width="3"><rect x="390" y="265" width="46" height="42" rx="8"/><rect x="515" y="600" width="46" height="42" rx="8"/><rect x="850" y="265" width="46" height="42" rx="8"/><rect x="965" y="600" width="46" height="42" rx="8"/><rect x="1275" y="265" width="46" height="42" rx="8"/><rect x="1370" y="600" width="46" height="42" rx="8"/></g>
+<text x="385" y="252" class="small">BUG CULVERTS</text><text x="1248" y="252" class="small">BUG CULVERTS</text>
+<!-- callout numbers -->
+<g><circle cx="225" cy="300" r="19" fill="#e85d04"/><text x="219" y="307" class="num">1</text><circle cx="655" cy="570" r="19" fill="#e85d04"/><text x="649" y="577" class="num">2</text><circle cx="1080" cy="300" r="19" fill="#e85d04"/><text x="1074" y="307" class="num">3</text></g>
+<!-- creature sighting -->
+<path d="M1435 352q-18-35 10-52l10-25 13 23 19-6-11 21q20 22 3 40l-12-12-13 12z" fill="#1d1a22" opacity=".86"/><circle cx="1452" cy="320" r="4" fill="#e85d04"/><circle cx="1462" cy="320" r="4" fill="#e85d04"/>
+<path d="M1390 340H1480" stroke="#a7c3c5" stroke-width="4" stroke-dasharray="8 7"/><text x="1260" y="388" class="small">DISTANT CREATURE</text><text x="1260" y="408" class="small">seen through spray / grate</text>
+<text x="1325" y="748" class="label">TO RUSTED SECTION →</text>
+<!-- sequence cards -->
+<rect x="70" y="865" width="460" height="180" rx="16" fill="#fffaf3" stroke="#1d1a22" stroke-width="3"/><rect x="570" y="865" width="460" height="180" rx="16" fill="#fffaf3" stroke="#1d1a22" stroke-width="3"/><rect x="1070" y="865" width="460" height="180" rx="16" fill="#fffaf3" stroke="#1d1a22" stroke-width="3"/>
+<text x="95" y="905" class="label">1 · FIRST LIFT</text><text x="95" y="940" class="small">Pump noise draws a small fast swarm</text><text x="95" y="964" class="small">from a side culvert. Lift locks; cross.</text><text x="95" y="1015" class="small">Teach the mechanic safely.</text>
+<text x="595" y="905" class="label">2 · SECOND LIFT</text><text x="595" y="940" class="small">Longer hold. Bugs drop from pipework</text><text x="595" y="964" class="small">and enter from the opposite bank.</text><text x="595" y="1015" class="small">Use the new raised crossing.</text>
+<text x="1095" y="905" class="label">3 · FINAL LIFT</text><text x="1095" y="940" class="small">Largest swarm: mixed bugs plus one</text><text x="1095" y="964" class="small">heavy unit. Canal creature stirs, then vanishes.</text><text x="1095" y="1015" class="small">Final platform locks; route to rusted zone.</text>
+</svg>
