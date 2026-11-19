@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1560 1190" font-family="Arial, sans-serif">
+  <!-- Sewer level v2 croquis: top-down plan (top) and depth profile along the route (bottom). Scale about 3.5 px = 1 m. -->
+  <defs>
+    <style>
+      .t{fill:#EFE6D2;font-size:15px}.s{fill:#D9CBB0;font-size:12px}.h{fill:#FF7A1A;font-size:17px;font-weight:bold}
+      .tun{fill:none;stroke:#D9CBB0;stroke-width:13;stroke-linecap:round;stroke-linejoin:round}
+      .tunE{fill:none;stroke:#2B2A2E;stroke-width:19;stroke-linecap:round;stroke-linejoin:round}
+      .crawl{fill:none;stroke:#D9CBB0;stroke-width:6;stroke-dasharray:2 6;stroke-linecap:round}
+      .room{fill:#D9CBB0;stroke:#2B2A2E;stroke-width:4}
+      .low{fill:#3A4447;stroke:#7FA3A6;stroke-width:3;stroke-dasharray:10 6}
+      .short{fill:none;stroke:#9FD3C7;stroke-width:5;stroke-dasharray:14 8}
+      .beast{fill:none;stroke:#E0344A;stroke-width:5;stroke-dasharray:4 7}
+      .route{fill:none;stroke:#FF7A1A;stroke-width:3;stroke-dasharray:1 9;stroke-linecap:round}
+      .lever{fill:#FF7A1A;stroke:#2B2A2E;stroke-width:3}.hold{fill:#FF7A1A;fill-opacity:.12;stroke:#FF7A1A;stroke-width:3;stroke-dasharray:8 6}
+      .cp{fill:#9FD3C7;stroke:#2B2A2E;stroke-width:2}.spawn{fill:#B58CFF}
+    </style>
+  </defs>
+  <rect width="1560" height="1190" fill="#24232A"/>
+  <text x="30" y="34" class="h" font-size="22">ALCANTARILLAS · RUMBO AL HOTEL AURORA (v2)</text>
+  <text x="30" y="56" class="s">Plan from above, north up. About 3.5 px = 1 m. Profile underneath shows depth along the route.</text>
+
+  <!-- legend -->
+  <g transform="translate(30,80)">
+    <rect width="250" height="215" rx="8" fill="#2B2A2E" stroke="#4A4650"/>
+    <line x1="16" y1="24" x2="56" y2="24" stroke="#D9CBB0" stroke-width="10" stroke-linecap="round"/><text x="68" y="29" class="s">walkable tunnel</text>
+    <line x1="16" y1="48" x2="56" y2="48" class="crawl"/><text x="68" y="53" class="s">crawl pipe (crouch)</text>
+    <line x1="16" y1="72" x2="56" y2="72" class="short"/><text x="68" y="77" class="s">shortcut, opens after lever</text>
+    <line x1="16" y1="96" x2="56" y2="96" class="beast"/><text x="68" y="101" class="s">beast path in the chase</text>
+    <line x1="16" y1="120" x2="56" y2="120" class="route"/><text x="68" y="125" class="s">climb / traversal line</text>
+    <circle cx="36" cy="146" r="9" class="lever"/><text x="68" y="151" class="s">lever / valve</text>
+    <circle cx="36" cy="172" r="12" class="hold"/><text x="68" y="177" class="s">defend zone (hold)</text>
+    <path d="M30 196 l6 -10 l6 10 z" class="spawn"/><text x="68" y="201" class="s">bug spawn  ◆ checkpoint</text>
+  </g>
+
+  <!-- lower level (cistern + nest), drawn first so upper tunnels sit on top -->
+  <path class="low" d="M790 585 C 860 548 990 560 1080 575 C 1160 590 1200 640 1190 705 C 1180 770 1100 810 1000 805 C 900 800 800 790 770 730 C 745 680 745 615 790 585 Z"/>
+  <g fill="#7FA3A6">
+    <circle cx="830" cy="640" r="7"/><circle cx="885" cy="615" r="7"/><circle cx="950" cy="630" r="7"/><circle cx="1015" cy="610" r="7"/><circle cx="1085" cy="630" r="7"/><circle cx="1140" cy="660" r="7"/>
+    <circle cx="815" cy="710" r="7"/><circle cx="870" cy="690" r="7"/><circle cx="935" cy="705" r="7"/><circle cx="1000" cy="680" r="7"/><circle cx="1065" cy="700" r="7"/><circle cx="1130" cy="725" r="7"/>
+    <circle cx="860" cy="760" r="7"/><circle cx="930" cy="770" r="7"/><circle cx="1000" cy="750" r="7"/><circle cx="1070" cy="770" r="7"/>
+  </g>
+  <path class="low" d="M1215 715 C 1250 690 1320 690 1345 725 C 1370 765 1340 815 1285 820 C 1235 825 1200 790 1205 755 Z"/>
+  <path d="M1190 720 C 1200 720 1205 722 1215 728" class="tun" stroke="#7FA3A6"/>
+  <g fill="#B58CFF" fill-opacity=".7"><ellipse cx="1250" cy="760" rx="9" ry="6"/><ellipse cx="1275" cy="790" rx="9" ry="6"/><ellipse cx="1305" cy="750" rx="9" ry="6"/><ellipse cx="1320" cy="785" rx="9" ry="6"/><ellipse cx="1285" cy="725" rx="9" ry="6"/></g>
+  <text x="770" y="838" class="t">⑤ CISTERNA MAYOR (−40 m)</text><text x="770" y="855" class="s">pillar forest, water drains in stages</text>
+  <text x="1230" y="845" class="t">⑥ EL NIDO (−46 m)</text>
+
+  <!-- ① entry + ② old collector (winding) -->
+  <circle cx="150" cy="760" r="24" class="room"/>
+  <path class="tunE" d="M150 760 C 220 740 300 700 290 620 S 200 540 240 470 S 380 380 470 440 S 560 500 625 470"/>
+  <path class="tun" d="M150 760 C 220 740 300 700 290 620 S 200 540 240 470 S 380 380 470 440 S 560 500 625 470"/>
+  <text x="60" y="805" class="t">① POZO DE ENTRADA: spiral stair −18 m</text>
+  <text x="300" y="690" class="t">② COLECTOR VIEJO</text>
+  <text x="300" y="707" class="s">brick S-curves, ankle water, side alcoves</text>
+  <path d="M232 512 l7 -12 l7 12 z" class="spawn"/><path d="M455 425 l7 -12 l7 12 z" class="spawn"/>
+  <text x="180" y="535" class="s">ceiling crawlers</text>
+  <path d="M290 618 l8 -8 l8 8 l-8 8 z" class="cp"/>
+
+  <!-- ③ hub La Rotonda -->
+  <path class="room" d="M620 470 C 630 400 680 360 740 370 C 800 375 835 410 828 462 C 822 522 772 548 715 542 C 660 536 614 520 620 470 Z"/>
+  <path d="M640 455 C 650 405 700 385 745 392 C 795 400 812 430 806 465" fill="none" stroke="#4A4650" stroke-width="5" stroke-dasharray="3 5"/>
+  <circle cx="722" cy="462" r="24" fill="#3A4447" stroke="#2B2A2E" stroke-width="4"/>
+  <text x="690" y="467" class="s" fill="#EFE6D2">pit ↓</text>
+  <text x="650" y="580" class="t">③ LA ROTONDA (hub)</text>
+  <text x="650" y="597" class="s">3 sealed gates, balcony ring, central drain pit</text>
+  <path d="M705 545 l8 -8 l8 8 l-8 8 z" class="cp"/>
+
+  <!-- ④A west/north branch: Los Sifones -->
+  <path class="tunE" d="M722 372 C 716 320 682 290 622 282 C 572 276 530 244 505 205"/>
+  <path class="tun" d="M722 372 C 716 320 682 290 622 282 C 572 276 530 244 505 205"/>
+  <rect x="560" y="255" width="85" height="45" rx="6" fill="#4C4A2E" stroke="#2B2A2E" stroke-width="3"/>
+  <text x="566" y="282" class="s" fill="#EFE6D2">sludge catwalk</text>
+  <path class="crawl" d="M505 205 C 480 185 450 170 420 150"/>
+  <text x="430" y="200" class="s">crawl pipe 30 m</text>
+  <path class="room" d="M330 98 L 412 88 L 424 162 L 342 172 Z"/>
+  <circle cx="375" cy="130" r="70" class="hold"/>
+  <circle cx="372" cy="128" r="11" class="lever"/><text x="365" y="133" class="s" fill="#2B2A2E" font-weight="bold">1</text>
+  <path d="M300 92 l7 -12 l7 12 z" class="spawn"/><path d="M440 90 l7 -12 l7 12 z" class="spawn"/><path d="M335 210 l7 -12 l7 12 z" class="spawn"/>
+  <text x="300" y="250" class="t">④A LOS SIFONES: pump house</text>
+  <text x="300" y="267" class="s">lever 1 → 90 s pressure hold</text>
+  <path class="short" d="M360 172 C 380 260 520 350 628 432"/>
+  <text x="430" y="330" class="s" fill="#9FD3C7">flood gate opens: back to hub</text>
+
+  <!-- ④B east branch: Galería de Filtros -->
+  <path class="tunE" d="M826 440 C 880 420 915 365 960 335"/>
+  <path class="tun" d="M826 440 C 880 420 915 365 960 335"/>
+  <path class="room" d="M955 205 C 1020 170 1130 165 1190 200 C 1215 250 1210 340 1185 385 C 1120 410 1010 405 960 380 C 935 330 935 250 955 205 Z"/>
+  <g fill="#EFE6D2" stroke="#4A4650" stroke-width="4"><circle cx="1010" cy="245" r="28"/><circle cx="1080" cy="222" r="28"/><circle cx="1150" cy="262" r="28"/><circle cx="1040" cy="325" r="28"/><circle cx="1122" cy="335" r="28"/></g>
+  <path class="route" d="M975 360 L 1040 325 L 1010 245 L 1080 222 L 1150 262 L 1122 335"/>
+  <circle cx="1010" cy="245" r="10" class="lever"/><circle cx="1080" cy="222" r="10" class="lever"/><circle cx="1150" cy="262" r="10" class="lever"/>
+  <circle cx="1080" cy="275" r="125" class="hold" fill-opacity=".06"/>
+  <rect x="1168" y="352" width="34" height="34" fill="#FF7A1A" stroke="#2B2A2E" stroke-width="3"/><text x="1210" y="375" class="s">lift</text>
+  <path d="M960 190 l7 -12 l7 12 z" class="spawn"/><path d="M1200 220 l7 -12 l7 12 z" class="spawn"/>
+  <text x="980" y="150" class="t">④B GALERÍA DE FILTROS (−20 m to −6 m)</text>
+  <text x="980" y="167" class="s">climb the tanks, turn 3 valves under fire, ride the lift down</text>
+  <path class="short" d="M1185 390 C 1100 470 950 500 830 482"/>
+  <text x="930" y="520" class="s" fill="#9FD3C7">lift bottom: shortcut back to hub</text>
+
+  <!-- hub pit to cistern -->
+  <path d="M722 486 C 735 520 760 560 795 590" fill="none" stroke="#7FA3A6" stroke-width="6" stroke-dasharray="6 6"/>
+  <text x="700" y="625" class="s" fill="#7FA3A6">pit ladder −20 m</text>
+  <circle cx="850" cy="640" r="55" class="hold"/><circle cx="1000" cy="700" r="55" class="hold"/><circle cx="1125" cy="610" r="55" class="hold"/>
+  <circle cx="850" cy="640" r="10" class="lever"/><circle cx="1000" cy="700" r="10" class="lever"/><circle cx="1125" cy="610" r="10" class="lever"/>
+  <text x="820" y="604" class="s" fill="#FF7A1A">P1</text><text x="985" y="666" class="s" fill="#FF7A1A">P2</text><text x="1110" y="574" class="s" fill="#FF7A1A">P3</text>
+  <rect x="1045" y="740" width="50" height="22" rx="4" fill="#9FD3C7" stroke="#2B2A2E" stroke-width="2"/><text x="1050" y="756" class="s" fill="#2B2A2E">workers</text>
+
+  <!-- ⑦ chase to Hotel Aurora -->
+  <path class="tunE" d="M1300 698 C 1335 620 1300 545 1345 480 C 1365 450 1375 400 1385 360 L 1410 300 C 1420 270 1430 230 1440 180"/>
+  <path class="tun" d="M1300 698 C 1335 620 1300 545 1345 480 C 1365 450 1375 400 1385 360 L 1410 300 C 1420 270 1430 230 1440 180"/>
+  <path class="beast" d="M1290 760 C 1320 660 1290 560 1335 490 C 1355 455 1365 410 1375 370"/>
+  <line x1="1352" y1="470" x2="1386" y2="356" stroke="#FF7A1A" stroke-width="4"/><text x="1395" y="430" class="s" fill="#FF7A1A">wall-run</text>
+  <text x="1140" y="490" class="s">aqueduct collapses behind you</text>
+  <line x1="1392" y1="318" x2="1428" y2="318" stroke="#EFE6D2" stroke-width="5"/><text x="1388" y="322" class="s" text-anchor="end">slide gate</text>
+  <circle cx="1425" cy="255" r="10" class="lever"/><text x="1410" y="260" class="s" text-anchor="end">slow gate: crank while it closes in</text>
+  <path class="room" d="M1385 80 L 1525 75 L 1530 170 L 1390 175 Z" fill="#EFE6D2"/>
+  <text x="1398" y="115" class="t" fill="#2B2A2E">HOTEL AURORA</text><text x="1398" y="135" class="s" fill="#2B2A2E">basement · exit</text>
+  <text x="1140" y="470" class="t">⑦ LA PERSECUCIÓN</text>
+  <path d="M1305 640 l8 -8 l8 8 l-8 8 z" class="cp"/><path d="M1380 470 l8 -8 l8 8 l-8 8 z" class="cp"/>
+
+  <!-- depth profile -->
+  <rect x="20" y="880" width="1520" height="295" rx="8" fill="#2B2A2E" stroke="#4A4650"/>
+  <text x="36" y="905" class="h">DEPTH ALONG THE ROUTE</text>
+  <line x1="60" y1="930" x2="1520" y2="930" stroke="#4A4650" stroke-dasharray="4 6"/><text x="30" y="934" class="s">0 m</text>
+  <line x1="60" y1="1090" x2="1520" y2="1090" stroke="#4A4650" stroke-dasharray="4 6"/><text x="22" y="1094" class="s">−40 m</text>
+  <polyline fill="none" stroke="#D9CBB0" stroke-width="5" stroke-linejoin="round"
+    points="70,930 90,1002 330,1010 360,1010 400,1010 440,994 520,998 560,990 600,1010 640,1010 700,994 740,958 770,954 790,1010 820,1010 840,1090 1060,1090 1090,1114 1180,1114 1240,1060 1300,1040 1380,1000 1440,962 1500,930"/>
+  <polyline fill="none" stroke="#9FD3C7" stroke-width="3" stroke-dasharray="8 6" points="560,990 600,1010"/>
+  <text x="62" y="1150" class="s">① shaft</text><text x="170" y="1150" class="s">② collector ~180 m</text><text x="360" y="1150" class="s">③ hub</text>
+  <text x="440" y="1150" class="s">④A sifones</text><text x="640" y="1150" class="s">④B filters (climb +14 m)</text><text x="790" y="1150" class="s">pit</text>
+  <text x="880" y="1150" class="s">⑤ cistern: 3-point hold</text><text x="1080" y="1150" class="s">⑥ nest</text><text x="1240" y="1150" class="s">⑦ chase: ladders up to the hotel</text>
+  <text x="850" y="1076" class="s" fill="#7FA3A6">water level −36 → −44 as pumps run</text>
+</svg>

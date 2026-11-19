@@ -1,0 +1,35 @@
+=== sw_ceiling.jpg
+Seamless tileable 1024x1024 game texture, flat straight-on view, flat even lighting, no shadows, no text. Hand-painted anime cel-shaded style, 2-3 flat tones, crisp edges, not photorealistic. Dark cream concrete ceiling (#C9BBA0 to #D9CBB0) with soft soot shading, a few mineral drip spots, and 3 thin parallel cable grooves running left to right. Covers 2x2 meters.
+
+=== sw_grating.jpg
+Seamless tileable 1024x1024 game texture, top-down view, flat even lighting, no shadows, no text. Hand-painted anime cel-shaded style, crisp edges. Charcoal steel floor grating (#2B2A2E, edges #4A4650): exactly 16 straight vertical bars evenly spaced, thin cross rods every 10 cm. The holes between bars are pure solid black #000000. Covers 1x1 meter.
+
+=== sw_corrugated.jpg
+Seamless tileable 1024x1024 game texture, flat straight-on view, flat even lighting, no shadows, no text. Hand-painted anime cel-shaded style, 2-3 flat tones. Warm ivory (#EFE6D2) painted corrugated metal sheet with exactly 16 vertical ridges, small paint chips showing charcoal (#2B2A2E) underneath, a few tiny rust spots. Covers 2x2 meters.
+
+=== sw_metal_orange.jpg
+Seamless tileable 1024x1024 game texture, flat straight-on view, flat even lighting, no shadows, no text. Hand-painted anime cel-shaded style, 2-3 flat tones. Bright orange (#FF7A1A) painted industrial steel, slightly darker orange worn patches, a few thin scratches showing charcoal (#2B2A2E) primer. Plain surface, no panels, no bolts. Covers 1x1 meter.
+
+=== sw_hazard.jpg
+Seamless tileable 1024x1024 game texture, flat straight-on view, flat even lighting, no shadows, no text. Hand-painted anime cel-shaded style. Diagonal hazard stripes at exactly 45 degrees: 4 bright orange (#FF7A1A) and 4 charcoal (#2B2A2E) stripes of equal width, edges meet perfectly when tiled, lightly worn paint. Covers 1x1 meter.
+
+=== sw_pipe_metal.jpg
+Seamless tileable 1024x1024 game texture, flat straight-on view, flat even lighting, no shadows, no text. Hand-painted anime cel-shaded style, 2-3 flat tones. Charcoal metal (#2B2A2E to #4A4650) with faint horizontal brushed lines running left to right and a few small cream (#EFE6D2) paint drips. No pipes drawn, just the flat surface. Covers 1x1 meter.
+
+=== sw_tech_panel.jpg
+Seamless tileable 1024x1024 game texture, flat straight-on view, flat even lighting, no shadows, no text. Clean anime sci-fi cel-shaded style, crisp edges. Futuristic warm ivory (#EFE6D2) wall: exactly 2x2 square panels, each with one rounded-rectangle inset, thin charcoal (#2B2A2E) seams between panels, 2 small orange (#FF7A1A) indicator squares per panel. Covers 2x2 meters.
+
+=== sw_glow_lines.jpg
+Seamless tileable 1024x1024 game texture, flat straight-on view, no shadows, no text. Clean anime sci-fi cel-shaded style. Dark charcoal (#2B2A2E) panel with thin glowing orange (#FF7A1A) circuit lines with right-angle turns and small round nodes, soft orange glow. Lines leave each edge where they enter the opposite edge so they connect when tiled. Covers 1x1 meter.
+
+=== sw_vent.jpg
+Seamless tileable 1024x1024 game texture, flat straight-on view, flat even lighting, no shadows, no text. Hand-painted anime cel-shaded style, crisp edges. Charcoal (#2B2A2E) louvered vent: exactly 12 horizontal slats filling the image left to right, dark gaps between them, an ivory (#EFE6D2) frame strip only along the top and bottom edges. Covers 1x1 meter.
+
+=== sw_trim_sheet.jpg
+1024x1024 game trim sheet, flat straight-on view, flat even lighting, no shadows, no text. Hand-painted anime cel-shaded style. Exactly 8 horizontal bands stacked top to bottom, each 128 pixels tall, each tiling left to right, crisp straight edges between bands. Top to bottom: 1 ivory concrete edge, 2 charcoal metal with a row of rivets, 3 orange and charcoal diagonal hazard stripes, 4 ivory sci-fi panel strip, 5 thin glowing orange line on charcoal, 6 black rubber gasket, 7 cream tile border, 8 worn orange paint. Colors: ivory #EFE6D2, charcoal #2B2A2E, orange #FF7A1A.
+
+=== sw_water.jpg
+Seamless tileable 1024x1024 game texture, top-down view, flat even lighting, no shadows, no text. Hand-painted anime cel-shaded style, 2-3 flat tones. Dark teal-grey sewer water (#2F3B3D), simple lighter teal (#5E7A7C) ripple shapes flowing left to right, a few cream (#D9CBB0) highlight streaks. Must be teal-grey, NOT olive, green or brown. Covers 4x4 meters.
+
+=== dc_cracks.jpg
+Single decal centered on a plain pure white background, 10 percent white margin on every side, flat straight-on view, no shadow, no frame, no text. Hand-painted anime cel-shaded style. A branching crack pattern in dark charcoal (#2B2A2E) lines with a few small chipped edges, about 1 meter across.
