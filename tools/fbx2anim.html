@@ -1,0 +1,36 @@
+<!doctype html><body style="font:12px monospace">
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/fflate.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FBXLoader.js"></script>
+<script>
+/* Mixamo FBX -> anims/*.json (same format as sword.json/moves.json):
+   per humanoid bone, per frame [x,y,z,w] = local rotation delta (L * Lrest^-1) expressed in rest-world axes: Wparent_rest * D * Wparent_rest^-1.
+   Verified against moves.json 'aim' (Mixamo Rifle Aiming Idle): head exact, other bones within rig-export noise.
+   drop = hip height relative to bind, normalized to bind hip height.
+   ?dir=<folder under tmp>&out=<file.json>&pre=<key prefix>&files=a.fbx,b.fbx&loop=a.fbx,... */
+const T=THREE,Q=new URLSearchParams(location.search),DIR='../tmp/'+Q.get('dir')+'/',PRE=Q.get('pre')||'',LOOP=new Set((Q.get('loop')||'').split(','));
+const MAP={hips:'Hips',spine:'Spine',chest:'Spine1',upperChest:'Spine2',neck:'Neck',head:'Head',leftShoulder:'LeftShoulder',leftUpperArm:'LeftArm',leftLowerArm:'LeftForeArm',leftHand:'LeftHand',
+  rightShoulder:'RightShoulder',rightUpperArm:'RightArm',rightLowerArm:'RightForeArm',rightHand:'RightHand',leftUpperLeg:'LeftUpLeg',leftLowerLeg:'LeftLeg',leftFoot:'LeftFoot',leftToes:'LeftToeBase',
+  rightUpperLeg:'RightUpLeg',rightLowerLeg:'RightLeg',rightFoot:'RightFoot',rightToes:'RightToeBase'};
+const log=s=>document.body.insertAdjacentHTML('beforeend',s+'<br>');
+const load=f=>new Promise((r,e)=>new T.FBXLoader().load(DIR+encodeURIComponent(f),r,undefined,e));
+const bonesOf=o=>{const b={};o.traverse(n=>{if(n.isBone)b[n.name.replace(/^mixamorig\d*:?/,'')]=n;});return b;};
+function restOf(o){ // rest (T-pose) local rotation of each bone and world rotation of its parent, from the pack's T-pose character
+  o.updateMatrixWorld(true);const out={};o.traverse(n=>{if(!n.isBone)return;const pw=new T.Quaternion();n.parent.getWorldQuaternion(pw);out[n.name.replace(/^mixamorig\d*:?/,'')]={l:n.quaternion.clone(),pw,p:n.getWorldPosition(new T.Vector3())};});return out;}
+(async()=>{const files=Q.get('files').split(','),all={};
+  const ref=restOf(await load('character_orange.fbx')); // every pack ships its T-pose character
+  for(const f of files){const o=await load(f),clip=o.animations[0];if(!clip){log('no clip '+f);continue;}
+    const B=bonesOf(o),mix=new T.AnimationMixer(o),act=mix.clipAction(clip);act.play();
+    const fps=30,n=Math.max(2,Math.round(clip.duration*fps)+1),bones={},drop=[],wq=new T.Quaternion(),wp=new T.Vector3(),hy=ref.Hips.p.y;
+    for(const k in MAP)bones[k]=[];
+    for(let i=0;i<n;i++){mix.setTime(Math.min(i/fps,clip.duration));o.updateMatrixWorld(true);
+      for(const k in MAP){const b=B[MAP[k]],r=ref[MAP[k]];if(!b||!r){continue;}wq.copy(b.quaternion).multiply(r.l.clone().invert()).premultiply(r.pw).multiply(r.pw.clone().invert());
+        const L=bones[k],a=[wq.x,wq.y,wq.z,wq.w];if(L.length&&L[L.length-4]*a[0]+L[L.length-3]*a[1]+L[L.length-2]*a[2]+L[L.length-1]*a[3]<0)a.forEach((v,j)=>a[j]=-v);
+        L.push(...a.map(v=>+v.toFixed(3)));}
+      B.Hips.getWorldPosition(wp);drop.push(+((wp.y-hy)/hy).toFixed(3));}
+    for(const k in bones)if(!bones[k].length)delete bones[k];
+    const key=PRE+f.replace(/\.fbx$/i,'').replace(/[^a-z0-9]+/gi,'_').replace(/_$/,'');
+    all[key]={src:f,fps,frames:n,mode:LOOP.has(f)?'loop':'once',rate:1,speed:0,bones,drop};
+    log(key+' frames '+n+' bones '+Object.keys(bones).length+' drop '+Math.min(...drop)+'..'+Math.max(...drop));}
+  const out=JSON.stringify(all);await fetch('http://127.0.0.1:8765/'+Q.get('out'),{method:'POST',body:out});log('sent '+out.length);document.title='done';})().catch(e=>{log('ERR '+e);document.title='err';});
+</script></body>
