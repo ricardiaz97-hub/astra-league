@@ -691,7 +691,7 @@ const rand=(a,b)=>a+Math.random()*(b-a), clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const hex=c=>'#'+c.toString(16).padStart(6,'0');
 
 /* ---------- constantes ---------- */
-let HX=80,HZ=46;const WALLH=26,R=.4,H=1.8,G=27,JUMP=7.6,SPEED=7.7,DMGK=.45,MATCH=300,KILLS=25;
+let HX=80,HZ=46,WALLH=26;const R=.4,H=1.8,G=27,JUMP=7.6,SPEED=7.7,DMGK=.45,MATCH=300,KILLS=25;
 const ARC=0xb58cff,INKC=0x1d1a22,CREAM=0xf1ece4,CHAR=0x3b3840;
 const TEAM=[{name:'ALFA',color:0xff7a1a,css:'#ff7a1a',baseX:-68},{name:'BETA',color:0x18c8f0,css:'#18c8f0',baseX:68}];
 const WPN=[
@@ -1671,7 +1671,7 @@ void main(){vec2 uv=vW.xz;float n=nz(uv*.45+time*vec2(.05,.035))*.6+nz(uv*.9-tim
 // túneles que se cruzan o se meten en salas ajenas, salas más angostas que su túnel y bocas que faltan.
 const SEWER_LAYOUT={K:1.6,
   rooms:[
-    {id:'pozo',blob:[330,565,34,0,0],y:16,h:22,o:{open:1,pool:.5,sky:1}},
+    {id:'pozo',blob:[330,565,34,0,0],y:16,h:46,o:{open:1,pool:.5,sky:1}}, // pozo alto: la caída del inicio dura ~1.7 s
     {id:'rotonda',blob:[722,462,80,.07,1],y:14,h:14,o:{dome:14,pool:.45,sky:1}},
     {id:'union',blob:[505,205,42,.1,3],y:14,h:14,o:{ceil:1,pool:.4,sky:1}},
     {id:'bombas',poly:[[315,80],[425,70],[440,170],[330,185]],y:14,h:16,o:{ceil:1,pool:.35}},
@@ -1851,8 +1851,8 @@ const MAPS=[
    items:[['hp',-20,0,-31],['ammo',20,0,-31],['ult',0,0,-31],['shield',-20,0,36],['hp',20,0,36],['elite',0,0,22],['str',-29.4,0,24],['agi',29.2,0,24],['ammo',-33.5,0,-17],['hp',32.3,0,-17],['shield',0,0,-17],['agi',-46,0,-26],['str',46,0,27]]},
   {name:'MERCADO OLOCUILTA',build:buildMarket,HX:79,HZ:232,base:24,edges:false,hemi:[0xffe5be,0x77634d,.76],sun:[0xffd18b,.86,-42,50,75],fog:[0xb9a995,210,620],ink:0x382d26,rim:[0xffb35e,.16],lift:[.02,.012,.004],gain:[1.02,1,.96],sat:.9,k:.29,ca:.003,con:.16,
    spawns:[[[-23,0,35],[-23,0,29],[-23,0,41]],[[23,0,35],[23,0,29],[23,0,41]]],nav:{n:{A:[-23,0,35],B:[0,0,35],C:[23,0,35],D:[-23,0,18],E:[0,0,18],F:[23,0,18],G:[-23,0,52],H:[0,0,52],I:[23,0,52],J:[0,0,64],K:[0,0,82],L:[0,0,20],M:[0,0,4],N:[0,0,-12],O:[0,0,-42],P:[0,0,-72],Q:[0,0,-104],R:[0,0,-138],S:[0,0,-151],T:[0,0,-174],U:[-35,0,-80],V:[35,0,-80]},e:'A-B B-C A-D D-E E-F F-C A-G G-H H-I I-C G-H H-J J-K J-L L-M M-N N-O O-P P-Q Q-R R-S S-T O-U U-Q O-V V-Q'}},
-  {name:'ALCANTARILLAS',build:buildSewer,HX:360,HZ:215,base:10,edges:false,hemi:[0x9fb2ae,0x2a221c,.46],sun:[0xffe0b0,.06,-30,80,20],fog:[0x131a19,16,105],ink:0x18181c,rim:[0xffb060,.22],lift:[.012,.014,.014],gain:[1.02,1,.98],sat:.95,k:.4,ca:.006,con:.35,
-   spawns:[[[-211.86,24.05,48.00],[-211.06,24.05,48.80],[-211.06,24.05,47.20]],[[-211.86,24.05,49.20],[-212.46,24.05,46.80],[-210.66,24.05,48.00]]]}];
+  {name:'ALCANTARILLAS',build:buildSewer,HX:360,HZ:215,wallH:60,base:10,edges:false,hemi:[0x9fb2ae,0x2a221c,.46],sun:[0xffe0b0,.06,-30,80,20],fog:[0x131a19,16,105],ink:0x18181c,rim:[0xffb060,.22],lift:[.012,.014,.014],gain:[1.02,1,.98],sat:.95,k:.4,ca:.006,con:.35,
+   spawns:[[[-211.86,55,48.00],[-211.06,55,48.80],[-211.06,55,47.20]],[[-211.86,55,49.20],[-212.46,55,46.80],[-210.66,55,48.00]]]}];
 let mapGroup=null,mapId=-1;
 const SET={words:false,mist:true};try{SET.words=localStorage.getItem('astra-words')==='1';SET.mist=localStorage.getItem('astra-mist')!=='0';}catch(e){}
 let CURM=null,NAV=null;
@@ -1868,7 +1868,7 @@ let LUT0=null;function portraLUT(){if(!LUT0){LUT0=new T.TextureLoader().load('fx
 function buildMap(id){
   if(id===mapId)return;mapId=id;const M=MAPS[id];
   if(mapGroup)scene.remove(mapGroup);
-  boxes.length=0;pads.length=0;FLOORS.length=0;MAPFX.halo=MAPFX.motes=MAPFX.lamps=MAPFX.reqs=MAPFX.water=null;MAPFX.indoor=[];MAPFX.mist=[];CURM=M;NAV=M.nav?prepNav(M.nav):null;HX=M.HX;HZ=M.HZ;TEAM[0].baseX=-M.base;TEAM[1].baseX=M.base;EDGES=M.edges;
+  boxes.length=0;pads.length=0;FLOORS.length=0;MAPFX.halo=MAPFX.motes=MAPFX.lamps=MAPFX.reqs=MAPFX.water=null;MAPFX.indoor=[];MAPFX.mist=[];CURM=M;NAV=M.nav?prepNav(M.nav):null;HX=M.HX;HZ=M.HZ;WALLH=M.wallH||26;TEAM[0].baseX=-M.base;TEAM[1].baseX=M.base;EDGES=M.edges;
   const n0=scene.children.length;M.build();
   const g=new T.Group();for(const o of scene.children.slice(n0))g.add(o);scene.add(g);mapGroup=g;
   if(M.bake){const t0=performance.now(),tris=bakeMap(g);console.log('mapa horneado',Math.round(tris),'triángulos',Math.round(performance.now()-t0),'ms');}
