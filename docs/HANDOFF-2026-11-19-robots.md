@@ -25,14 +25,14 @@ Open `http://localhost:8000/`. **Level 1:** HISTORIA → SIGUIENTE → COMENZAR.
 ## Enemies: robots (replaced the bug mobs)
 
 - **Models (placeholders):**
-  - Robot: `chars/robot-gunner.glb`, look `24` in `VRMS`. It's the Mixamo Ch44 model, converted in Blender with transforms applied. The FBX had a 0.01 armature scale, which made the robot 4× too tall.
-  - Drone: `props/drone.json`.
-  - The user will send final gunner/brawler/heavy/dog models in T-pose for Mixamo.
+  - Robots (final, Tripo + Mixamo rig): looks `24` gunner M, `25` gunner F, `26` brawler M, `27` brawler F in `VRMS` (`chars/robot-gunner-m.glb` … `robot-brawler-f.glb`). `mob()` picks male or female at random; `brute()` uses `26` scaled up.
+  - Drone: `props/drone.json` now holds the user's final drone (Tripo `tripo_convert_14cc4824-…(1).glb`, no rig, base64). `attachCreature` scales it to height, so its size in the file doesn't matter.
+  - Still missing: the heavy with the shield (Tripo keeps exporting a Character Creator skeleton, not Mixamo: `Hip`, `Waist`, `L_Thigh`; needs an unrigged FBX through Mixamo) and the level 2 beast (Tripo quadruped rig, needs its own clips).
 - **Spawn:** `mob()` picks a gunner (60%) or a brawler (40%) and sets `f.robot`. `brute()` is a brawler with `f.big=1.45`, 260 HP, slower and harder hitting. `crawler()`/`sniper()` are the drone.
 - **AI:** `robotAI` → `brawlAI` / `gunAI`, next to `mob()`.
   - **Brawler (Arkham style):** one attacker at a time (the token in `RB`), the rest circle at 4.5–6.5 m. A blue `!` warns 0.6 s before each 1–3 punch combo. Pressing **F** after the `!` counters (`player.parryAt`). Hitting the brawler during the wind-up interrupts it.
   - **Gunner (COD style):** finds cover with `coverSpot` (low cover, 0.72–1.55 m). It hides, then pops up with the `cv_Gunplay` clip and only fires while standing. It ducks when hit and advances 6 m every 7–11 s. It only shoots with line of sight (`los`), and its shots stop at walls.
-  - **Drone:** circles its target 10–18 m out at 5–9 m altitude. Velocity is set directly, because in the air AI movement input barely moves it. Ceiling-rail drones inside the market still crawl.
+  - **Drone:** circles its target 10–18 m out at 5–9 m altitude. Velocity is set directly, because in the air AI movement input barely moves it. Since 2026-11-19 every drone flies (no more ceiling rails), and they are called "Dron".
 - **Spawn drop:** `sDrop(f)` drops robots from 38 m, or 9 m inside the market (the ceiling), with a landing burst.
 - **Damage:** in `damage()` robots deal ×0.35 and brutes ×0.6.
 - **Bullets:** all guns (player, squad, bots) use `bullet()`, a thin streak moving at 220 m/s (`BUL`, `updBul`). Hits show small sparks only. `tracer()` remains for power/ki beams.
@@ -82,3 +82,38 @@ Open `http://localhost:8000/`. **Level 1:** HISTORIA → SIGUIENTE → COMENZAR.
 3. **Robots in high cover:** `coverSpot` only finds low cover.
 4. **Check in the arena:** the camera rise, the bullets and the cover changes are global but haven't been checked there.
 5. **Sewer level beats:** still open (see the first handoff).
+
+## Sprite VFX (started 2026-11-19, P1 in)
+
+- Style: 2D painted sprite sheets (Marvel Rivals / Deadlock look) plus 3D from code (real light flash, flat shock rings on the floor, ground cracks, orientation along swing/barrel). All old procedural VFX is to be scrapped as each event gets its sprite.
+- Prompts: `docs/fx-prompts.tsv` (28 effects, P1–P3). The user makes the art in ChatGPT (real transparency) or Gemini (magenta background).
+- Sheets: `fx/sprites/<name>.webp`, 1024 px, 4×4 grid of 256 px frames. 36 sheets, 5.4 MB. Extras with guessed names: `burst_white`, `geyser_white`, `fire_b`, `fire_ring`, `fire_pillar`, `muzzle_b`, `muzzle_c`, `ink_burst_b`, `slash_arc_b`. `ult_start` is missing.
+- Player: `celImg(name,img,n)` registers a sheet in `CEL.sheets` (`img` 1 = alpha, 2 = additive glow on black). `celFx` and the `CELF` shader play it in full color (`tint:1` multiplies by `col`).
+- P1 wiring:
+  - `celSpark` → `hit_light` / `hit_heavy` + `ink_burst`.
+  - `fxHit` → light flash + `celSpark` (old star/spark sprites removed).
+  - `damage` → `spark_metal` on robots; `robot_boom` + ground shock on robot/drone death.
+  - `parried` → `counter_flash` + cyan ring.
+  - `celSlash` → `slash_arc`.
+  - `fxDecal` → `impact_dust` (old bullet sparks removed).
+  - `muzzleFlash(p,col,k,to)` → `muzzle`, rolled along the barrel.
+  - `celLand` → `land_ring` over the crack and the flat shock.
+- P2/P3 wiring (same day):
+  - `img` 3 = white on black, where brightness becomes alpha and `col` tints it. Used by `smoke`, `ring`, `aura_loop` and `beam_hit`.
+  - Shared helpers now draw sheets, so every caller changed:
+    - `fxSmoke` → `smoke`
+    - `fxShock` → `ring`
+    - `fxBoom` → `explosion`
+    - `fxDust` → `jump_puff`
+    - `fxAura` → `aura_loop`
+    - `celFlare` → `beam_hit`
+    - `celTrail` → `dash`
+    - the jump puff → `jump_puff`
+  - Heroes: `slapHit` → `mau_slap`, `quakeHit` → `mau_quake`, `heartHit` → `ricardo_cry`, and Ira's aura loop → `ricardo_rage`.
+  - Squad: Bastión wall → `shield_hit`, Sanador → `heal`, Destello blink → `flash` (both ends), and `slam()` / `allyPower` → `slam`.
+  - Story fires (`flameFrames`) play `fire.webp` (4×4, additive). `fx/flame-atlas.png` is now unused.
+  - Not wired yet: `splash` (there's no water-entry hook), bullets hitting a Bastión wall, the extras, and `ult_start` (art missing). Old `burst()` particles, `kBlast`, `kPillar`, `kStreak`, `gRing` and `sprA` remain as the 3D/energy layer.
+- Sprite list v2 (2026-11-20): `docs/fx-prompts-v2.tsv`, 58 rows. 8 are REDO, sheets that touch their cell edge (`mau_quake`, `land_ring`, `dash`, `burst_white`, `geyser_white`, `aura_loop`, `mau_slap`, `ricardo_rage`). 50 are NEW, mostly replacing the leftover code effects that look messy: `fxRune`, `kStreak`, `kBlast`, `kPillar`, `kDome`, `sprA`, `fxBolt`, `fxStars` and `fxWord`.
+  - Every prompt has a CROP RULE: 12% empty margin in every cell.
+  - New layouts: `tall` (2:3 image, 4×3, cells 1:2), `wide` (3:2 image, 3×4, cells 2:1) and `strip` (4 tiling bands for beam bodies).
+  - Code to do: `celImg` must take cols/rows and the cell aspect (scale `ax`) for tall/wide sheets.
