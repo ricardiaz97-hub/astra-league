@@ -117,3 +117,23 @@ Open `http://localhost:8000/`. **Level 1:** HISTORIA → SIGUIENTE → COMENZAR.
   - Every prompt has a CROP RULE: 12% empty margin in every cell.
   - New layouts: `tall` (2:3 image, 4×3, cells 1:2), `wide` (3:2 image, 3×4, cells 2:1) and `strip` (4 tiling bands for beam bodies).
   - Code to do: `celImg` must take cols/rows and the cell aspect (scale `ax`) for tall/wide sheets.
+
+## Sprite VFX v2 wired (2026-11-20)
+
+- All 87 sheets in `fx/sprites/` are used; `fx/flame-atlas.png` was removed. Sources are in `Downloads/SPRITES` (files with no extension). The import script resized them to the layouts and removed the magenta.
+- `celImg(name,img,lay,n)`: `lay` 0 = square 4×4, 1 = wide 3×4 (cell 2:1), 2 = tall 4×3 (cell 1:2), 3 = 4 strips. `celFx` scales the width by the cell aspect (`S.ar`).
+- `celAtt(parent,name,o)` puts a looping sprite on an object and moves with it (`updAtt`, called from `updCel`). Used for the drone thruster, item glow, jump pads, beam body (crossed quads) and start, projectile orbs, robot sparks below 35% life, and fire smoke columns and embers.
+- Old code effects now drawn as sheets: `sprA` (charge/vortex → `charge_in`, eRing, hit, boom, star), `kBlast`, `kDome`, `kPillar`, `kStreak` (→ `buff_up`), `fxRune` (→ `cast_circle`), `fxStars` (→ `stun`), `fxBolt`, `fxRingB` (→ `e_ring`) and `fxBurst`.
+- New events:
+  - combat: block, parry glint, robot warn "!", death, respawn, headshot, `ult_start`
+  - drones: charge and shot
+  - robots: `drop_trail` on the way down, `celLand` when they land
+  - items: glow and take, plus `buff_up` for buffs
+  - zones: kiField → `zone_ki` / `zone_burn`, Sanador zone → `zone_heal`, Bastión wall → `shield_wall` / `_b` (team)
+  - movement: double jump, wall-run, slide, sprint wind
+  - vehicles: exhaust, tire dust, crash
+  - sewer: drips, ripples, steam, splash, slime
+  - story: lever short, `pod_land`, `tractor` + `rescue` on boarding, `warp` when the mothership leaves
+  - variants: muzzle, ink and slash pick a random sheet
+- The 3D layer stays under the sprites: `lightFlash`, `ring` / `gRing` floor rings, `celLand` cracks and shocks, shake.
+- Still missing art: comic `words` (`fxWord` is still text). Sizes and timing get tuned at the end.
