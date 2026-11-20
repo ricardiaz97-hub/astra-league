@@ -2260,7 +2260,7 @@ const SPARKT=tex(64,64,(g,w,h)=>{const r=g.createRadialGradient(32,32,0,32,32,32
 const parts=[];{const ge=new T.PlaneGeometry(1,1);for(let i=0;i<160;i++){const m=new T.Mesh(ge,basic(0xffffff,{map:SPARKT,transparent:true,blending:T.AdditiveBlending,depthWrite:false}));m.renderOrder=7;m.frustumCulled=false;m.visible=false;scene.add(m);parts.push({m,v:new V3,life:0,max:1,g:14,col:new T.Color(),sz:1});}}
 const _spR=new V3(),_spU=new V3(),_spW=new T.Color(0xffffff);
 let pI=0;
-function burst(x,y,z,color,n,spd,grav){for(let i=0;i<n;i++){const p=parts[pI=(pI+1)%parts.length];p.m.visible=true;p.m.position.set(x,y,z);p.col.setHex(color);p.v.set(rand(-1,1),rand(-.3,1.2),rand(-1,1)).multiplyScalar(spd*rand(.4,1));p.life=p.max=rand(.25,.6);p.sz=rand(.14,.26);p.g=grav===undefined?14:grav;}}
+function burst(x,y,z,color,n,spd,grav){return; /* sin cuadritos de código: los sprites dan las chispas */for(let i=0;i<n;i++){const p=parts[pI=(pI+1)%parts.length];p.m.visible=true;p.m.position.set(x,y,z);p.col.setHex(color);p.v.set(rand(-1,1),rand(-.3,1.2),rand(-1,1)).multiplyScalar(spd*rand(.4,1));p.life=p.max=rand(.25,.6);p.sz=rand(.14,.26);p.g=grav===undefined?14:grav;}}
 const tracers=[];{const ge=B(1,1,1);for(let i=0;i<28;i++){const m=new T.Mesh(ge,basic(0xffffff,{transparent:true,depthWrite:false}));m.visible=false;scene.add(m);tracers.push({m,life:0,max:1});}}
 let tI=0;const _a=new V3,_b=new V3;
 // bala de robot: trazo corto y delgado que viaja a ~220 m/s, en vez del rayo de ki de colores
@@ -2494,7 +2494,7 @@ function damage(t,amt,by,big){if(by&&by.story&&(by.kind==='mob'||by.kind==='snip
   if(by===player){const h=$('hitm');h.classList.add('on');setTimeout(()=>h.classList.remove('on'),70);if(!t._mel&&big)snd('head');else snd('hit');if(!game.story)dmgNum(t,Math.round(amt),big||raw>=45);
     if(t.hp<=0){h.classList.add('kill');setTimeout(()=>h.classList.remove('kill'),420);}}
   if(t.hp<=0){
-    if(t.robot||(t.cre&&t.cre.n==='drone')){const q=t.pos;celFx('robot_boom',q.x,q.y+1.1,q.z,{s0:3.2,s1:3.6,life:.8,e0:.85});celFx('shock',q.x,q.y+.06,q.z,{mode:'ground',s0:1,s1:5,life:.4,col:0xff9a40,e0:.55,add:1});lightFlash(q.x,q.y+1,q.z,0xff9a40,3,10,.3);celFx('short',q.x,q.y+1.4,q.z,{s0:2.2,life:.5,e0:.85});}else celFx('death',t.pos.x,t.pos.y+1.2,t.pos.z,{s0:2.6,life:1,e0:.85});
+    if(t.robot||(t.cre&&t.cre.n==='drone')){const q=t.pos;celFx('energy_blast',q.x,q.y+1.1,q.z,{s0:3.4,s1:3.8,life:.8,e0:.85});celFx('shock',q.x,q.y+.06,q.z,{mode:'ground',s0:1,s1:5,life:.4,col:0xff9a40,e0:.55,add:1});lightFlash(q.x,q.y+1,q.z,0xff9a40,3,10,.3);celFx('short',q.x,q.y+1.4,q.z,{s0:2.2,life:.5,e0:.85});}else celFx('death',t.pos.x,t.pos.y+1.2,t.pos.z,{s0:2.6,life:1,e0:.85});
     t.alive=false;t.respawnT=t.story?1e9:3;t.deaths++;by.kills++;t.deadT=0;t.dieKey=t.weapon===1?'die2':(Math.random()<.5&&ANIMS.die3?'die3':'die');t.act=null;
     if(!(t.m.vrm&&ANIMS[t.dieKey])){t.m.g.visible=false;t.m.sh.visible=false;}
     burst(t.pos.x,t.pos.y+1,t.pos.z,TEAM[t.team].color,18,7);burst(t.pos.x,t.pos.y+1,t.pos.z,0xffffff,10,5);
@@ -2584,7 +2584,7 @@ function playerShoot(w){
     _b.copy(_o).addScaledVector(_d,t);
     const col=w===2?ARC:TEAM[p.team].color;
     bullet(_e,_b);
-    if(hit){if(head)celFx('headshot',_b.x,_b.y,_b.z,{s0:1.1,life:.3,e0:.85});const d=hit.pos.distanceTo(p.pos),dm=W.dmg*(head?(W.head||2):1)*falloff(W,d);damage(hit,dm,p,head&&n===1);any=true;dealt+=dm;headAny=headAny||head;}
+    if(hit){if(head)celFx('e_ring',_b.x,_b.y,_b.z,{s0:1.2,life:.3,col:0xff4a3a,glow:.4,e0:.8});const d=hit.pos.distanceTo(p.pos),dm=W.dmg*(head?(W.head||2):1)*falloff(W,d);damage(hit,dm,p,head&&n===1);any=true;dealt+=dm;headAny=headAny||head;}
     else if(n===1||k<2){fxDecal(_b,_d);if(k===0&&Math.random()<.35)playS('rs_rico',.22*volAt(_b),rand(.9,1.2));}}
   // retroceso, destello y sonido
   p.recoil=1;camPitch+=W.kick*1.35*(1-.45*ads)+rand(-.002,.002)*(n>1?2:1);camYaw+=rand(-1,1)*W.kick*.35;
@@ -2764,7 +2764,7 @@ function vanish(f,t){ // aparece detrás del rival
   burst(x,y+1,z,0xffffff,14,5);snd('blink',f===player?1:volAt(f.pos));if(f===player){camYaw=f.yaw;flash(.2);}return true;
 }
 function slam(f){ // aterrizaje de héroe: onda que daña y levanta a los rivales cercanos
-  const p=f.pos,col=TEAM[f.team].color;celFx('ink_slam',p.x,p.y+.9,p.z,{s0:5.5,life:.7,e0:.85});celFx('slam',p.x,p.y+1.6,p.z,{s0:6,s1:6.5,life:.8,e0:.85});celLand(p.x,p.y,p.z,1,col);celFx('crack',p.x,p.y+.03,p.z,{mode:'ground',s0:7,s1:8,life:1.6,col:0x6a5a64,ink:0x8a7a82,core:0x5c4c56,e0:.75,roll:rand(0,6.3)});celSpark(p.x,p.y+.8,p.z,col,true);if(f===player)fxWord('¡DOOM!',p.x,p.y+2.5,p.z,'#ff7a1a');ring(p.x,p.y,p.z,col,8,.5);ring(p.x,p.y,p.z,0xffffff,5,.35);burst(p.x,p.y+.3,p.z,0xffffff,14,8);
+  const p=f.pos,col=TEAM[f.team].color;celFx('slam',p.x,p.y+1.6,p.z,{s0:6,s1:6.5,life:.8,e0:.85});celLand(p.x,p.y,p.z,1,col);celFx('crack',p.x,p.y+.03,p.z,{mode:'ground',s0:7,s1:8,life:1.6,col:0x6a5a64,ink:0x8a7a82,core:0x5c4c56,e0:.75,roll:rand(0,6.3)});celSpark(p.x,p.y+.8,p.z,col,true);if(f===player)fxWord('¡DOOM!',p.x,p.y+2.5,p.z,'#ff7a1a');ring(p.x,p.y,p.z,col,8,.5);ring(p.x,p.y,p.z,0xffffff,5,.35);burst(p.x,p.y+.3,p.z,0xffffff,14,8);
   snd('boom',f===player?.8:volAt(p)*.8);if(f===player){shake=.3;hitstop=Math.max(hitstop,.07);}
   for(const e of fighters){if(e.team===f.team||!e.alive)continue;const dx=e.pos.x-p.x,dz=e.pos.z-p.z,d=Math.hypot(dx,dz)||1;
     if(d<5.5&&Math.abs(e.pos.y-p.y)<2.5){e.vel.y=9;e.onGround=false;e.vel.x+=dx/d*8;e.vel.z+=dz/d*8;e.launchT=.7;damage(e,30,f,true);}}
@@ -2831,7 +2831,7 @@ function updClash(dt){
 }
 function updBeams(dt){updShocks(dt);
   for(const f of fighters){const bm=f.beam,col=TEAM[f.team].color,S=BEAMSTY[f.team?1:0],isB=f.ultKind==='beam',on=isB&&f.alive&&f.ultT>0&&f.ultT<=2.2;
-    if(isB&&!bm.fxB&&CEL.sheets.beam_body){for(const r of [[0,-PI/2,0],[PI/2,-PI/2,0,'YXZ']])bm.fxB=celAtt(bm.g,'beam_body',{mode:'free',s:1.8,ax:1/6,z:.5,rot:r,col:S.beam,glow:.4,fps:16});bm.fxS=celAtt(bm.src,'beam_start',{s:3,col:S.beam,glow:.4,fps:24});} /* cuerpo del rayo en cruz (se ve de lado y desde arriba) y su origen */
+    if(isB&&!bm.fxB&&CEL.sheets.beam_body){for(const r of [[0,-PI/2,0],[PI/2,-PI/2,0,'YXZ']])bm.fxB=celAtt(bm.g,'beam_body',{mode:'free',s:1.8,ax:1/10.8,z:.5,rot:r,col:S.beam,glow:.4,fps:16});bm.fxS=celAtt(bm.src,'beam_start',{s:3,col:S.beam,glow:.4,fps:24});} /* cuerpo del rayo en cruz (se ve de lado y desde arriba) y su origen */
     if(!on){bm.g.visible=bm.tip.visible=false;bm.on=false;bm.src.visible=isB&&f.alive&&f.ultT>2.2;
       if(bm.src.visible){beamOrigin(f,_a);bm.src.position.copy(_a);const k=clamp((2.8-f.ultT)/.6,0,1);if((bm.chT=(bm.chT||0)-dt)<=0){bm.chT=.2;celCharge(_a.x,_a.y,_a.z,S.beam,2.2+k*2.2);}bm.src.scale.setScalar(.4+k*1.8);styleBeam(bm,f.team,.5+k*.5,6);}
       continue;}
@@ -2881,7 +2881,7 @@ for(const [k,n] of [['burst',6],['bolt',10],['flame',18]])for(let i=0;i<n;i++){c
 // explosiones de ki filmadas (VFX Footage) y texturas de partículas (GDevelop)
 VFX.kiboom=[];VFX.ringboom=[];for(let i=0;i<22;i++)VFX.kiboom.push(TL.load('textures/vfx/kiboom'+i+'.jpg'));for(let i=0;i<26;i++)VFX.ringboom.push(TL.load('textures/vfx/ringboom'+i+'.jpg'));
 for(const k of ['smoke','star2','runes','glow','dsmoke'])VFX[k]=TL.load('textures/vfx/'+k+'.png');
-function fxBoom(x,y,z,size,ring){celFx('explosion',x,y+size*.2,z,{s0:size,s1:size*1.1,life:.9,e0:.85,roll:rand(-.2,.2)});}
+function fxBoom(x,y,z,size,ring){celFx('energy_blast',x,y+size*.2,z,{s0:size,s1:size*1.1,life:.8,e0:.85,roll:rand(-.2,.2)});}
 /* ---------- KFX: efectos de ki con shaders (mismo nivel que el kamehameha) ----------
    aura de llama para cargar ki / despertar / potenciadores, anillos en el piso, cúpulas de choque,
    columnas de luz, orbes de energía para proyectiles y armas de ki, y hojas de animación (Brackeys) */
@@ -2933,7 +2933,7 @@ function kAura(f){if(f.kAura)return f.kAura;const g=new T.Group(),a=new T.Mesh(a
 function auraOn(f,k,col,size){const o=kAura(f);if(k>o.want){o.want=k;o.wc.setHex(col);o.ws=size||1;}}
 for(let i=0;i<10;i++){const m=new T.Mesh(new T.PlaneGeometry(2,2),new T.ShaderMaterial(Object.assign({vertexShader:GRINGV,fragmentShader:GRINGF,uniforms:{col:{value:new T.Color()},prog:{value:0},inten:{value:1},seed:{value:0}}},KADD)));
   m.rotation.x=-PI/2;m.visible=false;m.renderOrder=4;scene.add(m);KFX.rings.push({m,t:1,life:1});}
-let krI=0;function gRing(x,y,z,R,col,life,inten){const r=KFX.rings[krI=(krI+1)%KFX.rings.length];r.m.visible=true;r.m.position.set(x,y+.07,z);r.m.scale.setScalar(R);r.t=0;r.life=life||.5;
+let krI=0;function gRing(x,y,z,R,col,life,inten){return; /* sin aros punteados en el piso */const r=KFX.rings[krI=(krI+1)%KFX.rings.length];r.m.visible=true;r.m.position.set(x,y+.07,z);r.m.scale.setScalar(R);r.t=0;r.life=life||.5;
   const u=r.m.material.uniforms;u.col.value.setHex(col);u.inten.value=inten||1.4;u.seed.value=Math.random()*30;}
 const domeGeo=new T.SphereGeometry(1,32,20);
 for(let i=0;i<5;i++){const m=new T.Mesh(domeGeo,orbMat(.6));m.material.uniforms.fill.value=.12;m.visible=false;m.renderOrder=5;m.frustumCulled=false;scene.add(m);KFX.domes.push({m,t:1,life:1,R:1});}
@@ -2944,7 +2944,7 @@ function kPillar(x,y,z,R,H,col,life){celFx('geyser_white',x,y+H*.5,z,{s0:H*1.15,
 // hojas de animación (Brackeys): un recorte por sprite
 const ATL={};for(const [k,f,c,r,n] of [['charge','b_charge.jpg',7,6,42],['eRing','b_electric_ring.jpg',6,5,30],['boom','b_explosion.jpg',6,5,27],['hit','b_big_hit.jpg',6,5,30],['star','b_star_explosion.jpg',6,5,30],['vortex','b_vortex.jpg',6,5,30],['fireRing','b_fire_ring.jpg',6,5,30],['boomFb','b_explosion_fb.jpg',8,8,64]]){
   const tx=TL.load('textures/vfx/'+f);ATL[k]={k,tx,c,r,n};}
-function sprA(name,x,y,z,o){{const C={charge:'charge_in',vortex:'charge_in',eRing:'e_ring',hit:'hit_heavy',boom:'energy_blast',star:'burst_white'}[name];if(C&&CEL.sheets[C]){o=o||{};const sz=o.s1||o.s0||1;celFx(C,x,y,z,{s0:o.s0||sz,s1:sz,life:Math.max(.3,o.life||.4),col:o.color===undefined?0xffffff:o.color,glow:.25,e0:.8,roll:C==='charge_in'?0:o.rot||0});return null;}}const A=ATL[name];if(!A||!A.tx.image)return null;const p=spr(A.tx,x,y,z,o);p.atlas=A;
+function sprA(name,x,y,z,o){{const C={charge:'charge_in',vortex:'charge_in',eRing:'e_ring',hit:'hit_light',boom:'energy_blast',star:'burst_white'}[name];if(C&&CEL.sheets[C]){o=o||{};const sz=o.s1||o.s0||1;celFx(C,x,y,z,{s0:o.s0||sz,s1:sz,life:Math.max(.3,o.life||.4),col:o.color===undefined?0xffffff:o.color,glow:.25,e0:.8,roll:C==='charge_in'?0:o.rot||0});return null;}}const A=ATL[name];if(!A||!A.tx.image)return null;const p=spr(A.tx,x,y,z,o);p.atlas=A;
   p.atex=p.atex||{};let tx=p.atex[name];if(!tx){tx=p.atex[name]=A.tx.clone();tx.needsUpdate=true;tx.repeat.set(1/A.c,1/A.r);}p.s.material.map=tx;setAtl(p,0);return p;}
 function setAtl(p,k){const A=p.atlas,i=Math.min(A.n-1,k*A.n|0),tx=p.s.material.map;tx.offset.set((i%A.c)/A.c,1-((i/A.c|0)+1)/A.r);}
 // estela vertical (rayas de luz que suben al cargar)
@@ -2972,9 +2972,9 @@ function kfxFighter(f,dt){if(!f.alive)return;const col=TEAM[f.team].color;
   if(f.bersT>0){auraOn(f,1,0xff7a1a,1.35);if((f.rgT=(f.rgT||0)-dt)<=0){f.rgT=.2;celFx('ricardo_rage',f.pos.x,f.pos.y+1.1,f.pos.z,{s0:3.2,s1:3.4,life:.5,e0:.8,loop:1});}if(Math.random()<dt*14)kStreak(f.pos.x+rand(-.9,.9),f.pos.y+rand(.2,1.8),f.pos.z+rand(-.9,.9),Math.random()<.3?0xfff1c9:0xff7a1a,1.6);}
   if(f.agiT>now){auraOn(f,.35,0x3fe0ff,.84);if(Math.hypot(f.vel.x,f.vel.z)>6&&Math.random()<dt*14)kStreak(f.pos.x+rand(-.5,.5),f.pos.y+rand(.3,1.5),f.pos.z+rand(-.5,.5),0x3fe0ff,1);}}
 function fxSmoke(x,y,z,n,size){for(let i=0;i<Math.min(n,3);i++)celFx('smoke',x+rand(-.5,.5),y+rand(.3,.8)*size,z+rand(-.5,.5),{s0:size*1.2,s1:size*1.8,life:rand(.7,1),col:0x8a7c84,e0:.8,roll:rand(-.3,.3),vy:rand(.3,.9),drag:1.5});}
-function fxStars(x,y,z,col,n){celFx('stun',x,y+.4,z,{s0:1.3,life:1.1,e0:.85,loop:1});}
+function fxStars(x,y,z,col,n){celFx('e_ring',x,y+.4,z,{s0:1.1,life:1.1,col:0xffe14a,glow:.3,e0:.85,loop:1});}
 const RUNES=[];{const ge=new T.PlaneGeometry(1,1);for(let i=0;i<4;i++){const m=new T.Mesh(ge,basic(0xffffff,{map:VFX.runes,transparent:true,depthWrite:false,blending:T.AdditiveBlending,polygonOffset:true,polygonOffsetFactor:-3}));m.rotation.x=-PI/2;m.visible=false;scene.add(m);RUNES.push({m,life:0,max:1});}}
-function fxRune(x,y,z,size,col,life){celFx('cast_circle',x,y+size*.18,z,{s0:size*1.1,life:Math.max(.5,life||1),col,glow:.3,e0:.8});}
+function fxRune(x,y,z,size,col,life){return;celFx('cast_circle',x,y+size*.18,z,{s0:size*1.1,life:Math.max(.5,life||1),col,glow:.3,e0:.8});}
 function updRunes(dt){for(const r of RUNES){if(r.life<=0)continue;r.life-=dt;const k=r.life/r.max;r.m.material.opacity=Math.min(1,k*3)*(.5+.5*Math.min(1,(1-k)*6));r.m.rotation.z+=dt*1.2;if(r.life<=0)r.m.visible=false;}}
 /* ---------- objetos en el mapa: vida, munición, fuerza, agilidad, escudo, carga de definitiva y armas élite ---------- */
 const ITEMT={
@@ -3106,34 +3106,53 @@ celSheet('trail',4,2,(g,k,L)=>{const s=1-k*.85;for(const [y,l,w] of [[100,200,16
 const CELV=`uniform float bill,roll;varying vec2 vU;void main(){vU=uv;vec4 mv;
  if(bill>.5){mv=modelViewMatrix*vec4(0.,0.,0.,1.);vec2 p=position.xy*vec2(length(modelMatrix[0].xyz),length(modelMatrix[1].xyz));float c=cos(roll),s=sin(roll);mv.xy+=vec2(c*p.x-s*p.y,s*p.x+c*p.y);}
  else mv=modelViewMatrix*vec4(position,1.);gl_Position=projectionMatrix*mv;}`;
-const CELF=`uniform sampler2D map;uniform vec2 grid;uniform float frame,ero,glow,add,img,tk;uniform vec3 col,ink,core;varying vec2 vU;
+const CELF=`uniform sampler2D map;uniform vec2 grid;uniform float frame,ero,glow,add,img,tk,op;uniform vec3 col,ink,core;varying vec2 vU;
 float ch(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
 float cn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(ch(i),ch(i+vec2(1.,0.)),f.x),mix(ch(i+vec2(0.,1.)),ch(i+vec2(1.,1.)),f.x),f.y);}
 void main(){float fr=floor(frame);vec2 cell=vec2(mod(fr,grid.x),floor(fr/grid.x));vec2 u=clamp(vU,.004,.996);
  vec4 s4=texture2D(map,vec2((cell.x+u.x)/grid.x,1.-(cell.y+1.-u.y)/grid.y));vec3 t=s4.rgb;
- if(img>.5){if(img>2.5){float a=max(t.r,max(t.g,t.b));if(a<.03)discard;gl_FragColor=vec4(col*(1.+glow),a*(1.-ero));return;} /* blanco sobre negro: el brillo es la transparencia, se tiñe con col */
+ if(img>.5){if(img>3.5){float v=max(t.r,max(t.g,t.b)),a=s4.a*smoothstep(.03,.18,v)*op;if(a<.02)discard;vec3 c=v<.5?mix(ink,col,v*2.):mix(col,core,v*2.-1.);gl_FragColor=vec4(c*(1.+glow),a*(1.-ero));return;} /* hoja en grises: cada gris toma un color de la paleta (oscuro, medio, brillante) */
+ if(img>2.5){float a=max(t.r,max(t.g,t.b));if(a<.03)discard;gl_FragColor=vec4(col*(1.+glow),a*(1.-ero));return;} /* blanco sobre negro: el brillo es la transparencia, se tiñe con col */
  vec3 c=t*mix(vec3(1.),col,tk)*(1.+glow);if(img>1.5){gl_FragColor=vec4(c*(1.-ero),1.);return;}if(s4.a<.03)discard;gl_FragColor=vec4(c,s4.a*(1.-ero));return;} /* hoja pintada: color propio, se desvanece al final */
  if(add>.5){float o=smoothstep(.2,.65,t.r),b=smoothstep(.35,.65,t.g),k=smoothstep(.35,.65,t.b);gl_FragColor=vec4((col*(.4*o+.8*b)+core*k)*(1.-ero)*(1.+glow),1.);return;} // ki: brillo aditivo, núcleo blanco y halo de color
  float th=.5+ero*(.2+.75*cn(vU*6.+fr));if(t.r<th)discard;
  vec3 c=t.b>th?core:(t.g>th?col:ink);gl_FragColor=vec4(c*(1.+glow),1.);}`;
-{const ge=new T.PlaneGeometry(1,1);for(let i=0;i<90;i++){const u={map:{value:null},grid:{value:new T.Vector2(4,4)},frame:{value:0},ero:{value:0},glow:{value:0},add:{value:0},img:{value:0},tk:{value:0},bill:{value:1},roll:{value:0},col:{value:new T.Color()},ink:{value:new T.Color()},core:{value:new T.Color()}};
+{const ge=new T.PlaneGeometry(1,1);for(let i=0;i<90;i++){const u={map:{value:null},grid:{value:new T.Vector2(4,4)},frame:{value:0},ero:{value:0},glow:{value:0},add:{value:0},img:{value:0},tk:{value:0},op:{value:1},bill:{value:1},roll:{value:0},col:{value:new T.Color()},ink:{value:new T.Color()},core:{value:new T.Color()}};
   const m=new T.Mesh(ge,new T.ShaderMaterial({vertexShader:CELV,fragmentShader:CELF,uniforms:u,side:T.DoubleSide,fog:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2}));
   m.visible=false;m.frustumCulled=false;m.renderOrder=6;scene.add(m);CEL.pool.push({m,u,life:0,max:1,v:new V3,n:16,s0:1,s1:1,ax:1,spin:0,drag:0,grav:0,e0:.6,loop:0});}}
 const _cInk=new T.Color(),_cW=new T.Color(0xffffff);
 // hojas de sprites pintadas (fx/sprites, 4×4 de 256): img 1 = con transparencia, 2 = brillo sobre negro
-function celImg(name,img,lay,n){const L=[[4,4,1],[3,4,2],[4,3,.5],[1,4,6]][lay||0],t=new T.TextureLoader().load('fx/sprites/'+name+'.webp');CEL.sheets[name]={t,cols:L[0],rows:L[1],n:n||L[0]*L[1],img,ar:L[2]};}
+const PALS={blood:[0x3a0008,0xa8101c,0xff7a8a,.85,0],tea:[0x3a2208,0xa8743a,0xf2dcb0,.7,0],sewage:[0x2a2a10,0x6a6a2a,0xc8c090,.75,0],bluefire:[0x0a1a6a,0x3fa8ff,0xffffff,1,1],water:[0x1f3a3f,0x6f9aa3,0xffffff,.6,0]};
+const DEFPAL=(()=>{const D={},put=(ks,P)=>{for(const k of ks.split(' '))D[k]=P;};
+  put('fire fire_b fire_ring fire_pillar embers zone_burn explosion robot_boom exhaust',[0x7a1408,0xff7a1a,0xfff3c0,1,1]);
+  put('smoke smoke_column',['fog',0x9a8f8a,0xe8e0d8,.5,0]);put('steam',[0x8a8f96,0xc8ccd2,0xffffff,.5,0]);
+  put('jump_puff land_ring impact_dust slide tire_dust pod_land slam debris slam_crack',['fog',0xd9cbb0,0xfff8ec,.85,0]);
+  put('splash drip ripple',PALS.water);put('slime',[0x1f4a10,0x7fbf3a,0xf4ffc0,.8,0]);
+  put('spark_metal short',[0xb84a00,0xffc23a,0xffffff,1,1]);put('robot_sparks thruster',[0x0a3a7a,0x4fe0ff,0xffffff,1,1]);put('drone_shot drone_charge',[0x3a0a6a,0xb25bff,0xffffff,1,1]);
+  put('heal zone_heal rescue',[0x0a4a1a,0x6cff8a,0xffffff,1,1]);put('warn counter_flash parry_glint',[0x0a2a7a,0x4fc3ff,0xffffff,1,1]);
+  put('headshot',[0x6a0a0a,0xff3b3b,0xffffff,1,1]);put('stun',[0xa85a00,0xffe14a,0xffffff,1,1]);put('mau_slap mau_quake',[0x6a0a3a,0xff3fa4,0xffffff,1,1]);
+  put('ricardo_cry ricardo_rage',[0x6a1000,0xff5a1a,0xfff0c0,1,1]);put('words',[0xa83a00,0xff7a1a,0xfff3d8,1,0]);return D;})();
+/* paleta de una hoja en grises: [oscuro, medio, brillante, opacidad, aditivo]; o.pal elige una con nombre (blood, tea, sewage, bluefire, water) o un arreglo; si no hay, el color del equipo o de o.col */
+function celPal(name,o){o=o||{};let P=o.pal&&(PALS[o.pal]||o.pal)||DEFPAL[name];if(!P){const c=new T.Color(o.col===undefined?0xffffff:o.col);P=[c.clone().multiplyScalar(.35).getHex(),c.getHex(),0xffffff,1,1];}
+  return P[0]==='fog'?[scene.fog?scene.fog.color.getHex():0x2b2a2e].concat(P.slice(1)):P;}
+function celSetPal(u,P){u.ink.value.setHex(P[0]);u.col.value.setHex(P[1]);u.core.value.setHex(P[2]);u.op.value=P[3];}
+function celImg(name,img,lay,n){const L=[[4,4,1],[3,4,2],[4,3,.5],[1,4,6]][lay||0],t=new T.TextureLoader().load('fx/sprites/'+name+'.webp',tx=>{try{const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d');g.drawImage(tx.image,0,0,32,32);const d=g.getImageData(0,0,32,32).data;let sa=0,k=0;
+  for(let i=0;i<d.length;i+=4){if(d[i+3]<20||d[i]+d[i+1]+d[i+2]<40)continue;sa+=Math.max(d[i],d[i+1],d[i+2])-Math.min(d[i],d[i+1],d[i+2]);k++;}if(k&&sa/k<8)CEL.sheets[name].img=4;}catch(e){}}); /* si la hoja viene en grises, se pinta con paleta */
+CEL.sheets[name]={t,cols:L[0],rows:L[1],n:n||L[0]*L[1],img,ar:L[2]};}
 /* img: 1 transparencia, 2 brillo sobre negro, 3 blanco que se tiñe · lay: 0 cuadrada 4×4, 1 ancha 3×4, 2 alta 4×3, 3 cuatro tiras */
-for(const [k,m,l] of [['hit_light',2],['hit_heavy',1],['ink_burst',1],['ink_burst_b',1],['slash_arc',1],['slash_arc_b',1],['counter_flash',2],['spark_metal',2],['robot_boom',1],['impact_dust',1],['land_ring',3,1],['muzzle_b',2],['muzzle_c',2],['dash',1],['jump_puff',1],['smoke',3],['ring',3],['explosion',1],['aura_loop',3,2],['beam_hit',3],['mau_slap',2,1],['mau_quake',2,1],['ricardo_cry',2],['ricardo_rage',2,2],['heal',2],['shield_hit',2],['flash',2],['slam',1],['splash',1],['fire_ring',2],['fire_pillar',1],['burst_white',3],['geyser_white',3,2],['beam_start',3],['block',3],['zone_burn',2,1],['crash',1],['death',1,2],['debris',3],['double_jump',3],['drone_charge',2],['drone_shot',2,1],['thruster',2],['e_ring',3],['short',2],['embers',2,2],['beam_body',3,3],['energy_blast',1],['dome',3],['zone_ki',3,1],['orb',3],['exhaust',2,1],['ink_slam',1],['headshot',1],['item_glow',3,2],['item_take',3],['pad',3],['bolt',3,2],['parry_glint',2],['rescue',1],['respawn',3,2],['drop_trail',2,2],['robot_sparks',2],['warn',1],['shield_wall',3],['shield_wall_b',3],['pod_land',1,1],['cast_circle',3],['slide',1,1],['slime',1],['smoke_column',1,2],['sprint_wind',3,1],['steam',1,2],['stun',1],['tire_dust',1,1],['ult_start',2],['wallrun',3,1],['warp',3],['drip',1,2],['ripple',3],['zone_heal',2,1],['buff_up',3,2],['tractor',3,2],['charge_in',3,2]])celImg(k,m,l);celImg('muzzle',2,0,4);
+for(const [k,m,l] of [['hit_light',2],['slash_arc',1],['slash_arc_b',1],['counter_flash',2],['spark_metal',2],['impact_dust',1],['land_ring',3,1],['muzzle_b',2],['muzzle_c',2],['dash',1],['jump_puff',1],['smoke',3],['ring',3],['aura_loop',3,2],['beam_hit',3],['mau_slap',2,1],['mau_quake',2,1],['ricardo_cry',2],['ricardo_rage',2,2],['heal',2],['shield_hit',2],['flash',2],['slam',1],['splash',1],['fire_ring',2],['fire_pillar',1],['burst_white',3],['geyser_white',3,2],['beam_start',3],['block',3],['zone_burn',2,1],['crash',1],['death',1,2],['debris',3],['double_jump',3],['drone_charge',2],['drone_shot',2,1],['thruster',2],['e_ring',3],['short',2],['embers',2,2],['beam_body',3,3],['energy_blast',1],['dome',3],['zone_ki',3,1],['orb',3],['exhaust',2,1],['item_glow',3,2],['item_take',3],['pad',3],['bolt',3,2],['parry_glint',2],['rescue',1],['respawn',3,2],['drop_trail',2,2],['robot_sparks',2],['warn',1],['shield_wall',3],['shield_wall_b',3],['pod_land',1,1],['cast_circle',3],['slide',1,1],['slime',1],['sprint_wind',3,1],['steam',1,2],['tire_dust',1,1],['ult_start',2],['wallrun',3,1],['warp',3],['drip',1,2],['ripple',3],['zone_heal',2,1],['buff_up',3,2],['tractor',3,2],['charge_in',3,2]])celImg(k,m,l);celImg('muzzle',2,0,4);
 /* sprite pegado a un objeto (dron, ítem, rayo, proyectil, fuego): se mueve con él y repite su animación */
 const CELA=[],_v3o=new V3(),CELGEO=new T.PlaneGeometry(1,1);
 function celAtt(par,name,o){const S=CEL.sheets[name];if(!S||!par)return null;o=o||{};const c=o.col===undefined?0xffffff:o.col;
-  const u={map:{value:S.t},grid:{value:new T.Vector2(S.cols,S.rows)},frame:{value:0},ero:{value:0},glow:{value:o.glow||0},add:{value:0},img:{value:S.img},tk:{value:o.tint?1:0},bill:{value:o.mode==='free'?0:1},roll:{value:o.roll||0},col:{value:new T.Color(c)},ink:{value:new T.Color()},core:{value:new T.Color()}};
-  const m=new T.Mesh(CELGEO,new T.ShaderMaterial({vertexShader:CELV,fragmentShader:CELF,uniforms:u,side:T.DoubleSide,fog:false,transparent:true,depthWrite:false,blending:S.img===2?T.AdditiveBlending:T.NormalBlending}));
+  const u={map:{value:S.t},grid:{value:new T.Vector2(S.cols,S.rows)},frame:{value:0},ero:{value:0},glow:{value:o.glow||0},add:{value:0},img:{value:S.img},tk:{value:o.tint?1:0},op:{value:1},bill:{value:o.mode==='free'?0:1},roll:{value:o.roll||0},col:{value:new T.Color(c)},ink:{value:new T.Color()},core:{value:new T.Color()}};
+  const P=celPal(name,o);if(S.img===4)celSetPal(u,P);
+  const m=new T.Mesh(CELGEO,new T.ShaderMaterial({vertexShader:CELV,fragmentShader:CELF,uniforms:u,side:T.DoubleSide,fog:false,transparent:true,depthWrite:false,blending:S.img===2||(S.img===4&&P[4])?T.AdditiveBlending:T.NormalBlending}));
   par.updateMatrixWorld(true);const ws=par.getWorldScale(_v3o).y||1,sc=(o.s||1)/ws;m.scale.set(sc*(S.ar||1)*(o.ax||1),sc,1);m.position.set((o.x||0)/ws,(o.y||0)/ws,(o.z||0)/ws);
   if(o.rot)m.rotation.set(o.rot[0],o.rot[1],o.rot[2],o.rot[3]||'XYZ');m.frustumCulled=false;m.renderOrder=6;par.add(m);
-  const a={m,u,n:S.n,fps:o.fps||16,ph:rand(0,S.n),life:o.life||0,t:0};CELA.push(a);return a;}
+  const a={m,u,S,P,img:S.img,n:S.n,fps:o.fps||16,ph:rand(0,S.n),life:o.life||0,t:0};CELA.push(a);return a;}
 function updAtt(dt){for(const pd of pads)if(!pd.fx&&CEL.sheets.pad&&pd.m){pd.fx=celAtt(pd.m,'pad',{s:2.6,z:1,col:0x3fd0ff,glow:.2});pd.m.material.visible=false;}
   for(let i=CELA.length-1;i>=0;i--){const a=CELA[i];if(!a.m.parent){CELA.splice(i,1);continue;}a.t+=dt;
+    if(a.img!==a.S.img){a.img=a.u.img.value=a.S.img;if(a.img===4)celSetPal(a.u,a.P);a.m.material.blending=a.img===2||(a.img===4&&a.P[4])?T.AdditiveBlending:T.NormalBlending;a.m.material.needsUpdate=true;}
     if(a.life){const k=a.t/a.life;if(k>=1){a.m.parent.remove(a.m);a.m.material.dispose();CELA.splice(i,1);continue;}a.u.ero.value=k>.85?(k-.85)/.15:0;}
     a.u.frame.value=Math.floor(a.ph+a.t*a.fps)%a.n;}}
 function scrRoll(dx,dy,dz){const e=camera.matrixWorld.elements;return Math.atan2(dx*e[4]+dy*e[5]+dz*e[6],dx*e[0]+dy*e[1]+dz*e[2]);}
@@ -3142,7 +3161,7 @@ function celFx(name,x,y,z,o){const S=CEL.sheets[name];if(!S)return null;o=o||{};
   u.map.value=S.t;u.grid.value.set(S.cols,S.rows);p.n=S.n;u.frame.value=0;u.ero.value=0;u.glow.value=o.glow||0;
   const c=o.col===undefined?0xffffff:o.col;u.col.value.setHex(c);u.core.value.setHex(o.core===undefined?c:o.core);if(o.core===undefined)u.core.value.lerp(_cW,.8);
   if(o.ink!==undefined)u.ink.value.setHex(o.ink);else u.ink.value.setHex(c).multiplyScalar(.78); // borde: el mismo color un poco más oscuro, nunca tinta negra
-  const ad=S.img?S.img===2:!!o.add,tr=ad||S.img===1||S.img===3,mt=m.material;u.add.value=ad&&!S.img?1:0;u.img.value=S.img||0;u.tk.value=S.img&&o.tint?1:0;mt.blending=ad?T.AdditiveBlending:T.NormalBlending;mt.transparent=tr;mt.depthWrite=!tr;
+  const P=S.img===4?celPal(name,o):null,ad=P?!!P[4]:S.img?S.img===2:!!o.add,tr=ad||S.img>=1,mt=m.material;u.add.value=ad&&!S.img?1:0;u.img.value=S.img||0;u.tk.value=S.img&&o.tint?1:0;if(P)celSetPal(u,P);else u.op.value=1;mt.blending=ad?T.AdditiveBlending:T.NormalBlending;mt.transparent=tr;mt.depthWrite=!tr;
   const mode=o.mode||'bill';u.bill.value=mode==='bill'?1:0;u.roll.value=o.roll||0;
   m.position.set(x,y,z);if(mode==='ground')m.rotation.set(-PI/2,0,o.roll||0);else if(mode==='free'&&o.q)m.quaternion.copy(o.q);
   p.life=p.max=o.life||.3;p.s0=o.s0||1;p.s1=o.s1===undefined?p.s0:o.s1;p.ax=(o.ax||1)*(S.ar||1);p.sx=o.sx||1;p.spin=o.spin||0;p.drag=o.drag||0;p.grav=o.grav||0;p.e0=o.e0===undefined?.6:o.e0;p.loop=o.loop||0;
@@ -3161,11 +3180,11 @@ function celLand(x,y,z,s,col){col=col===undefined?0xffffff:col;if(CURM&&CURM.bui
     celFx('dust',x+Math.cos(a)*.35,y+.35+.2*s,z+Math.sin(a)*.35,{s0:.7+.4*s,s1:1.2+1.1*s,life:rand(.45,.6)+.2*s,col:0xe8d9c6,ink:0xcdb8a8,core:0xfffaf0,vx:Math.cos(a)*sp,vy:rand(.4,1.2),vz:Math.sin(a)*sp,drag:4.5,e0:.55,roll:rand(0,6.3)});}}
 // chispa de golpe cel (big = golpe fuerte: aro y líneas de velocidad)
 function celSpark(x,y,z,col,big){if(!big){celFx('hit_light',x,y,z,{s0:1.1,s1:1.3,life:.4,e0:.85,roll:rand(0,6.3)});return;}
-  celFx(Math.random()<.5?'ink_burst':'ink_burst_b',x,y,z,{s0:3,s1:3.4,life:.5,e0:.85,roll:rand(0,6.3)});celFx('hit_heavy',x,y,z,{s0:2.2,s1:2.5,life:.6,e0:.85,roll:rand(-.4,.4)});
+  celFx('hit_light',x,y,z,{s0:2.2,s1:2.6,life:.45,e0:.85,roll:rand(0,6.3)});celFx('e_ring',x,y,z,{s0:2.4,life:.35,col:0xffffff,glow:.3,e0:.8});
   celFx('shock',x,y,z,{s0:.8,s1:3.6,life:.26,col,e0:.5,add:1});}
 // destello cel en la punta del rayo / al cargar
 function celFlare(x,y,z,col,size,life){return celFx(CEL.sheets.beam_hit?'beam_hit':'flare',x,y,z,{s0:size,s1:size*1.1,life:life||.18,col,loop:1,e0:.75,roll:rand(0,6.3),spin:rand(-3,3),glow:.25,add:1});}
-function celCharge(x,y,z,col,size){celFx('charge',x,y,z,{s0:size,s1:size*.9,life:.5,col,e0:.85,roll:rand(0,6.3),glow:.2,add:1});
+function celCharge(x,y,z,col,size){if(CEL.sheets.charge_in){celFx('charge_in',x,y,z,{s0:size*1.3,life:.5,col,glow:.3,e0:.85});return;}celFx('charge',x,y,z,{s0:size,s1:size*.9,life:.5,col,e0:.85,roll:rand(0,6.3),glow:.2,add:1});
   if(CEL.sheets.bolt)for(let i=0;i<2;i++)celFx('bolt',x+rand(-.5,.5)*size*.3,y+rand(-.3,.4)*size*.3,z+rand(-.5,.5)*size*.3,{s0:size*.42,s1:size*.46,life:.12,col,e0:.4,roll:rand(0,6.3),glow:.3,add:1});}
 // estela de dash: trazos estirados en la dirección del movimiento (en pantalla)
 const _cvR=new V3(),_cvU=new V3();
@@ -3438,7 +3457,7 @@ function animate(f,dt){
   m.gun.visible=f.weapon!==1&&!f.kind;m.sword.visible=f.weapon===1&&!f.kind&&!fists(f);if(m.gunP){m.gunP.visible=f.weapon===0&&!f.kind;m.gunM.visible=f.weapon===2&&!f.kind;
     const g=f.weapon===2?m.gunM:m.gunP,r=f.recoil||0;if(!m.vrm){g.position.copy(g.userData.base);g.position.y+=r*.06;}if(r>0)f.recoil=Math.max(0,r-dt*9);}
   if(m.stones){m.stones.rotation.y+=dt*2.2;m.stones.position.y=1.25+Math.sin(now*2.5)*.08;}
-  const big=f.charging||f.ultT>0,a=m.aura.material,tgt=f.superT>0?0:f.ultT>0?.4:f.charging?.12:f.parryT>0?.65:fast?.5:f.castT>0?.55:f.wr>0?.22:0;a.opacity+=(tgt-a.opacity)*Math.min(1,dt*14);m.aura.visible=a.opacity>.02;
+  const big=f.charging||f.ultT>0,a=m.aura.material,tgt=f.superT>0?0:f.ultT>0?.4:f.charging?.12:fast?.5:f.castT>0?.55:f.wr>0?.22:0;a.opacity+=(tgt-a.opacity)*Math.min(1,dt*14);m.aura.visible=false; /* sin burbuja: el aura la dan los sprites */
   if(m.aura.visible){const s=(1+Math.sin(now*24)*.06)*(big?1.55:1);m.aura.scale.set(s,1.45*s,s);a.color.setHex(f.parryT>0?0xffffff:f.superT>0?0xffd23f:TEAM[f.team].color);}
   kfxFighter(f,dt);
   if(f.charging&&(f.fxT-=dt)<=0){f.fxT=.3;const col=TEAM[f.team].color;for(let i=0;i<4;i++){const an=rand(0,6.283),rr=rand(.4,1.1);kStreak(f.pos.x+Math.cos(an)*rr,f.pos.y+rand(.2,1.6),f.pos.z+Math.sin(an)*rr,col,rand(1,1.8));}
@@ -3485,6 +3504,7 @@ window.addEventListener('keydown',e=>{
   if(e.code==='KeyP'||(e.code==='Escape'&&!wasLocked)){if(game.paused)resume();else if(game.state!=='ended')pause();}
 });
 window.addEventListener('keyup',e=>{keys[e.code]=false;if(e.code==='KeyF')blockHeld=false;});
+window.addEventListener('blur',()=>{blockHeld=false;heavyHeld=false;for(const k in keys)keys[k]=false;}); /* si se pierde el keyup (cambio de ventana), no queda bloqueando */
 window.addEventListener('blur',()=>{for(const k in keys)keys[k]=false;mouseDown=false;});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&!game.menu&&!game.paused&&game.state!=='ended')pause();});
 canvas.addEventListener('mousedown',e=>{if(game.photo){if(!locked)lockPtr();return;}if(game.menu||game.paused)return;initAudio();if(!locked)lockPtr();if(e.button===0){mouseDown=true;if(player.clash)player.push+=1;}if(e.button===2){adsHeld=true;if(player.weapon===1){heavyQ=true;heavyHeld=true;}}if(e.button===1){e.preventDefault();toggleLock();}});
@@ -3655,6 +3675,7 @@ function updPlayer(dt){
   if(ultQ){ultQ=false;if(startUlt(p))return;}
   if(updFinisher(p,dt)){jumpQ=dashQ=skillQ=parryQ=heavyQ=false;return;}
   if(p.weapon===1)autoLock(dt);LFX*=Math.exp(-5*dt);
+  if(blockHeld&&!keys.KeyF&&tbtn.blkId==null)blockHeld=false;
   const wantBlock=blockHeld&&p.weapon===1&&p.stunT<=0&&!(p.heavyT>0)&&!(p.hcharge>0)&&p.dashT<=0;
   if(wantBlock&&!p.block){p.block=true;celFx('block',p.pos.x-Math.sin(camYaw)*.7,p.pos.y+1.2,p.pos.z-Math.cos(camYaw)*.7,{s0:1.7,life:.35,col:TEAM[p.team].color,glow:.2,e0:.8});if(p.parryCd<=0){p.parryT=.25;p.parryCd=.6;p.parryAt=now;snd('parryup');celFx('parry_glint',p.pos.x,p.pos.y+1.6,p.pos.z,{s0:.9,life:.25,e0:.85});}}else if(!wantBlock)p.block=false;
   if(p.block){p.wish.x*=.35;p.wish.z*=.35;parryQ=false;}
@@ -4432,7 +4453,7 @@ function fallen(x,z,w,h,ci){sCol(x-w/2,x+w/2,z-.45,z+.45,0,h); // barrera baja d
 function flameFrames(k){k=k||'fire';const C=STORY.ffrs=STORY.ffrs||{};if(C[k])return C[k];const F=C[k]=[];if(k==='fire')STORY.ffr=F;for(let i=0;i<16;i++){const t=new T.Texture();t.repeat.set(1/4,1/4);t.offset.set((i%4)/4,1-(1+(i/4|0))/4);F.push(t);}
   new T.TextureLoader().load('fx/sprites/'+k+'.webp',b=>{for(const t of F){t.image=b.image;t.needsUpdate=true;}});return F;}
 function sFlames(n,x0,x1,y0,y1,z0,z1,s){const FRS=[flameFrames(),flameFrames('fire_b')];
-  {const g=sAdd(new T.Sprite(STORY.glowMat(0xff6a1a)));g.position.set((x0+x1)/2,(y0+y1)/2+s*.7,(z0+z1)/2);g.scale.setScalar(s*4+Math.max(x1-x0,z1-z0)*1.6);g.material.opacity=.7;g.userData={glow:1,ph:rand(0,6),o:.7};STORY.flames.push(g);}{const G=sAdd(new T.Group());G.position.set((x0+x1)/2,y0,(z0+z1)/2);celAtt(G,'smoke_column',{s:s*7,y:s*4.2,fps:10});celAtt(G,'embers',{s:s*3,y:s*1.6,fps:12});} // resplandor de cada foco de fuego
+  {const g=sAdd(new T.Sprite(STORY.glowMat(0xff6a1a)));g.position.set((x0+x1)/2,(y0+y1)/2+s*.7,(z0+z1)/2);g.scale.setScalar(s*4+Math.max(x1-x0,z1-z0)*1.6);g.material.opacity=.7;g.userData={glow:1,ph:rand(0,6),o:.7};STORY.flames.push(g);}{const G=sAdd(new T.Group());G.position.set((x0+x1)/2,y0,(z0+z1)/2);celAtt(G,'embers',{s:s*3,y:s*1.6,fps:12});} // resplandor de cada foco de fuego
   for(let i=0;i<n;i++){const FR=FRS[i%2],x=rand(x0,x1),y=rand(y0,y1),z=rand(z0,z1),sc=s*rand(.7,1.3),ph=rand(0,9);
     for(const [col,k,o] of [[0xff4a12,1,0],[0xffb733,.62,1]]){const p=sAdd(new T.Sprite(new T.SpriteMaterial({map:FR[0],color:0xffffff,transparent:true,blending:T.AdditiveBlending,depthWrite:false,fog:false})));p.center.set(.5,.08);p.renderOrder=o;
       p.position.set(x,y,z);p.userData={F:FR,s:sc*k,ph:ph+o*4,fr:1,lit:o===0&&i%3===0};STORY.flames.push(p);}const p={position:new V3(x,y,z)};
@@ -4873,7 +4894,7 @@ STORY.post=function(dt){if(!STORY.on)return;
     const d=Math.hypot(x-player.pos.x,z-player.pos.z);el.querySelector('b').textContent=Math.round(d)+' m';place(el,x,y+3.6,z,true);$('sObjD').textContent=STORY.od||'';}
   else{M.visible=false;el.style.display='none';$('sObjD').textContent=STORY.od||'';}};
 STORY.mk=(()=>{const g=new T.Group();const c=new T.Mesh(new T.CylinderGeometry(.45,.45,40,16,1,true),basic(0xffb347,{transparent:true,opacity:.2,depthWrite:false,side:T.DoubleSide,blending:T.AdditiveBlending}));
-  c.position.y=20;g.add(c);const gem=new T.Mesh(new T.OctahedronGeometry(.5,0),basic(0xffd23f));g.add(gem);g.visible=false;scene.add(g);return g;})();
+  c.position.y=20;g.add(c);const gem=new T.Mesh(new T.OctahedronGeometry(.5,0),basic(0xffd23f));gem.visible=false;g.add(gem);g.visible=false;scene.add(g);return g;})();
 STORY.outro=function(){STORY.ph='done';game.talk=false;playS('ui_done',.6);game.state='ended';window.__MUS&&window.__MUS.play('end');const e=$('sEnd');
   $('sEndSub').textContent=(STORY.txt&&STORY.txt.siguiente)||'Siguiente: Las alcantarillas';e.hidden=false;$('hud').hidden=true;$('sObj').hidden=true;try{document.exitPointerLock();}catch(_){}};
 STORY.end=function(){if(!STORY.on&&!game.story)return;

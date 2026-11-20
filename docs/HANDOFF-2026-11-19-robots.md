@@ -137,3 +137,10 @@ Open `http://localhost:8000/`. **Level 1:** HISTORIA → SIGUIENTE → COMENZAR.
   - variants: muzzle, ink and slash pick a random sheet
 - The 3D layer stays under the sprites: `lightFlash`, `ring` / `gRing` floor rings, `celLand` cracks and shocks, shake.
 - Still missing art: comic `words` (`fxWord` is still text). Sizes and timing get tuned at the end.
+
+## Grayscale sprites + palettes (2026-11-20)
+
+- Direction from the user: every sheet is painted in grayscale with no black outlines and no halftone, and code colors it. Prompts: `docs/fx-prompts-gray.tsv` (89 effects, P1–P3, with default colors per effect). `docs/fx-prompts-v3.tsv` holds the earlier no-outline redos.
+- `img` 4 = gradient map: each grey takes a color from `[dark, mid, bright, opacity, additive]`. `celImg` detects a grayscale sheet when it loads (average saturation < 8), so a new gray file dropped in with the same name just works.
+- `DEFPAL` holds the defaults per sheet: fire orange, smoke = scene fog color + warm grey at 50%, water teal at 60%, slime green, sparks, drones purple and so on. Anything not listed uses the team color or `o.col`. `o.pal` picks a named palette (`blood`, `tea`, `sewage`, `bluefire`, `water`) or takes an array, e.g. `celFx('splash',x,y,z,{pal:'blood'})`.
+- Removed for looking bad: `burst()` square particles, `fxRune` floor circles, `gRing` dashed floor rings, the aura bubble (`m.aura`), the marker gem, and the outlined sheets (hit_heavy, ink_*, robot_boom, explosion, headshot, stun, smoke_column), now covered by clean stand-ins.
